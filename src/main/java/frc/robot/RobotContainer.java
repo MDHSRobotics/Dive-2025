@@ -4,11 +4,16 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.DriverConstants;
+import frc.robot.Constants.*;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
@@ -29,6 +34,30 @@ public class RobotContainer {
     private final CommandXboxController operatorController =
             new CommandXboxController(DriverConstants.OPERATOR_CONTROLLER_PORT);
 
+    /* Robot States */
+    private int reefBranchIndex = 0;
+
+    /* NetworkTables Logging */
+    private final NetworkTable driverInfoTable =
+            NetworkTableInstance.getDefault().getTable("Driver Info");
+    /**
+     * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
+     */
+    private final BooleanPublisher[] branchAimingIndicators = {
+        driverInfoTable.getBooleanTopic("Branch A").publish(),
+        driverInfoTable.getBooleanTopic("Branch B").publish(),
+        driverInfoTable.getBooleanTopic("Branch C").publish(),
+        driverInfoTable.getBooleanTopic("Branch D").publish(),
+        driverInfoTable.getBooleanTopic("Branch E").publish(),
+        driverInfoTable.getBooleanTopic("Branch F").publish(),
+        driverInfoTable.getBooleanTopic("Branch G").publish(),
+        driverInfoTable.getBooleanTopic("Branch H").publish(),
+        driverInfoTable.getBooleanTopic("Branch I").publish(),
+        driverInfoTable.getBooleanTopic("Branch J").publish(),
+        driverInfoTable.getBooleanTopic("Branch K").publish(),
+        driverInfoTable.getBooleanTopic("Branch L").publish()
+    };
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure the trigger bindings
@@ -45,6 +74,18 @@ public class RobotContainer {
      * joysticks}.
      */
     private void configureBindings() {
+        // Change the reef wall you want to face counterclockwise.
+        driverController.povLeft().onTrue(new InstantCommand(this::incrementBranchIndexByTwo, new Subsystem[0]));
+
+        // Change the reef wall you want to face clockwise.
+        driverController.povRight().onTrue(new InstantCommand(this::decrementBranchIndexByTwo, new Subsystem[0]));
+
+        // Change the branch you want to face counterclockwise.
+        driverController.povUp().onTrue(new InstantCommand(this::incrementBranchIndex, new Subsystem[0]));
+
+        // Change the branch you want to face clockwise.
+        driverController.povDown().onTrue(new InstantCommand(this::decrementBranchIndex, new Subsystem[0]));
+
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(exampleSubsystem::exampleCondition).onTrue(new ExampleCommand(exampleSubsystem));
 
@@ -61,5 +102,77 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
         return Autos.exampleAuto(exampleSubsystem);
+    }
+
+    public void incrementBranchIndex() {
+        reefBranchIndex += 1;
+        // Wrap the index
+        if (reefBranchIndex > 11) {
+            reefBranchIndex -= 12;
+        }
+
+        // Update dashboard info
+        for (BooleanPublisher branch : branchAimingIndicators) {
+            branch.set(false);
+        }
+        // Since the driver wants to face a specific branch, only light up that one branch.
+        branchAimingIndicators[reefBranchIndex].set(true);
+    }
+
+    public void decrementBranchIndex() {
+        reefBranchIndex -= 1;
+        // Wrap the index
+        if (reefBranchIndex < 0) {
+            reefBranchIndex += 12;
+        }
+
+        // Update dashboard info
+        for (BooleanPublisher branch : branchAimingIndicators) {
+            branch.set(false);
+        }
+        // Since the driver wants to face a specific branch, only light up that one branch.
+        branchAimingIndicators[reefBranchIndex].set(true);
+    }
+
+    public void incrementBranchIndexByTwo() {
+        reefBranchIndex = reefBranchIndex + 2;
+        // Wrap the index
+        if (reefBranchIndex > 11) {
+            reefBranchIndex -= 12;
+        }
+
+        // Update dashboard info
+        for (BooleanPublisher branch : branchAimingIndicators) {
+            branch.set(false);
+        }
+        // Handle the case where the index may be odd
+        if (reefBranchIndex % 2 != 0) {
+            reefBranchIndex -= 1;
+        }
+        // Since the driver wants to face a side of the reef wall, they may be trying to score on either of the two
+        // branches.
+        branchAimingIndicators[reefBranchIndex].set(true);
+        branchAimingIndicators[reefBranchIndex + 1].set(true);
+    }
+
+    public void decrementBranchIndexByTwo() {
+        reefBranchIndex -= 2;
+        // Wrap the index
+        if (reefBranchIndex < 0) {
+            reefBranchIndex += 12;
+        }
+
+        // Update dashboard info
+        for (BooleanPublisher branch : branchAimingIndicators) {
+            branch.set(false);
+        }
+        // Handle the case where the index may be odd
+        if (reefBranchIndex % 2 != 0) {
+            reefBranchIndex -= 1;
+        }
+        // Since the driver wants to face a side of the reef wall, they may be trying to score on either of the two
+        // branches.
+        branchAimingIndicators[reefBranchIndex].set(true);
+        branchAimingIndicators[reefBranchIndex + 1].set(true);
     }
 }

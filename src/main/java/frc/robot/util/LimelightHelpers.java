@@ -1,15 +1,15 @@
 // spotless:off
 //LimelightHelpers v1.10 (REQUIRES LLOS 2024.9.1 OR LATER)
 
-package frc.robot.utils;
+package frc.robot.util;
 
 import edu.wpi.first.networktables.DoubleArrayEntry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.TimestampedDoubleArray;
-import frc.robot.utils.LimelightHelpers.LimelightResults;
-import frc.robot.utils.LimelightHelpers.PoseEstimate;
+import frc.robot.util.LimelightHelpers.LimelightResults;
+import frc.robot.util.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;

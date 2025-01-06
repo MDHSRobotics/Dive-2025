@@ -4,6 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.net.WebServer;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -26,6 +32,9 @@ public class Robot extends TimedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
+
+        // Create the webserver for accessing Elastic's saved layout across computers
+        WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
     }
 
     /**
@@ -46,7 +55,19 @@ public class Robot extends TimedRobot {
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        StructPublisher<Pose2d> testPosePub = NetworkTableInstance.getDefault()
+                .getTable("Test Table")
+                .getStructTopic("Test Pose", Pose2d.struct)
+                .publish();
+        testPosePub.set(new Pose2d());
+
+        StructPublisher<Rotation2d> testRotPub = NetworkTableInstance.getDefault()
+                .getTable("Test Table")
+                .getStructTopic("Test Rotation", Rotation2d.struct)
+                .publish();
+        testRotPub.set(new Rotation2d());
+    }
 
     @Override
     public void disabledPeriodic() {}
