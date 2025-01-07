@@ -4,9 +4,12 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -35,7 +38,7 @@ public class RobotContainer {
             new CommandXboxController(DriverConstants.OPERATOR_CONTROLLER_PORT);
 
     /* Robot States */
-    private int reefBranchIndex = 0;
+    private int selectedBranchIndex = 0;
 
     /* NetworkTables Logging */
     private final NetworkTable driverInfoTable =
@@ -43,7 +46,7 @@ public class RobotContainer {
     /**
      * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
      */
-    private final BooleanPublisher[] branchAimingIndicators = {
+    private final BooleanPublisher[] selectedBranchIndicators = {
         driverInfoTable.getBooleanTopic("Branch A").publish(),
         driverInfoTable.getBooleanTopic("Branch B").publish(),
         driverInfoTable.getBooleanTopic("Branch C").publish(),
@@ -75,16 +78,16 @@ public class RobotContainer {
      */
     private void configureBindings() {
         // Change the reef wall you want to face counterclockwise.
-        driverController.povLeft().onTrue(new InstantCommand(this::incrementBranchIndexByTwo, new Subsystem[0]));
+        driverController.povLeft().onTrue(new InstantCommand(this::selectNextTwoBranches, new Subsystem[0]));
 
         // Change the reef wall you want to face clockwise.
-        driverController.povRight().onTrue(new InstantCommand(this::decrementBranchIndexByTwo, new Subsystem[0]));
+        driverController.povRight().onTrue(new InstantCommand(this::selectPreviousTwoBranches, new Subsystem[0]));
 
         // Change the branch you want to face counterclockwise.
-        driverController.povUp().onTrue(new InstantCommand(this::incrementBranchIndex, new Subsystem[0]));
+        driverController.povUp().onTrue(new InstantCommand(this::selectNextBranch, new Subsystem[0]));
 
         // Change the branch you want to face clockwise.
-        driverController.povDown().onTrue(new InstantCommand(this::decrementBranchIndex, new Subsystem[0]));
+        driverController.povDown().onTrue(new InstantCommand(this::selectPreviousBranch, new Subsystem[0]));
 
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(exampleSubsystem::exampleCondition).onTrue(new ExampleCommand(exampleSubsystem));
@@ -104,75 +107,86 @@ public class RobotContainer {
         return Autos.exampleAuto(exampleSubsystem);
     }
 
-    public void incrementBranchIndex() {
-        reefBranchIndex += 1;
+    public void selectNextBranch() {
+        selectedBranchIndex += 1;
         // Wrap the index
-        if (reefBranchIndex > 11) {
-            reefBranchIndex -= 12;
+        if (selectedBranchIndex > 11) {
+            selectedBranchIndex -= 12;
         }
 
         // Update dashboard info
-        for (BooleanPublisher branch : branchAimingIndicators) {
+        for (BooleanPublisher branch : selectedBranchIndicators) {
             branch.set(false);
         }
         // Since the driver wants to face a specific branch, only light up that one branch.
-        branchAimingIndicators[reefBranchIndex].set(true);
+        selectedBranchIndicators[selectedBranchIndex].set(true);
     }
 
-    public void decrementBranchIndex() {
-        reefBranchIndex -= 1;
+    public void selectPreviousBranch() {
+        selectedBranchIndex -= 1;
         // Wrap the index
-        if (reefBranchIndex < 0) {
-            reefBranchIndex += 12;
+        if (selectedBranchIndex < 0) {
+            selectedBranchIndex += 12;
         }
 
         // Update dashboard info
-        for (BooleanPublisher branch : branchAimingIndicators) {
+        for (BooleanPublisher branch : selectedBranchIndicators) {
             branch.set(false);
         }
         // Since the driver wants to face a specific branch, only light up that one branch.
-        branchAimingIndicators[reefBranchIndex].set(true);
+        selectedBranchIndicators[selectedBranchIndex].set(true);
     }
 
-    public void incrementBranchIndexByTwo() {
-        reefBranchIndex = reefBranchIndex + 2;
+    public void selectNextTwoBranches() {
+        selectedBranchIndex = selectedBranchIndex + 2;
         // Wrap the index
-        if (reefBranchIndex > 11) {
-            reefBranchIndex -= 12;
+        if (selectedBranchIndex > 11) {
+            selectedBranchIndex -= 12;
         }
 
         // Update dashboard info
-        for (BooleanPublisher branch : branchAimingIndicators) {
+        for (BooleanPublisher branch : selectedBranchIndicators) {
             branch.set(false);
         }
         // Handle the case where the index may be odd
-        if (reefBranchIndex % 2 != 0) {
-            reefBranchIndex -= 1;
+        if (selectedBranchIndex % 2 != 0) {
+            selectedBranchIndex -= 1;
         }
         // Since the driver wants to face a side of the reef wall, they may be trying to score on either of the two
         // branches.
-        branchAimingIndicators[reefBranchIndex].set(true);
-        branchAimingIndicators[reefBranchIndex + 1].set(true);
+        selectedBranchIndicators[selectedBranchIndex].set(true);
+        selectedBranchIndicators[selectedBranchIndex + 1].set(true);
     }
 
-    public void decrementBranchIndexByTwo() {
-        reefBranchIndex -= 2;
+    public void selectPreviousTwoBranches() {
+        selectedBranchIndex -= 2;
         // Wrap the index
-        if (reefBranchIndex < 0) {
-            reefBranchIndex += 12;
+        if (selectedBranchIndex < 0) {
+            selectedBranchIndex += 12;
         }
 
         // Update dashboard info
-        for (BooleanPublisher branch : branchAimingIndicators) {
+        for (BooleanPublisher branch : selectedBranchIndicators) {
             branch.set(false);
         }
         // Handle the case where the index may be odd
-        if (reefBranchIndex % 2 != 0) {
-            reefBranchIndex -= 1;
+        if (selectedBranchIndex % 2 != 0) {
+            selectedBranchIndex -= 1;
         }
         // Since the driver wants to face a side of the reef wall, they may be trying to score on either of the two
         // branches.
-        branchAimingIndicators[reefBranchIndex].set(true);
-        branchAimingIndicators[reefBranchIndex + 1].set(true);
+        selectedBranchIndicators[selectedBranchIndex].set(true);
+        selectedBranchIndicators[selectedBranchIndex + 1].set(true);
+    }
+
+    public Pose2d getSelectedBranch() {
+        Alliance alliance = DriverStation.getAlliance().orElse(null);
+        if (alliance == Alliance.Blue) {
+            return FieldConstants.BLUE_REEF_BRANCH_POSES[selectedBranchIndex];
+        } else if (alliance == Alliance.Red) {
+            return FieldConstants.RED_REEF_BRANCH_POSES[selectedBranchIndex];
+        }
+        DriverStation.reportError("Could not get alliance, please fix this!", true);
+        return FieldConstants.BLUE_REEF_BRANCH_POSES[selectedBranchIndex];
     }
 }
