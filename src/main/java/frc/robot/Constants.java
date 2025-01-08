@@ -30,6 +30,12 @@ public final class Constants {
         public static final int OPERATOR_CONTROLLER_PORT = 1;
     }
 
+    public static class VisionConstants {
+        private VisionConstants() {}
+
+        public static final String LIMELIGHT_NAME = "limelight-front";
+    }
+
     /**
      * This class contains information about the field, like the positions of game elements and Apriltags.
      * <p>
@@ -44,7 +50,7 @@ public final class Constants {
          * and using the dimension tool from the edge of the driver station wall (for x) or the edge of the side polycarbonate wall (for y) to the centermark of the L4 branch.
          * The rotation represents what angle the robot could face to align with the reef wall.
          */
-        public static final Pose2d[] BLUE_REEF_BRANCH_POSES = {
+        public static final Pose2d[] BLUE_REEF_TREE_POSES = {
             // A
             new Pose2d(Inches.of(145.490), Inches.of(164.968), new Rotation2d()),
             // B
@@ -77,7 +83,7 @@ public final class Constants {
          * and using the dimension tool from the edge of the driver station wall (for x) or the edge of the side polycarbonate wall (for y) to the centermark of the L4 branch.
          * The rotation represents what angle the robot could face to align with the reef wall.
          */
-        public static final Pose2d[] RED_REEF_BRANCH_POSES = {
+        public static final Pose2d[] RED_REEF_TREE_POSES = {
             // A
             new Pose2d(Inches.of(544.261), Inches.of(152.030), new Rotation2d(Degrees.of(180))),
             // B
@@ -126,12 +132,12 @@ public final class Constants {
                     Inches.of(365.20),
                     Inches.of(241.64),
                     Inches.of(573.54),
-                    new Rotation3d(Degrees.of(30), Degrees.of(0), Degrees.of(0))),
+                    new Rotation3d(Degrees.of(0), Degrees.of(30), Degrees.of(0))),
             new Pose3d(
                     Inches.of(365.20),
                     Inches.of(75.39),
                     Inches.of(73.54),
-                    new Rotation3d(Degrees.of(30), Degrees.of(0), Degrees.of(0))),
+                    new Rotation3d(Degrees.of(0), Degrees.of(30), Degrees.of(0))),
             new Pose3d(
                     Inches.of(530.49),
                     Inches.of(130.17),
@@ -176,12 +182,12 @@ public final class Constants {
                     Inches.of(325.68),
                     Inches.of(241.64),
                     Inches.of(73.54),
-                    new Rotation3d(Degrees.of(30), Degrees.of(0), Degrees.of(180))),
+                    new Rotation3d(Degrees.of(0), Degrees.of(30), Degrees.of(180))),
             new Pose3d(
                     Inches.of(325.68),
                     Inches.of(75.39),
                     Inches.of(73.54),
-                    new Rotation3d(Degrees.of(30), Degrees.of(0), Degrees.of(180))),
+                    new Rotation3d(Degrees.of(0), Degrees.of(30), Degrees.of(180))),
             new Pose3d(
                     Inches.of(235.73),
                     Inches.of(-0.15),
