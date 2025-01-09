@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.units.measure.Distance;
 
 /**
@@ -53,14 +54,18 @@ public final class Constants {
      * This class contains information about the field, like the positions of game elements and Apriltags.
      * <p>
      * This information comes from <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings.pdf">the FRC Field Drawings.</a>
+     * <p>
+     * The x and y coordinates were found by importing the Field CAD to Onshape, generating a top-down drawing,
+     * and using the dimension tool.
      */
     public static class FieldConstants {
         private FieldConstants() {}
 
+        public static final Translation2d BLUE_REEF_CENTER = new Translation2d(Inches.of(176.183), Inches.of(158.500));
+        public static final Translation2d RED_REEF_CENTER = new Translation2d(Inches.of(513.568), Inches.of(158.500));
+
         /**
          * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
-         * The x and y coordinates were found by importing the Field CAD to Onshape, generating a top-down drawing,
-         * and using the dimension tool from the edge of the driver station wall (for x) or the edge of the side polycarbonate wall (for y) to the centermark of the L4 branch.
          * The rotation represents what angle the robot could face to align with the reef wall.
          */
         public static final Pose2d[] BLUE_REEF_TREE_POSES = {

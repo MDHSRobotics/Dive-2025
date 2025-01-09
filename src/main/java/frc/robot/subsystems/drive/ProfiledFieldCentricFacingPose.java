@@ -8,7 +8,6 @@ import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -53,7 +52,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * For example, a robot with the pose of (0,0) will rotate to a heading of 45 degrees counterclockwise to face a target pose of (1,1),
      * and a robot with the pose of (1,1) will rotate to a heading of 90 degrees counterclockwise to face a target pose of (1,2).
      */
-    private Pose2d targetPose = new Pose2d();
+    private Translation2d targetPose = new Translation2d();
 
     /**
      * The allowable deadband of the request, in m/s.
@@ -239,7 +238,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newTargetPose Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withTargetPose(Pose2d newTargetPose) {
+    public ProfiledFieldCentricFacingPose withTargetPose(Translation2d newTargetPose) {
         this.targetPose = newTargetPose;
         return this;
     }
