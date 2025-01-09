@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.units.measure.Distance;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -34,6 +35,18 @@ public final class Constants {
         private VisionConstants() {}
 
         public static final String LIMELIGHT_NAME = "limelight-front";
+
+        /*
+         * Used for setting the limelight's fiducial 3D offset.
+         * https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-3d#point-of-interest-tracking
+         *
+         * These measurements were found by importing the Field CAD to Onshape, generating a top-down drawing,
+         * and using the dimension tool from the edge (for FORWARD) or centerline (for RIGHT) of the reef wall to the centermark of the L4 branch.
+         */
+        public static final Distance TAG_TO_LEFT_TREE_FORWARD_OFFSET = Inches.of(-2.052);
+        public static final Distance TAG_TO_LEFT_TREE_RIGHT_OFFSET = Inches.of(-6.470);
+        public static final Distance TAG_TO_RIGHT_TREE_FORWARD_OFFSET = Inches.of(-2.007);
+        public static final Distance TAG_TO_RIGHT_TREE_RIGHT_OFFSET = Inches.of(6.468);
     }
 
     /**
