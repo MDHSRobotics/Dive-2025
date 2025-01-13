@@ -34,7 +34,7 @@ import edu.wpi.first.units.measure.*;
  * so we could use a {@link PhoenixPIDController PhoenixPIDController} instead of a normal PID controller.
  * @see <a href="https://www.chiefdelphi.com/t/implementing-feedforward-with-ctre-s-fieldcentricfacingangle-request/475822/14">Original source of this code</a>
  */
-public class ProfiledFieldCentricFacingPose implements SwerveRequest {
+public class ProfiledFieldCentricFacingPosition implements SwerveRequest {
     /**
      * The velocity in the X direction, in m/s.
      * X is defined as forward according to WPILib convention,
@@ -49,10 +49,10 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
     private double velocityY = 0;
     /**
      * The desired position to face.
-     * For example, a robot with the pose of (0,0) will rotate to a heading of 45 degrees counterclockwise to face a target pose of (1,1),
-     * and a robot with the pose of (1,1) will rotate to a heading of 90 degrees counterclockwise to face a target pose of (1,2).
+     * For example, a robot with the position of (0,0) will rotate to a heading of 45 degrees counterclockwise to face a target position of (1,1),
+     * and a robot with the position of (1,1) will rotate to a heading of 90 degrees counterclockwise to face a target position of (1,2).
      */
-    private Translation2d targetPose = new Translation2d();
+    private Translation2d targetPosition = new Translation2d();
 
     /**
      * The allowable deadband of the request, in m/s.
@@ -102,7 +102,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      *
      * @param constraints Constraints for the trapezoid profile
      */
-    public ProfiledFieldCentricFacingPose(TrapezoidProfile.Constraints constraints) {
+    public ProfiledFieldCentricFacingPosition(TrapezoidProfile.Constraints constraints) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         profile = new TrapezoidProfile(constraints);
     }
@@ -114,8 +114,8 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         // Find the angle of the vector that the goal would make if the robot was the origin
-        double xDistance = targetPose.getX() - parameters.currentPose.getX();
-        double yDistance = targetPose.getY() - parameters.currentPose.getY();
+        double xDistance = targetPosition.getX() - parameters.currentPose.getX();
+        double yDistance = targetPosition.getY() - parameters.currentPose.getY();
         double yawRadians = Math.atan2(yDistance, xDistance);
         Rotation2d targetDirection = Rotation2d.fromRadians(yawRadians);
 
@@ -180,7 +180,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newVelocityX Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withVelocityX(double newVelocityX) {
+    public ProfiledFieldCentricFacingPosition withVelocityX(double newVelocityX) {
         this.velocityX = newVelocityX;
         return this;
     }
@@ -194,7 +194,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newVelocityX Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withVelocityX(LinearVelocity newVelocityX) {
+    public ProfiledFieldCentricFacingPosition withVelocityX(LinearVelocity newVelocityX) {
         this.velocityX = newVelocityX.in(MetersPerSecond);
         return this;
     }
@@ -209,7 +209,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newVelocityY Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withVelocityY(double newVelocityY) {
+    public ProfiledFieldCentricFacingPosition withVelocityY(double newVelocityY) {
         this.velocityY = newVelocityY;
         return this;
     }
@@ -224,22 +224,22 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newVelocityY Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withVelocityY(LinearVelocity newVelocityY) {
+    public ProfiledFieldCentricFacingPosition withVelocityY(LinearVelocity newVelocityY) {
         this.velocityY = newVelocityY.in(MetersPerSecond);
         return this;
     }
 
     /**
-     * Modifies the TargetPose parameter and returns itself.
+     * Modifies the targetPosition parameter and returns itself.
      * <p>
-     * The desired pose to face.
-     * The origin for this swerve request is <a href="https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#always-blue-origin">the blue alliance.</a>
+     * The desired position to face.
+     * The origin for this position should be <a href="https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#always-blue-origin">the blue alliance.</a>
      *
-     * @param newTargetPose Parameter to modify
+     * @param newTargetPosition Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withTargetPose(Translation2d newTargetPose) {
-        this.targetPose = newTargetPose;
+    public ProfiledFieldCentricFacingPosition withTargetPosition(Translation2d newTargetPosition) {
+        this.targetPosition = newTargetPosition;
         return this;
     }
 
@@ -251,7 +251,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withDeadband(double newDeadband) {
+    public ProfiledFieldCentricFacingPosition withDeadband(double newDeadband) {
         this.deadband = newDeadband;
         return this;
     }
@@ -264,7 +264,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withDeadband(LinearVelocity newDeadband) {
+    public ProfiledFieldCentricFacingPosition withDeadband(LinearVelocity newDeadband) {
         this.deadband = newDeadband.in(MetersPerSecond);
         return this;
     }
@@ -277,7 +277,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newRotationalDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withRotationalDeadband(double newRotationalDeadband) {
+    public ProfiledFieldCentricFacingPosition withRotationalDeadband(double newRotationalDeadband) {
         this.rotationalDeadband = newRotationalDeadband;
         return this;
     }
@@ -290,7 +290,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newRotationalDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withRotationalDeadband(AngularVelocity newRotationalDeadband) {
+    public ProfiledFieldCentricFacingPosition withRotationalDeadband(AngularVelocity newRotationalDeadband) {
         this.rotationalDeadband = newRotationalDeadband.in(RadiansPerSecond);
         return this;
     }
@@ -304,7 +304,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newCenterOfRotation Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withCenterOfRotation(Translation2d newCenterOfRotation) {
+    public ProfiledFieldCentricFacingPosition withCenterOfRotation(Translation2d newCenterOfRotation) {
         this.centerOfRotation = newCenterOfRotation;
         return this;
     }
@@ -317,7 +317,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newDriveRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
+    public ProfiledFieldCentricFacingPosition withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
         this.driveRequestType = newDriveRequestType;
         return this;
     }
@@ -330,7 +330,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newSteerRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
+    public ProfiledFieldCentricFacingPosition withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
         this.steerRequestType = newSteerRequestType;
         return this;
     }
@@ -344,7 +344,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newDesaturateWheelSpeeds Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
+    public ProfiledFieldCentricFacingPosition withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
         this.desaturateWheelSpeeds = newDesaturateWheelSpeeds;
         return this;
     }
@@ -357,7 +357,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param newDrivingPerspective Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
+    public ProfiledFieldCentricFacingPosition withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
         this.drivingPerspective = newDrivingPerspective;
         return this;
     }
@@ -370,7 +370,7 @@ public class ProfiledFieldCentricFacingPose implements SwerveRequest {
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public ProfiledFieldCentricFacingPose withPIDGains(double kp, double ki, double kd) {
+    public ProfiledFieldCentricFacingPosition withPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
         return this;
     }

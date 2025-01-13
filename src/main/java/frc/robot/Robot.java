@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -67,6 +68,12 @@ public class Robot extends TimedRobot {
                 .getStructTopic("Test Rotation", Rotation2d.struct)
                 .publish();
         testRotPub.set(new Rotation2d());
+
+        StructPublisher<Pose3d> testPose3dPub = NetworkTableInstance.getDefault()
+                .getTable("Test Table")
+                .getStructTopic("Test Pose3d", Pose3d.struct)
+                .publish();
+        testPose3dPub.set(new Pose3d());
     }
 
     @Override
