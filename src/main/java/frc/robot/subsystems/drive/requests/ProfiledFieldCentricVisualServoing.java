@@ -154,7 +154,7 @@ public class ProfiledFieldCentricVisualServoing implements SwerveRequest {
 
         double toApplyOmega = setpoint.velocity + errorCorrectionOutput;
 
-        this.motionIsFinished = (headingController.atSetpoint() && goal.equals(setpoint)) || tx == 0;
+        this.motionIsFinished = (headingController.atSetpoint() && goal.equals(setpoint));
 
         return fieldCentric
                 .withVelocityX(velocityX)
