@@ -1,4 +1,4 @@
-package frc.robot.subsystems.drive;
+package frc.robot.subsystems.drive.requests;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -105,6 +105,9 @@ public class ProfiledFieldCentricFacingAngle implements SwerveRequest {
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
     private TrapezoidProfile.State goal = new TrapezoidProfile.State();
 
+    private boolean resetRequested = false;
+    private boolean motionIsFinished = false;
+
     /**
      * Creates a new profiled FieldCentricFacingAngle request with the given constraints.
      *
@@ -122,7 +125,14 @@ public class ProfiledFieldCentricFacingAngle implements SwerveRequest {
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         Rotation2d currentAngle = parameters.currentPose.getRotation();
+        double currentAngularVelocity = parameters.currentChassisSpeed.omegaRadiansPerSecond;
         Rotation2d fakeTargetDirection = targetDirection;
+
+        if (resetRequested) {
+            setpoint.position = currentAngle.getRadians();
+            setpoint.velocity = currentAngularVelocity;
+            this.resetRequested = false;
+        }
 
         /* If the user requested a target direction according to the operator perspective, rotate our target direction by the angle */
         if (aimingPerspective == ForwardPerspectiveValue.OperatorPerspective) {
@@ -154,6 +164,8 @@ public class ProfiledFieldCentricFacingAngle implements SwerveRequest {
 
         double toApplyOmega = setpoint.velocity + errorCorrectionOutput;
 
+        this.motionIsFinished = headingController.atSetpoint() && goal.equals(setpoint);
+
         return fieldCentric
                 .withVelocityX(velocityX)
                 .withVelocityY(velocityY)
@@ -169,14 +181,11 @@ public class ProfiledFieldCentricFacingAngle implements SwerveRequest {
     }
 
     /**
-     * Resets the profile used for the target direction.
-     *
-     * @param currentHeading The current heading of the robot
-     * @param currentAngularVelocity The current yaw rate of the robot
+     * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
-    public void resetProfile(Rotation2d currentHeading, AngularVelocity currentAngularVelocity) {
-        setpoint.position = currentHeading.getRadians();
-        setpoint.velocity = currentAngularVelocity.in(RadiansPerSecond);
+    public void resetProfile() {
+        this.resetRequested = true;
+        this.motionIsFinished = false;
     }
 
     /**
@@ -395,5 +404,24 @@ public class ProfiledFieldCentricFacingAngle implements SwerveRequest {
     public ProfiledFieldCentricFacingAngle withPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
         return this;
+    }
+
+    /**
+     * Modifies the setpoint tolerance for the heading controller and returns itself.
+     *
+     * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
+     * @return this object
+     */
+    public ProfiledFieldCentricFacingAngle withTolerance(Angle toleranceAmount) {
+        this.headingController.setTolerance(toleranceAmount.in(Radians));
+        return this;
+    }
+
+    /**
+     * @return Whether or not the robot has reached its target rotation,
+     * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle#withTolerance(Angle) withTolerance()}
+     */
+    public boolean motionIsFinished() {
+        return this.motionIsFinished;
     }
 }

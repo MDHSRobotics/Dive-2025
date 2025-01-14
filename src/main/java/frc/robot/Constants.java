@@ -4,7 +4,9 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
@@ -12,7 +14,7 @@ import static edu.wpi.first.units.Units.RotationsPerSecond;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Angle;
 import frc.robot.subsystems.drive.TunerConstants;
 import java.util.List;
 
@@ -50,8 +52,7 @@ public final class Constants {
                 RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
         /**
-         * Constraints for the motion profiles used in {@link frc.robot.subsystems.drive.ProfiledFieldCentricFacingAngle ProfiledFieldCentricFacingAngle}
-         * and {@link frc.robot.subsystems.drive.ProfiledFieldCentricFacingPosition ProfiledFieldCentricFacingPosition}.
+         * Constraints for the motion profiles used in custom swerve requests.
          * This still needs to be tuned.
          */
         public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS =
@@ -59,19 +60,24 @@ public final class Constants {
 
         /**
          * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-         * used in {@link frc.robot.subsystems.drive.ProfiledFieldCentricFacingAngle ProfiledFieldCentricFacingAngle}
-         * and {@link frc.robot.subsystems.drive.ProfiledFieldCentricFacingPosition ProfiledFieldCentricFacingPosition}.
+         * used in custom swerve requests.
          * This still needs to be tuned.
          */
         public static final double K_P = 0;
 
         /**
          * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-         * used in {@link frc.robot.subsystems.drive.ProfiledFieldCentricFacingAngle ProfiledFieldCentricFacingAngle}
-         * and {@link frc.robot.subsystems.drive.ProfiledFieldCentricFacingPosition ProfiledFieldCentricFacingPosition}.
+         * used in custom swerve requests.
          * This still needs to be tuned.
          */
         public static final double K_D = 0;
+
+        /**
+         * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
+         * used in custom swerve requests.
+         * This still needs to be tuned.
+         */
+        public static final Angle GOAL_TOLERANCE = Degrees.of(10);
     }
 
     public static class VisionConstants {
@@ -86,10 +92,14 @@ public final class Constants {
          * These measurements were found by importing the Field CAD to Onshape, generating a top-down drawing,
          * and using the dimension tool from the edge (for FORWARD) or centerline (for RIGHT) of the reef wall to the centermark of the L4 branch.
          */
-        public static final Distance TAG_TO_LEFT_TREE_FORWARD_OFFSET = Inches.of(-2.052);
-        public static final Distance TAG_TO_LEFT_TREE_RIGHT_OFFSET = Inches.of(-6.470);
-        public static final Distance TAG_TO_RIGHT_TREE_FORWARD_OFFSET = Inches.of(-2.007);
-        public static final Distance TAG_TO_RIGHT_TREE_RIGHT_OFFSET = Inches.of(6.468);
+        public static final double TAG_TO_LEFT_TREE_FORWARD_OFFSET =
+                Inches.of(-2.052).in(Meters);
+        public static final double TAG_TO_LEFT_TREE_RIGHT_OFFSET =
+                Inches.of(-6.470).in(Meters);
+        public static final double TAG_TO_RIGHT_TREE_FORWARD_OFFSET =
+                Inches.of(-2.007).in(Meters);
+        public static final double TAG_TO_RIGHT_TREE_RIGHT_OFFSET =
+                Inches.of(6.468).in(Meters);
     }
 
     /**
