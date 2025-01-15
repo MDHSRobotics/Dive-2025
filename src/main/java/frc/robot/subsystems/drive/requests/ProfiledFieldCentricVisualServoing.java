@@ -36,6 +36,7 @@ import frc.robot.Constants.VisionConstants;
  * <p>
  * We opted to take some code from {@link edu.wpi.first.math.controller.ProfiledPIDController ProfiledPIDController}
  * so we could use a {@link PhoenixPIDController PhoenixPIDController} instead of a normal PID controller.
+ * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/tutorials/tutorial-aiming-with-visual-servoing">Explanation of visual servoing</a>
  * @see <a href="https://www.chiefdelphi.com/t/implementing-feedforward-with-ctre-s-fieldcentricfacingangle-request/475822/14">Original source of this code</a>
  */
 public class ProfiledFieldCentricVisualServoing implements SwerveRequest {
