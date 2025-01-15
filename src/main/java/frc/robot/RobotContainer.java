@@ -78,7 +78,7 @@ public class RobotContainer {
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
     /* Robot States */
-    private boolean slowMode = false;
+    private volatile boolean slowMode = false;
 
     /* NetworkTables Logging */
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
@@ -173,8 +173,7 @@ public class RobotContainer {
                             return driveFacingPosition
                                     .withVelocityX(getVelocityX())
                                     .withVelocityY(getVelocityY())
-                                    .withDeadband(getDeadband())
-                                    .withRotationalDeadband(getRotationalDeadband());
+                                    .withDeadband(getDeadband());
                         }))
                         .until(driveFacingPosition::motionIsFinished)
                         .andThen(drivetrain.runOnce(driveFacingNearestPosition::resetProfile))
@@ -196,16 +195,14 @@ public class RobotContainer {
                             return driveFacingNearestPosition
                                     .withVelocityX(getVelocityX())
                                     .withVelocityY(getVelocityY())
-                                    .withDeadband(getDeadband())
-                                    .withRotationalDeadband(getRotationalDeadband());
+                                    .withDeadband(getDeadband());
                         }))
                         .until(() -> LimelightHelpers.getFiducialID(VisionConstants.LIMELIGHT_NAME) != 0)
                         .andThen(drivetrain.runOnce(driveFacingVisionTarget::resetProfile))
                         .andThen(drivetrain.applyRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
                                 .withVelocityY(getVelocityY())
-                                .withDeadband(getDeadband())
-                                .withRotationalDeadband(getRotationalDeadband()))));
+                                .withDeadband(getDeadband()))));
 
         // Point wheels with left joystick
         driverController
