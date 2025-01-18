@@ -162,7 +162,9 @@ public class RobotContainer {
         driverController
                 .circle()
                 .toggleOnTrue(drivetrain
+                        // Always reset the profile before using the swerve request.
                         .runOnce(driveFacingPosition::resetProfile)
+                        // Face either the blue or red reef
                         .andThen(drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
@@ -186,11 +188,12 @@ public class RobotContainer {
                                             .withDeadband(getDeadband());
                                 })
                                 .until(driveFacingPosition::motionIsFinished))
+                        // Always reset the profile before using the swerve request.
                         .andThen(driveFacingAngle::resetProfile)
                         // THIS COMMAND DOES NOT DRIVE. It just updates the target direction variable.
                         .andThen(drivetrain.runOnce(() -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
                                 drivetrain.getState().Pose.getRotation(), FieldConstants.REEF_WALL_ROTATIONS))))
-                        // This command drives.
+                        // Drive at a fixed rotation
                         .andThen(drivetrain
                                 .applyRequest(() -> driveFacingAngle
                                         .withVelocityX(getVelocityX())
@@ -200,6 +203,7 @@ public class RobotContainer {
                                     int id = (int) apriltagID.get();
                                     return (id >= 6 && id <= 11) || (id >= 17 && id <= 22);
                                 }))
+                        // Drive facing perpendicular to the apriltag
                         .andThen(drivetrain.applyRequest(() -> {
                             int id = (int) apriltagID.get();
                             if ((id >= 6 && id <= 11) || (id >= 17 && id <= 22)) {
@@ -227,7 +231,9 @@ public class RobotContainer {
         driverController
                 .cross()
                 .toggleOnTrue(drivetrain
+                        // Always reset the profile before using the swerve request.
                         .runOnce(driveFacingPosition::resetProfile)
+                        // Face either the blue or red reef
                         .andThen(drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
@@ -251,7 +257,9 @@ public class RobotContainer {
                                             .withDeadband(getDeadband());
                                 })
                                 .until(driveFacingPosition::motionIsFinished))
+                        // Always reset the profile before using the swerve request.
                         .andThen(drivetrain.runOnce(driveFacingNearestPosition::resetProfile))
+                        // Drive facing either the nearest blue tree or nearest red tree
                         .andThen(drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
@@ -280,7 +288,9 @@ public class RobotContainer {
                                     int id = (int) apriltagID.get();
                                     return (id >= 6 && id <= 11) || (id >= 17 && id <= 22);
                                 }))
+                        // Always reset the profile before using the swerve request.
                         .andThen(drivetrain.runOnce(driveFacingVisionTarget::resetProfile))
+                        // Face the middle of the tag
                         .andThen(drivetrain.applyRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
                                 .withVelocityY(getVelocityY())
