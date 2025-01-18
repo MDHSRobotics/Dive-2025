@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -36,6 +37,9 @@ public class Robot extends TimedRobot {
 
         // Create the webserver for accessing Elastic's saved layout across computers
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+        // Set USB drive path for logging
+        SignalLogger.setPath("/logs");
     }
 
     /**

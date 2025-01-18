@@ -57,7 +57,7 @@ public final class Constants {
                 RotationsPerSecond.of(0.75).in(RadiansPerSecond);
 
         /**
-         * Constraints for the motion profiles used in custom swerve requests.
+         * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
          * This still needs to be tuned.
          */
         public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS =
