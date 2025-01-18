@@ -56,10 +56,6 @@ public class ProfiledFieldCentricFacingPosition implements SwerveRequest {
      */
     private double deadband = 0;
     /**
-     * The rotational deadband of the request, in radians per second.
-     */
-    private double rotationalDeadband = 0;
-    /**
      * The center of rotation the robot should rotate around.
      * This is (0,0) by default, which will rotate around the center of the robot.
      */
@@ -161,7 +157,7 @@ public class ProfiledFieldCentricFacingPosition implements SwerveRequest {
                 .withVelocityY(velocityY)
                 .withRotationalRate(toApplyOmega)
                 .withDeadband(deadband)
-                .withRotationalDeadband(rotationalDeadband)
+                .withRotationalDeadband(0)
                 .withCenterOfRotation(centerOfRotation)
                 .withDriveRequestType(driveRequestType)
                 .withSteerRequestType(steerRequestType)
@@ -273,32 +269,6 @@ public class ProfiledFieldCentricFacingPosition implements SwerveRequest {
      */
     public ProfiledFieldCentricFacingPosition withDeadband(LinearVelocity newDeadband) {
         this.deadband = newDeadband.in(MetersPerSecond);
-        return this;
-    }
-
-    /**
-     * Modifies the RotationalDeadband parameter and returns itself.
-     * <p>
-     * The rotational deadband of the request, in radians per second.
-     *
-     * @param newRotationalDeadband Parameter to modify
-     * @return this object
-     */
-    public ProfiledFieldCentricFacingPosition withRotationalDeadband(double newRotationalDeadband) {
-        this.rotationalDeadband = newRotationalDeadband;
-        return this;
-    }
-
-    /**
-     * Modifies the RotationalDeadband parameter and returns itself.
-     * <p>
-     * The rotational deadband of the request, in radians per second.
-     *
-     * @param newRotationalDeadband Parameter to modify
-     * @return this object
-     */
-    public ProfiledFieldCentricFacingPosition withRotationalDeadband(AngularVelocity newRotationalDeadband) {
-        this.rotationalDeadband = newRotationalDeadband.in(RadiansPerSecond);
         return this;
     }
 

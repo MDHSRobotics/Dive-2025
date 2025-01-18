@@ -7,6 +7,7 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
@@ -30,6 +31,7 @@ import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
 import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingNearestPosition;
 import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingPosition;
 import frc.robot.subsystems.drive.requests.ProfiledFieldCentricVisualServoing;
+import frc.robot.util.Aiming;
 import frc.robot.util.LimelightHelpers;
 
 /**
@@ -81,9 +83,16 @@ public class RobotContainer {
     private volatile boolean slowMode = false;
 
     /* NetworkTables Logging */
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
-    private final NetworkTable driverInfoTable =
-            NetworkTableInstance.getDefault().getTable("Driver Info");
+    private final NetworkTable driverInfoTable = inst.getTable("Driver Info");
+    /**
+     * Gets the ID of the primary in-view apriltag.
+     * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">limelight NetworkTables API</a>
+     * @see {@link frc.robot.util.LimelightHelpers#getFiducialID(String) LimelightHelpers equivalent}
+     */
+    private final IntegerSubscriber apriltagID =
+            inst.getTable(VisionConstants.LIMELIGHT_NAME).getIntegerTopic("tid").subscribe(0);
 
     private final StringPublisher selectedDirectionIndicator =
             driverInfoTable.getStringTopic("Selected Tree Direction").publish();
@@ -125,7 +134,7 @@ public class RobotContainer {
 
     /**
      * Use this method to define controller input->command mappings.
-     * please use <a href="https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+on+to+tree&xButton=&yButton=&leftBumper=Select+Left+Tree&backButton=Reset+robot+orientation&rightBumper=Select+Right+Tree&bButton=Point+wheels+with+left+joystick&leftTrigger=Slow+Mode&rightTrigger=Fast+Mode">this controller map</a>
+     * please use <a href="https://www.padcrafter.com/?templates=Driver%20Controller&plat=1&leftStick=Drive&aButton=Lock%20on%20to%20tree&xButton&yButton&leftBumper=Select%20Left%20Tree&backButton=Reset%20robot%20orientation&rightBumper=Select%20Right%20Tree&bButton=Lock%20on%20to%20reef&leftTrigger=Slow%20Mode&rightTrigger=Fast%20Mode&dpadLeft=Point%20wheels%20with%20right%20joystick&rightStick">this controller map</a>
      * to update and view the current controls.
      */
     private void configureDriverControls() {
@@ -139,15 +148,79 @@ public class RobotContainer {
         driverController.R1().onTrue(Commands.runOnce(this::selectRightTree));
 
         /*
-         * This very lengthy sequence is for locking on to a tree. Here is the explanation:
+         * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
          * Once the driver presses this button, the robot will rotate to face the center of the reef.
          * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-         * Once this movement is finished, it will attempt to lock onto the nearest tree.
-         * If a tag is in view or enters view, the robot will instead start aiming at an offset from the tag using tx.
+         * Once this movement is finished, the robot will snap to the closest angle that aligns itself with a reef wall.
+         * If a reef tag is in view or enters view, the robot will instead angle itself perpendicular to the tag.
+         * It does this by looking for the closest tag (based on tag size in the camera view),
+         * and snapping to an angle that faces the wall (based on the tag's id).
+         * The point of this is to allow the robot to snap to each wall as it rotates around the reef.
+         * If the robot loses sight of all reef tags, it will finish rotating based on the last known angle,
+         * and then stop rotating unless a tag returns in view.
+         */
+        driverController
+                .circle()
+                .toggleOnTrue(drivetrain
+                        .runOnce(driveFacingPosition::resetProfile)
+                        .andThen(drivetrain
+                                .applyRequest(() -> {
+                                    Alliance alliance =
+                                            DriverStation.getAlliance().orElse(null);
+                                    if (alliance == Alliance.Blue) {
+                                        driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
+                                    } else if (alliance == Alliance.Red) {
+                                        driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                                    } else {
+                                        DriverStation.reportWarning(
+                                                "Driver Station not connected, robot will drive normally!", false);
+                                        return drive.withVelocityX(getVelocityX())
+                                                .withVelocityY(getVelocityY())
+                                                .withRotationalRate(getRotationalRate())
+                                                .withDeadband(getDeadband())
+                                                .withRotationalDeadband(getRotationalDeadband());
+                                    }
+                                    return driveFacingPosition
+                                            .withVelocityX(getVelocityX())
+                                            .withVelocityY(getVelocityY())
+                                            .withDeadband(getDeadband());
+                                })
+                                .until(driveFacingPosition::motionIsFinished))
+                        .andThen(driveFacingAngle::resetProfile)
+                        // THIS COMMAND DOES NOT DRIVE. It just updates the target direction variable.
+                        .andThen(drivetrain.runOnce(() -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
+                                drivetrain.getState().Pose.getRotation(), FieldConstants.REEF_WALL_ROTATIONS))))
+                        // This command drives.
+                        .andThen(drivetrain
+                                .applyRequest(() -> driveFacingAngle
+                                        .withVelocityX(getVelocityX())
+                                        .withVelocityY(getVelocityY())
+                                        .withDeadband(getDeadband()))
+                                .until(() -> {
+                                    int id = (int) apriltagID.get();
+                                    return (id >= 6 && id <= 11) || (id >= 17 && id <= 22);
+                                }))
+                        .andThen(drivetrain.applyRequest(() -> {
+                            int id = (int) apriltagID.get();
+                            if ((id >= 6 && id <= 11) || (id >= 17 && id <= 22)) {
+                                driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
+                            }
+                            return driveFacingAngle
+                                    .withVelocityX(getVelocityX())
+                                    .withVelocityY(getVelocityY())
+                                    .withDeadband(getDeadband());
+                        })));
+
+        /*
+         * This lengthy sequence is for locking on to a tree. Here is the explanation:
+         * Once the driver presses this button, the robot will rotate to face the center of the reef.
+         * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
+         * Once this movement is finished, it will attempt to lock onto the nearest tree using its position.
+         * If a reef tag is in view or enters view, the robot will instead start aiming at an offset from the tag using tx.
          * The offset is to the left if the operator has selected the left tree,
          * or to the right if the operator has selected the right tree.
          * (They can change their selection any time.)
-         * If a tag is no longer in view, the robot will finish rotating based on the last known tx value,
+         * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
          * and then stop rotating unless a tag returns in view.
          * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
          */
@@ -155,60 +228,69 @@ public class RobotContainer {
                 .cross()
                 .toggleOnTrue(drivetrain
                         .runOnce(driveFacingPosition::resetProfile)
-                        .andThen(drivetrain.applyRequest(() -> {
-                            Alliance alliance = DriverStation.getAlliance().orElse(null);
-                            if (alliance == Alliance.Blue) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
-                            } else if (alliance == Alliance.Red) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Driver Station not connected, robot will drive normally!", false);
-                                return drive.withVelocityX(getVelocityX())
-                                        .withVelocityY(getVelocityY())
-                                        .withRotationalRate(getRotationalRate())
-                                        .withDeadband(getDeadband())
-                                        .withRotationalDeadband(getRotationalDeadband());
-                            }
-                            return driveFacingPosition
-                                    .withVelocityX(getVelocityX())
-                                    .withVelocityY(getVelocityY())
-                                    .withDeadband(getDeadband());
-                        }))
-                        .until(driveFacingPosition::motionIsFinished)
+                        .andThen(drivetrain
+                                .applyRequest(() -> {
+                                    Alliance alliance =
+                                            DriverStation.getAlliance().orElse(null);
+                                    if (alliance == Alliance.Blue) {
+                                        driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
+                                    } else if (alliance == Alliance.Red) {
+                                        driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                                    } else {
+                                        DriverStation.reportWarning(
+                                                "Driver Station not connected, robot will drive normally!", false);
+                                        return drive.withVelocityX(getVelocityX())
+                                                .withVelocityY(getVelocityY())
+                                                .withRotationalRate(getRotationalRate())
+                                                .withDeadband(getDeadband())
+                                                .withRotationalDeadband(getRotationalDeadband());
+                                    }
+                                    return driveFacingPosition
+                                            .withVelocityX(getVelocityX())
+                                            .withVelocityY(getVelocityY())
+                                            .withDeadband(getDeadband());
+                                })
+                                .until(driveFacingPosition::motionIsFinished))
                         .andThen(drivetrain.runOnce(driveFacingNearestPosition::resetProfile))
-                        .andThen(drivetrain.applyRequest(() -> {
-                            Alliance alliance = DriverStation.getAlliance().orElse(null);
-                            if (alliance == Alliance.Blue) {
-                                driveFacingNearestPosition.withTargetPositions(FieldConstants.BLUE_REEF_TREE_POSITIONS);
-                            } else if (alliance == Alliance.Red) {
-                                driveFacingNearestPosition.withTargetPositions(FieldConstants.RED_REEF_TREE_POSITIONS);
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Driver Station not connected, robot will drive normally!", false);
-                                return drive.withVelocityX(getVelocityX())
-                                        .withVelocityY(getVelocityY())
-                                        .withRotationalRate(getRotationalRate())
-                                        .withDeadband(getDeadband())
-                                        .withRotationalDeadband(getRotationalDeadband());
-                            }
-                            return driveFacingNearestPosition
-                                    .withVelocityX(getVelocityX())
-                                    .withVelocityY(getVelocityY())
-                                    .withDeadband(getDeadband());
-                        }))
-                        .until(() -> LimelightHelpers.getFiducialID(VisionConstants.LIMELIGHT_NAME) != 0)
+                        .andThen(drivetrain
+                                .applyRequest(() -> {
+                                    Alliance alliance =
+                                            DriverStation.getAlliance().orElse(null);
+                                    if (alliance == Alliance.Blue) {
+                                        driveFacingNearestPosition.withTargetPositions(
+                                                FieldConstants.BLUE_REEF_TREE_POSITIONS);
+                                    } else if (alliance == Alliance.Red) {
+                                        driveFacingNearestPosition.withTargetPositions(
+                                                FieldConstants.RED_REEF_TREE_POSITIONS);
+                                    } else {
+                                        DriverStation.reportWarning(
+                                                "Driver Station not connected, robot will drive normally!", false);
+                                        return drive.withVelocityX(getVelocityX())
+                                                .withVelocityY(getVelocityY())
+                                                .withRotationalRate(getRotationalRate())
+                                                .withDeadband(getDeadband())
+                                                .withRotationalDeadband(getRotationalDeadband());
+                                    }
+                                    return driveFacingNearestPosition
+                                            .withVelocityX(getVelocityX())
+                                            .withVelocityY(getVelocityY())
+                                            .withDeadband(getDeadband());
+                                })
+                                .until(() -> {
+                                    int id = (int) apriltagID.get();
+                                    return (id >= 6 && id <= 11) || (id >= 17 && id <= 22);
+                                }))
                         .andThen(drivetrain.runOnce(driveFacingVisionTarget::resetProfile))
                         .andThen(drivetrain.applyRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
                                 .withVelocityY(getVelocityY())
                                 .withDeadband(getDeadband()))));
 
-        // Point wheels with left joystick
+        // Point wheels with right joystick
         driverController
-                .circle()
+                .povLeft()
                 .whileTrue(drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
-                        new Rotation2d(-driverController.getLeftY(), -driverController.getLeftX()))));
+                        new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
 
         // Reset robot orientation
         driverController.touchpad().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));

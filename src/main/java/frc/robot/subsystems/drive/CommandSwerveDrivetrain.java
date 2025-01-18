@@ -350,7 +350,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
             /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(botPoseEstimate, adjustedTimestamp);
+            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
 
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];

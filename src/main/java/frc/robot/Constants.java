@@ -11,6 +11,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -178,9 +179,12 @@ public final class Constants {
                 // L
                 new Translation2d(Inches.of(534.539), Inches.of(135.113)));
 
-        // Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
-        // IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22. Basically, index into the
-        // array by subtracting one from the id.
+        /**
+         * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
+         * <p>
+         * IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22.
+         * Basically, index into the array by subtracting one from the id.
+         */
         public static final Translation3d[] APRILTAG_POSES = {
             new Translation3d(Inches.of(657.37), Inches.of(25.80), Inches.of(58.50)),
             new Translation3d(Inches.of(657.37), Inches.of(291.20), Inches.of(58.50)),
@@ -204,6 +208,52 @@ public final class Constants {
             new Translation3d(Inches.of(193.10), Inches.of(186.83), Inches.of(12.13)),
             new Translation3d(Inches.of(209.49), Inches.of(158.50), Inches.of(12.13)),
             new Translation3d(Inches.of(193.10), Inches.of(130.17), Inches.of(12.13))
+        };
+
+        /**
+         * Rotations of the reef walls for for aligning perpendicular to them. The rotations are in no particular order.
+         * <p>
+         * These rotations correspond to the Z-Rotation of the reef wall tags on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a> plus 180 degrees.
+         */
+        public static final List<Rotation2d> REEF_WALL_ROTATIONS = List.of(
+                new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
+                new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
+                new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
+                new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
+                new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
+                new Rotation2d(Degrees.of(120).plus(Degrees.of(180))));
+
+        /**
+         * Rotations of the Apriltags for aligning perpendicular to them.
+         * <p>
+         * These rotations correspond to the Z-Rotation on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a> plus 180 degrees.
+         * <p>
+         * IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22.
+         * Basically, index into the array by subtracting one from the id.
+         */
+        public static final Rotation2d[] APRILTAG_ROTATIONS = {
+            new Rotation2d(Degrees.of(126).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(234).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(270).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(120).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(54).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(306).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(90).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(120).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
+            new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
         };
     }
 }
