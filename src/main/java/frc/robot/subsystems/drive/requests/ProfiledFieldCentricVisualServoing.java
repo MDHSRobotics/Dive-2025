@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
-import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -39,7 +38,7 @@ import frc.robot.Constants.VisionConstants;
  * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/tutorials/tutorial-aiming-with-visual-servoing">Explanation of visual servoing</a>
  * @see <a href="https://www.chiefdelphi.com/t/implementing-feedforward-with-ctre-s-fieldcentricfacingangle-request/475822/14">Original source of this code</a>
  */
-public class ProfiledFieldCentricVisualServoing implements SwerveRequest {
+public class ProfiledFieldCentricVisualServoing implements ProfiledSwerveRequest {
     /**
      * The velocity in the X direction, in m/s.
      * X is defined as forward according to WPILib convention,

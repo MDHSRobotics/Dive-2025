@@ -34,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.TunerConstants.TunerSwerveDrivetrain;
+import frc.robot.subsystems.drive.requests.ProfiledSwerveRequest;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 
@@ -256,12 +257,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
+     * <p>
+     * If the request is a motion profiled request, the command resets the motion profile before applying the request.
      *
      * @param request Function returning the request to apply
      * @return Command to run
      */
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        return run(() -> this.setControl(requestSupplier.get()));
+        SwerveRequest request = requestSupplier.get();
+        Command requestedCommand;
+        if (request instanceof ProfiledSwerveRequest profiledRequest) {
+            requestedCommand = this.runOnce(profiledRequest::resetProfile);
+            requestedCommand.andThen(this.run(() -> this.setControl(requestSupplier.get())));
+        } else {
+            requestedCommand = this.run(() -> this.setControl(requestSupplier.get()));
+        }
+        return requestedCommand;
     }
 
     /**
