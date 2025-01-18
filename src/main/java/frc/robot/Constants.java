@@ -43,6 +43,10 @@ public final class Constants {
      */
     public static class DriveConstants {
         private DriveConstants() {}
+        /*
+         * Front Right to Front Left: 1ft 9in
+         * Front Left to Back Left: 2ft
+         */
 
         /** Max linear speed of the robot in meters per second. This still needs to be tuned. */
         public static final double MAX_LINEAR_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
