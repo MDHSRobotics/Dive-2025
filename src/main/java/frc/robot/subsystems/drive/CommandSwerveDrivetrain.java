@@ -64,8 +64,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
             new SwerveRequest.SysIdSwerveRotation();
+    private final SwerveRequest.SysIdSwerveTranslation m_slipCurrentCharacterization =
+            new SwerveRequest.SysIdSwerveTranslation();
 
-    /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
+    /** SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
             new SysIdRoutine.Config(
                     null, // Use default ramp rate (1 V/s)
@@ -76,7 +78,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new SysIdRoutine.Mechanism(
                     output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
 
-    /* SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
+    /** SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
     private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
             new SysIdRoutine.Config(
                     null, // Use default ramp rate (1 V/s)
@@ -86,7 +88,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
             new SysIdRoutine.Mechanism(volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
 
-    /*
+    /**
      * SysId routine for characterizing rotation.
      * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
      * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
@@ -109,6 +111,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     },
                     null,
                     this));
+
+    /** SysId routine for characterizing slip current.
+     * You must log the data yourself while the test is running.
+     * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html#preventing-wheel-slip">explanation on what to log</a>
+     */
+    private final SysIdRoutine m_sysIdRoutineSlipCurrent = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                    Volts.of(0.1).per(Second),
+                    Volts.of(0), // Dynamic should not be used for this routine
+                    null, // Use default timeout (10 s)
+                    state -> {}), // You must log the data yourself.
+            new SysIdRoutine.Mechanism(
+                    output -> setControl(m_slipCurrentCharacterization.withVolts(output)), null, this));
 
     /* The SysId routine to test */
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;

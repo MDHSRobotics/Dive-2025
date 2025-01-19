@@ -4,15 +4,9 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Meters;
-
 import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -63,23 +57,8 @@ public class Robot extends TimedRobot {
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
     public void disabledInit() {
-        StructPublisher<Pose2d> testPosePub = NetworkTableInstance.getDefault()
-                .getTable("Test Table")
-                .getStructTopic("Test Pose", Pose2d.struct)
-                .publish();
-        testPosePub.set(new Pose2d());
-
-        StructPublisher<Rotation2d> testRotPub = NetworkTableInstance.getDefault()
-                .getTable("Test Table")
-                .getStructTopic("Test Rotation", Rotation2d.struct)
-                .publish();
-        testRotPub.set(new Rotation2d());
-
-        StructPublisher<Pose3d> testPose3dPub = NetworkTableInstance.getDefault()
-                .getTable("Test Table")
-                .getStructTopic("Test Pose3d", Pose3d.struct)
-                .publish();
-        testPose3dPub.set(new Pose3d());
+        DataLogManager.stop();
+        SignalLogger.stop();
     }
 
     @Override
@@ -120,7 +99,10 @@ public class Robot extends TimedRobot {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
 
-        robotContainer.resetFieldPosition(new Pose2d(Meters.of(17), Meters.of(0.5), Rotation2d.fromDegrees(180)));
+        DataLogManager.start();
+        SignalLogger.start();
+
+        // robotContainer.resetFieldPosition(new Pose2d(Meters.of(17), Meters.of(0.5), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during test mode. */

@@ -28,6 +28,9 @@ public class DriveTelemetry {
 
     private double[] megatag2Orientation = new double[6];
 
+    /** Used to derive angular accel */
+    private double previousYawRate = 0;
+
     /* Robot swerve drive state */
     private final NetworkTable driveStateTable = inst.getTable("DriveState");
     private final StructPublisher<Pose2d> drivePose =
@@ -49,6 +52,8 @@ public class DriveTelemetry {
             driveStateTable.getDoubleTopic("OdometryFrequency").publish();
     private final DoublePublisher driveOdometryPeriod =
             driveStateTable.getDoubleTopic("OdometryPeriod").publish();
+    private final DoublePublisher angularAccel =
+            driveStateTable.getDoubleTopic("Angular Accel").publish();
 
     private final double[] poseArray = new double[3];
     private final double[] moduleStatesArray = new double[8];
@@ -73,6 +78,10 @@ public class DriveTelemetry {
         driveTimestamp.set(state.Timestamp);
         driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
         driveOdometryPeriod.set(state.OdometryPeriod);
+        angularAccel.set((state.Speeds.omegaRadiansPerSecond - previousYawRate) / state.OdometryPeriod);
+
+        // Update previous angular velocity
+        previousYawRate = state.Speeds.omegaRadiansPerSecond;
 
         /* Also write to log file */
         poseArray[0] = state.Pose.getX();

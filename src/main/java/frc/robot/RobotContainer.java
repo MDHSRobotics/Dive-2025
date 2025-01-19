@@ -72,6 +72,9 @@ public class RobotContainer {
 
     private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt();
 
+    private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
+            new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
+
     /* Controllers */
     private final CommandPS4Controller driverController =
             new CommandPS4Controller(ControllerConstants.DRIVER_CONTROLLER_PORT);
@@ -138,11 +141,13 @@ public class RobotContainer {
      */
     private void configureDriverControls() {
         driverController.povUp().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(
-                        DriveConstants.MAX_LINEAR_SPEED * 0.2)
+                        DriveConstants.MAX_LINEAR_SPEED)
                 .withVelocityY(0)
                 .withRotationalRate(0)
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
+
+        driverController.povRight().whileTrue(drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
         // Slow Mode
         driverController.L2().onTrue(Commands.runOnce(() -> this.slowMode = true));
@@ -331,10 +336,6 @@ public class RobotContainer {
                 .options()
                 .and(driverController.square())
                 .whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-
-        // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-        // cancelling on release.
-        operatorController.b().whileTrue(exampleSubsystem.exampleMethodCommand());
     }
 
     /**
@@ -342,7 +343,11 @@ public class RobotContainer {
      * please use <a href="https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF">this controller map</a>
      * to update and view the current controls.
      */
-    private void configureOperatorControls() {}
+    private void configureOperatorControls() {
+        // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
+        // cancelling on release.
+        operatorController.b().whileTrue(exampleSubsystem.exampleMethodCommand());
+    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

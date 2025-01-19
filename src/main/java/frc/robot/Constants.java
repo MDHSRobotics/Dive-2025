@@ -9,13 +9,13 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.drive.TunerConstants;
 import java.util.List;
 
@@ -44,17 +44,30 @@ public final class Constants {
      */
     public static class DriveConstants {
         private DriveConstants() {}
-        /*
-         * Front Right to Front Left: 1ft 9in
-         * Front Left to Back Left: 2ft
+
+        /**
+         * Distance between front left module (cancoder) and front right module (cancoder)
          */
+        private static final Distance TRACKWIDTH = Inches.of(20.25);
+        /**
+         * Distance between front left module (cancoder) and back left module (cancoder)
+         */
+        private static final Distance WHEELBASE = Inches.of(25.25);
+        /**
+         * Distance from center of robot to a module (cancoder)
+         */
+        private static final Distance DRIVEBASE_RADIUS =
+                Inches.of(Math.hypot(TRACKWIDTH.in(Inches) / 2.0, WHEELBASE.in(Inches) / 2.0));
 
         /** Max linear speed of the robot in meters per second. This still needs to be tuned. */
         public static final double MAX_LINEAR_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
-        /** Max angular rate of the robot in radians per second. This still needs to be tuned. */
-        public static final double MAX_ANGULAR_RATE =
-                RotationsPerSecond.of(0.75).in(RadiansPerSecond);
+        /** Max angular rate of the robot in radians per second.
+         * @see <a href="https://math.libretexts.org/Bookshelves/Precalculus/Elementary_Trigonometry_(Corral)/04%3A_Radian_Measure/4.04%3A_Circular_Motion-_Linear_and_Angular_Speed">explanation on how to convert from linear velocity to angular velocity</a>
+         */
+        public static final double MAX_ANGULAR_RATE = RadiansPerSecond.of(
+                        MAX_LINEAR_SPEED / DRIVEBASE_RADIUS.in(Meters))
+                .in(RadiansPerSecond);
 
         /**
          * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
