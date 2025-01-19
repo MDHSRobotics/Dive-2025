@@ -6,7 +6,6 @@ package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.IntegerSubscriber;
@@ -48,8 +47,6 @@ public class RobotContainer {
     private final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
-     * Hint: Deadbands are a percentage of the joystick input.
-     * 0.1 means you don't want to move until the joystick is pushed at least 10% in any direction (to prevent drift)
      */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric();
 
@@ -156,6 +153,18 @@ public class RobotContainer {
         // Select right tree
         driverController.R1().onTrue(Commands.runOnce(this::selectRightTree));
 
+        // Point wheels with right joystick
+        driverController
+                .povLeft()
+                .whileTrue(drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
+                        new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
+
+        // Reset robot orientation
+        driverController
+                .touchpad()
+                .onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
+                        drivetrain.getState().Pose.getRotation())));
+
         /*
          * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
          * Once the driver presses this button, the robot will orient to face the center of the reef.
@@ -171,6 +180,8 @@ public class RobotContainer {
         driverController
                 .circle()
                 .toggleOnTrue(drivetrain
+                        // We have to reset the profile manually because the following request may or may not be a
+                        // profiled request
                         .runOnce(driveFacingPosition::resetProfile)
                         .andThen(
                                 // Face either the blue or red reef
@@ -197,19 +208,20 @@ public class RobotContainer {
                                                     .withVelocityY(getVelocityY())
                                                     .withDeadband(getDeadband());
                                         })
+                                        // This will return false if drive is applied instead of driveFacingPosition.
                                         .until(driveFacingPosition::motionIsFinished))
                         // THIS COMMAND DOES NOT DRIVE. It just updates the target direction variable.
                         .andThen(drivetrain.runOnce(() -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
                                 drivetrain.getState().Pose.getRotation(), FieldConstants.REEF_WALL_ROTATIONS))))
                         // Drive at a fixed rotation
                         .andThen(drivetrain
-                                .applyRequest(() -> driveFacingAngle
+                                .applyProfiledRequest(() -> driveFacingAngle
                                         .withVelocityX(getVelocityX())
                                         .withVelocityY(getVelocityY())
                                         .withDeadband(getDeadband()))
                                 .until(() -> Aiming.isReefTag((int) apriltagID.get())))
                         // Drive facing perpendicular to the apriltag
-                        .andThen(drivetrain.applyRequest(() -> {
+                        .andThen(drivetrain.applyProfiledRequest(() -> {
                             int id = (int) apriltagID.get();
                             if (Aiming.isReefTag(id)) {
                                 driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
@@ -236,6 +248,8 @@ public class RobotContainer {
         driverController
                 .cross()
                 .toggleOnTrue(drivetrain
+                        // We have to reset the profile manually because the following request may or may not be a
+                        // profiled request
                         .runOnce(driveFacingPosition::resetProfile)
                         .andThen(drivetrain
                                 .applyRequest(() -> {
@@ -259,7 +273,11 @@ public class RobotContainer {
                                             .withVelocityY(getVelocityY())
                                             .withDeadband(getDeadband());
                                 })
+                                // This will return false if drive is applied instead of driveFacingPosition.
                                 .until(driveFacingPosition::motionIsFinished))
+                        // We have to reset the profile manually because the following request may or may not be a
+                        // profiled request
+                        .andThen(driveFacingNearestPosition::resetProfile)
                         // Drive facing either the nearest blue tree or nearest red tree
                         .andThen(drivetrain
                                 .applyRequest(() -> {
@@ -287,19 +305,10 @@ public class RobotContainer {
                                 })
                                 .until(() -> Aiming.isReefTag((int) apriltagID.get())))
                         // Face the middle of the tag
-                        .andThen(drivetrain.applyRequest(() -> driveFacingVisionTarget
+                        .andThen(drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
                                 .withVelocityY(getVelocityY())
                                 .withDeadband(getDeadband()))));
-
-        // Point wheels with right joystick
-        driverController
-                .povLeft()
-                .whileTrue(drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
-                        new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
-
-        // Reset robot orientation
-        driverController.touchpad().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -380,6 +389,8 @@ public class RobotContainer {
     }
 
     /**
+     * Deadbands are a percentage of the joystick input.
+     * 0.1 means you don't want to move until the joystick is pushed at least 10% in any direction (to prevent drift)
      * @return The linear deadband in meters per second.
      */
     public double getDeadband() {
@@ -391,6 +402,8 @@ public class RobotContainer {
     }
 
     /**
+     * Deadbands are a percentage of the joystick input.
+     * 0.1 means you don't want to move until the joystick is pushed at least 10% in any direction (to prevent drift)
      * @return The rotational deadband in radians per second.
      */
     public double getRotationalDeadband() {

@@ -259,22 +259,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /**
      * Returns a command that applies the specified control request to this swerve drivetrain.
-     * <p>
-     * If the request is a motion profiled request, the command resets the motion profile before applying the request.
      *
      * @param request Function returning the request to apply
      * @return Command to run
      */
     public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-        SwerveRequest request = requestSupplier.get();
-        Command requestedCommand;
-        if (request instanceof ProfiledSwerveRequest profiledRequest) {
-            requestedCommand =
-                    this.startRun(profiledRequest::resetProfile, () -> this.setControl(requestSupplier.get()));
-        } else {
-            requestedCommand = this.run(() -> this.setControl(requestSupplier.get()));
-        }
-        return requestedCommand;
+        return this.run(() -> this.setControl(requestSupplier.get()));
+    }
+
+    /**
+     * Returns a command that resets the swerve request's motion profile,
+     * and applies the specified control request to this swerve drivetrain.
+     *
+     * @param request Function returning the request to apply
+     * @return Command to run
+     */
+    public Command applyProfiledRequest(Supplier<ProfiledSwerveRequest> requestSupplier) {
+        return this.startRun(() -> requestSupplier.get().resetProfile(), () -> this.setControl(requestSupplier.get()));
     }
 
     /**
