@@ -255,5 +255,10 @@ public final class Constants {
             new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
             new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
         };
+
+        public static final int MINIMUM_RED_REEF_TAG_ID = 6;
+        public static final int MAXIMUM_RED_REEF_TAG_ID = 11;
+        public static final int MINIMUM_BLUE_REEF_TAG_ID = 17;
+        public static final int MAXIMUM_BLUE_REEF_TAG_ID = 22;
     }
 }

@@ -6,6 +6,8 @@ package frc.robot;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
@@ -138,6 +140,13 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureDriverControls() {
+        driverController.povUp().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(
+                        DriveConstants.MAX_LINEAR_SPEED * 0.2)
+                .withVelocityY(0)
+                .withRotationalRate(0)
+                .withDeadband(getDeadband())
+                .withRotationalDeadband(getRotationalDeadband())));
+
         // Slow Mode
         driverController.L2().onTrue(Commands.runOnce(() -> this.slowMode = true));
         // Fast Mode
@@ -149,10 +158,10 @@ public class RobotContainer {
 
         /*
          * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
-         * Once the driver presses this button, the robot will rotate to face the center of the reef.
+         * Once the driver presses this button, the robot will orient to face the center of the reef.
          * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-         * Once this movement is finished, the robot will snap to the closest angle that aligns itself with a reef wall.
-         * If a reef tag is in view or enters view, the robot will instead angle itself perpendicular to the tag.
+         * Once this movement is finished, the robot will snap to the closest angle that orients itself with a reef wall.
+         * If a reef tag is in view or enters view, the robot will instead orient itself perpendicular to the tag.
          * It does this by looking for the closest tag (based on tag size in the camera view),
          * and snapping to an angle that faces the wall (based on the tag's id).
          * The point of this is to allow the robot to snap to each wall as it rotates around the reef.
@@ -161,9 +170,74 @@ public class RobotContainer {
          */
         driverController
                 .circle()
-                .toggleOnTrue(
-                        // Face either the blue or red reef
-                        drivetrain
+                .toggleOnTrue(drivetrain
+                        .runOnce(driveFacingPosition::resetProfile)
+                        .andThen(
+                                // Face either the blue or red reef
+                                drivetrain
+                                        .applyRequest(() -> {
+                                            Alliance alliance =
+                                                    DriverStation.getAlliance().orElse(null);
+                                            if (alliance == Alliance.Blue) {
+                                                driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
+                                            } else if (alliance == Alliance.Red) {
+                                                driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                                            } else {
+                                                DriverStation.reportWarning(
+                                                        "Driver Station not connected, robot will drive normally!",
+                                                        false);
+                                                return drive.withVelocityX(getVelocityX())
+                                                        .withVelocityY(getVelocityY())
+                                                        .withRotationalRate(getRotationalRate())
+                                                        .withDeadband(getDeadband())
+                                                        .withRotationalDeadband(getRotationalDeadband());
+                                            }
+                                            return driveFacingPosition
+                                                    .withVelocityX(getVelocityX())
+                                                    .withVelocityY(getVelocityY())
+                                                    .withDeadband(getDeadband());
+                                        })
+                                        .until(driveFacingPosition::motionIsFinished))
+                        // THIS COMMAND DOES NOT DRIVE. It just updates the target direction variable.
+                        .andThen(drivetrain.runOnce(() -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
+                                drivetrain.getState().Pose.getRotation(), FieldConstants.REEF_WALL_ROTATIONS))))
+                        // Drive at a fixed rotation
+                        .andThen(drivetrain
+                                .applyRequest(() -> driveFacingAngle
+                                        .withVelocityX(getVelocityX())
+                                        .withVelocityY(getVelocityY())
+                                        .withDeadband(getDeadband()))
+                                .until(() -> Aiming.isReefTag((int) apriltagID.get())))
+                        // Drive facing perpendicular to the apriltag
+                        .andThen(drivetrain.applyRequest(() -> {
+                            int id = (int) apriltagID.get();
+                            if (Aiming.isReefTag(id)) {
+                                driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
+                            }
+                            return driveFacingAngle
+                                    .withVelocityX(getVelocityX())
+                                    .withVelocityY(getVelocityY())
+                                    .withDeadband(getDeadband());
+                        })));
+
+        /*
+         * This lengthy sequence is for locking on to a tree. Here is the explanation:
+         * Once the driver presses this button, the robot will rotate to face the center of the reef.
+         * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
+         * Once this movement is finished, it will attempt to lock onto the nearest tree using its position.
+         * If a reef tag is in view or enters view, the robot will instead start aiming at an offset from the tag using tx.
+         * The offset is to the left if the operator has selected the left tree,
+         * or to the right if the operator has selected the right tree.
+         * (They can change their selection any time.)
+         * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
+         * and then stop rotating unless a tag returns in view.
+         * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
+         */
+        driverController
+                .cross()
+                .toggleOnTrue(drivetrain
+                        .runOnce(driveFacingPosition::resetProfile)
+                        .andThen(drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElse(null);
@@ -185,71 +259,7 @@ public class RobotContainer {
                                             .withVelocityY(getVelocityY())
                                             .withDeadband(getDeadband());
                                 })
-                                .until(driveFacingPosition::motionIsFinished)
-                                // THIS COMMAND DOES NOT DRIVE. It just updates the target direction variable.
-                                .andThen(drivetrain.runOnce(
-                                        () -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
-                                                drivetrain.getState().Pose.getRotation(),
-                                                FieldConstants.REEF_WALL_ROTATIONS))))
-                                // Drive at a fixed rotation
-                                .andThen(drivetrain
-                                        .applyRequest(() -> driveFacingAngle
-                                                .withVelocityX(getVelocityX())
-                                                .withVelocityY(getVelocityY())
-                                                .withDeadband(getDeadband()))
-                                        .until(() -> {
-                                            int id = (int) apriltagID.get();
-                                            return (id >= 6 && id <= 11) || (id >= 17 && id <= 22);
-                                        }))
-                                // Drive facing perpendicular to the apriltag
-                                .andThen(drivetrain.applyRequest(() -> {
-                                    int id = (int) apriltagID.get();
-                                    if ((id >= 6 && id <= 11) || (id >= 17 && id <= 22)) {
-                                        driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
-                                    }
-                                    return driveFacingAngle
-                                            .withVelocityX(getVelocityX())
-                                            .withVelocityY(getVelocityY())
-                                            .withDeadband(getDeadband());
-                                })));
-
-        /*
-         * This lengthy sequence is for locking on to a tree. Here is the explanation:
-         * Once the driver presses this button, the robot will rotate to face the center of the reef.
-         * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-         * Once this movement is finished, it will attempt to lock onto the nearest tree using its position.
-         * If a reef tag is in view or enters view, the robot will instead start aiming at an offset from the tag using tx.
-         * The offset is to the left if the operator has selected the left tree,
-         * or to the right if the operator has selected the right tree.
-         * (They can change their selection any time.)
-         * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
-         * and then stop rotating unless a tag returns in view.
-         * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
-         */
-        driverController
-                .cross()
-                .toggleOnTrue(drivetrain
-                        .applyRequest(() -> {
-                            Alliance alliance = DriverStation.getAlliance().orElse(null);
-                            if (alliance == Alliance.Blue) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
-                            } else if (alliance == Alliance.Red) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Driver Station not connected, robot will drive normally!", false);
-                                return drive.withVelocityX(getVelocityX())
-                                        .withVelocityY(getVelocityY())
-                                        .withRotationalRate(getRotationalRate())
-                                        .withDeadband(getDeadband())
-                                        .withRotationalDeadband(getRotationalDeadband());
-                            }
-                            return driveFacingPosition
-                                    .withVelocityX(getVelocityX())
-                                    .withVelocityY(getVelocityY())
-                                    .withDeadband(getDeadband());
-                        })
-                        .until(driveFacingPosition::motionIsFinished)
+                                .until(driveFacingPosition::motionIsFinished))
                         // Drive facing either the nearest blue tree or nearest red tree
                         .andThen(drivetrain
                                 .applyRequest(() -> {
@@ -275,10 +285,7 @@ public class RobotContainer {
                                             .withVelocityY(getVelocityY())
                                             .withDeadband(getDeadband());
                                 })
-                                .until(() -> {
-                                    int id = (int) apriltagID.get();
-                                    return (id >= 6 && id <= 11) || (id >= 17 && id <= 22);
-                                }))
+                                .until(() -> Aiming.isReefTag((int) apriltagID.get())))
                         // Face the middle of the tag
                         .andThen(drivetrain.applyRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
@@ -414,5 +421,9 @@ public class RobotContainer {
                 0);
         // Log the direction
         selectedDirectionIndicator.set("Right");
+    }
+
+    public void resetFieldPosition(Pose2d position) {
+        drivetrain.resetPose(position);
     }
 }

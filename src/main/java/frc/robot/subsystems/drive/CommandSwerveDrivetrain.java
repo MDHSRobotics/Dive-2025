@@ -269,8 +269,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SwerveRequest request = requestSupplier.get();
         Command requestedCommand;
         if (request instanceof ProfiledSwerveRequest profiledRequest) {
-            requestedCommand = this.runOnce(profiledRequest::resetProfile);
-            requestedCommand.andThen(this.run(() -> this.setControl(requestSupplier.get())));
+            requestedCommand =
+                    this.startRun(profiledRequest::resetProfile, () -> this.setControl(requestSupplier.get()));
         } else {
             requestedCommand = this.run(() -> this.setControl(requestSupplier.get()));
         }

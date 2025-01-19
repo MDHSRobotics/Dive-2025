@@ -47,6 +47,8 @@ public class DriveTelemetry {
             driveStateTable.getDoubleTopic("Timestamp").publish();
     private final DoublePublisher driveOdometryFrequency =
             driveStateTable.getDoubleTopic("OdometryFrequency").publish();
+    private final DoublePublisher driveOdometryPeriod =
+            driveStateTable.getDoubleTopic("OdometryPeriod").publish();
 
     private final double[] poseArray = new double[3];
     private final double[] moduleStatesArray = new double[8];
@@ -70,6 +72,7 @@ public class DriveTelemetry {
         driveModulePositions.set(state.ModulePositions);
         driveTimestamp.set(state.Timestamp);
         driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
+        driveOdometryPeriod.set(state.OdometryPeriod);
 
         /* Also write to log file */
         poseArray[0] = state.Pose.getX();

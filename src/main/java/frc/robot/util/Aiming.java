@@ -1,6 +1,7 @@
 package frc.robot.util;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import frc.robot.Constants.FieldConstants;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -21,5 +22,13 @@ public class Aiming {
                 otherRotations,
                 Comparator.comparing(
                         (Rotation2d other) -> Math.abs(rotation.minus(other).getRadians())));
+    }
+
+    /**
+     * Takes a given apriltag ID, and returns whether or not it is a reef tag.
+     */
+    public static boolean isReefTag(int id) {
+        return (id >= FieldConstants.MINIMUM_RED_REEF_TAG_ID && id <= FieldConstants.MAXIMUM_RED_REEF_TAG_ID)
+                || (id >= FieldConstants.MINIMUM_BLUE_REEF_TAG_ID && id <= FieldConstants.MAXIMUM_BLUE_REEF_TAG_ID);
     }
 }

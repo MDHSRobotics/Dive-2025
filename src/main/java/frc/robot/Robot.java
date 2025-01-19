@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Meters;
+
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -117,6 +119,8 @@ public class Robot extends TimedRobot {
     public void testInit() {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
+
+        robotContainer.resetFieldPosition(new Pose2d(Meters.of(17), Meters.of(0.5), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during test mode. */
