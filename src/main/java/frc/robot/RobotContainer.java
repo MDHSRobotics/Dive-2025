@@ -82,7 +82,7 @@ public class RobotContainer {
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
     /* Robot States */
-    private volatile boolean slowMode = false;
+    private boolean slowMode = false;
 
     /* NetworkTables Logging */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
