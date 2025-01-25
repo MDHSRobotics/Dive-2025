@@ -98,6 +98,27 @@ public final class Constants {
         public static final Angle GOAL_TOLERANCE = Degrees.of(10);
     }
 
+    public static class ClimbConstants {
+        private ClimbConstants() {}
+
+        public static final int CURRENT_LIMIT = 80;
+        public static final double GEAR_RATIO = 1;
+
+        /**
+         * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
+         * used in custom swerve requests.
+         * This still needs to be tuned.
+         */
+        public static final double K_P = 0;
+
+        /**
+         * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
+         * used in custom swerve requests.
+         * This still needs to be tuned.
+         */
+        public static final double K_D = 0;
+    }
+
     public static class VisionConstants {
         private VisionConstants() {}
 

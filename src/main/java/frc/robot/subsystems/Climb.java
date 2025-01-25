@@ -4,12 +4,26 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
+import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ClimbConstants;
 
-public class ExampleSubsystem extends SubsystemBase {
-    /** Creates a new ExampleSubsystem. */
-    public ExampleSubsystem() {}
+public class Climb extends SubsystemBase {
+    private final SparkFlex left_Climb = new SparkFlex(2, MotorType.kBrushless);
+    private final SparkFlex right_Climb = new SparkFlex(3, MotorType.kBrushless);
+
+    public Climb() {
+        SparkFlexConfig config = new SparkFlexConfig();
+        config.smartCurrentLimit(ClimbConstants.CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        config.encoder
+                .positionConversionFactor(ClimbConstants.GEAR_RATIO)
+                .velocityConversionFactor(ClimbConstants.GEAR_RATIO);
+        config.closedLoop.p(ClimbConstants.K_P).d(ClimbConstants.K_D).positionWrappingInputRange(0, 1);
+    }
 
     /**
      * Example command factory method.

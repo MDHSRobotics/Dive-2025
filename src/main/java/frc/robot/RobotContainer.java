@@ -24,7 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
@@ -43,8 +43,8 @@ import frc.robot.util.LimelightHelpers;
  */
 public class RobotContainer {
     // The robot's subsystems and commands are defined here...
-    private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-    private final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
+    private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
+    private final Climb m_climb = new Climb();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -109,7 +109,7 @@ public class RobotContainer {
         configureDriverControls();
         configureOperatorControls();
 
-        drivetrain.registerTelemetry(driveTelemetry::telemeterize);
+        m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Select your auto:", autoChooser);
@@ -119,7 +119,7 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        drivetrain.setDefaultCommand(drivetrain.applyRequest(() -> drive.withVelocityX(getVelocityX())
+        m_drivetrain.setDefaultCommand(m_drivetrain.applyRequest(() -> drive.withVelocityX(getVelocityX())
                 .withVelocityY(getVelocityY())
                 .withRotationalRate(getRotationalRate())
                 .withDeadband(getDeadband())
@@ -131,7 +131,7 @@ public class RobotContainer {
      */
     private void configureTriggers() {
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-        new Trigger(exampleSubsystem::exampleCondition).onTrue(new ExampleCommand(exampleSubsystem));
+        new Trigger(m_climb::exampleCondition).onTrue(new ExampleCommand(m_climb));
     }
 
     /**
@@ -140,14 +140,14 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureDriverControls() {
-        driverController.povUp().whileTrue(drivetrain.applyRequest(() -> drive.withVelocityX(
+        driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
                         DriveConstants.MAX_LINEAR_SPEED)
                 .withVelocityY(0)
                 .withRotationalRate(0)
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
 
-        driverController.povRight().whileTrue(drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
+        driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
         // Slow Mode
         driverController.L2().onTrue(Commands.runOnce(() -> this.slowMode = true));
@@ -161,14 +161,14 @@ public class RobotContainer {
         // Point wheels with right joystick
         driverController
                 .povLeft()
-                .whileTrue(drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
+                .whileTrue(m_drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
                         new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
 
         // Reset robot orientation
         driverController
                 .touchpad()
-                .onTrue(drivetrain.runOnce(() -> drivetrain.setOperatorPerspectiveForward(
-                        drivetrain.getState().Pose.getRotation())));
+                .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
+                        m_drivetrain.getState().Pose.getRotation())));
 
         /*
          * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
@@ -184,13 +184,13 @@ public class RobotContainer {
          */
         driverController
                 .circle()
-                .toggleOnTrue(drivetrain
+                .toggleOnTrue(m_drivetrain
                         // We have to reset the profile manually because the following request may or may not be a
                         // profiled request
                         .runOnce(driveFacingPosition::resetProfile)
                         .andThen(
                                 // Face either the blue or red reef
-                                drivetrain
+                                m_drivetrain
                                         .applyRequest(() -> {
                                             Alliance alliance =
                                                     DriverStation.getAlliance().orElse(null);
@@ -216,17 +216,17 @@ public class RobotContainer {
                                         // This will return false if drive is applied instead of driveFacingPosition.
                                         .until(driveFacingPosition::motionIsFinished))
                         // THIS COMMAND DOES NOT DRIVE. It just updates the target direction variable.
-                        .andThen(drivetrain.runOnce(() -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
-                                drivetrain.getState().Pose.getRotation(), FieldConstants.REEF_WALL_ROTATIONS))))
+                        .andThen(m_drivetrain.runOnce(() -> driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
+                                m_drivetrain.getState().Pose.getRotation(), FieldConstants.REEF_WALL_ROTATIONS))))
                         // Drive at a fixed rotation
-                        .andThen(drivetrain
+                        .andThen(m_drivetrain
                                 .applyProfiledRequest(() -> driveFacingAngle
                                         .withVelocityX(getVelocityX())
                                         .withVelocityY(getVelocityY())
                                         .withDeadband(getDeadband()))
                                 .until(() -> Aiming.isReefTag((int) apriltagID.get())))
                         // Drive facing perpendicular to the apriltag
-                        .andThen(drivetrain.applyProfiledRequest(() -> {
+                        .andThen(m_drivetrain.applyProfiledRequest(() -> {
                             int id = (int) apriltagID.get();
                             if (Aiming.isReefTag(id)) {
                                 driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
@@ -252,11 +252,11 @@ public class RobotContainer {
          */
         driverController
                 .cross()
-                .toggleOnTrue(drivetrain
+                .toggleOnTrue(m_drivetrain
                         // We have to reset the profile manually because the following request may or may not be a
                         // profiled request
                         .runOnce(driveFacingPosition::resetProfile)
-                        .andThen(drivetrain
+                        .andThen(m_drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElse(null);
@@ -284,7 +284,7 @@ public class RobotContainer {
                         // profiled request
                         .andThen(driveFacingNearestPosition::resetProfile)
                         // Drive facing either the nearest blue tree or nearest red tree
-                        .andThen(drivetrain
+                        .andThen(m_drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElse(null);
@@ -310,7 +310,7 @@ public class RobotContainer {
                                 })
                                 .until(() -> Aiming.isReefTag((int) apriltagID.get())))
                         // Face the middle of the tag
-                        .andThen(drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
+                        .andThen(m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
                                 .withVelocityY(getVelocityY())
                                 .withDeadband(getDeadband()))));
@@ -323,19 +323,19 @@ public class RobotContainer {
         driverController
                 .share()
                 .and(driverController.triangle())
-                .whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
         driverController
                 .share()
                 .and(driverController.square())
-                .whileTrue(drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         driverController
                 .options()
                 .and(driverController.triangle())
-                .whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         driverController
                 .options()
                 .and(driverController.square())
-                .whileTrue(drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
@@ -346,7 +346,7 @@ public class RobotContainer {
     private void configureOperatorControls() {
         // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
         // cancelling on release.
-        operatorController.b().whileTrue(exampleSubsystem.exampleMethodCommand());
+        operatorController.b().whileTrue(m_climb.exampleMethodCommand());
     }
 
     /**
@@ -442,6 +442,6 @@ public class RobotContainer {
     }
 
     public void resetFieldPosition(Pose2d position) {
-        drivetrain.resetPose(position);
+        m_drivetrain.resetPose(position);
     }
 }
