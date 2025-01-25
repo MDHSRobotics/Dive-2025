@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
@@ -11,30 +13,36 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ClimbConstants;
+import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
-    private final SparkFlex left_Climb = new SparkFlex(2, MotorType.kBrushless);
-    private final SparkFlex right_Climb = new SparkFlex(3, MotorType.kBrushless);
+    private final SparkFlex m_leftMotor = new SparkFlex(ClimbConstants.LEFT_ID, MotorType.kBrushless);
+    private final SparkFlex m_rightMotor = new SparkFlex(ClimbConstants.RIGHT_ID, MotorType.kBrushless);
 
+    /**
+     * Motors should be configured in the robot code rather than the REV Hardware Client
+     * so that we can see the motor configs without having to connect to the robot.
+     * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
+     */
     public Climb() {
         SparkFlexConfig config = new SparkFlexConfig();
         config.smartCurrentLimit(ClimbConstants.CURRENT_LIMIT).idleMode(IdleMode.kBrake);
         config.encoder
-                .positionConversionFactor(ClimbConstants.GEAR_RATIO)
-                .velocityConversionFactor(ClimbConstants.GEAR_RATIO);
+                .positionConversionFactor(ClimbConstants.ENOCDER_CONVERSION_FACTOR)
+                .velocityConversionFactor(ClimbConstants.ENOCDER_CONVERSION_FACTOR);
         config.closedLoop.p(ClimbConstants.K_P).d(ClimbConstants.K_D).positionWrappingInputRange(0, 1);
+        config.closedLoop
+                .maxMotion
+                .maxVelocity(ClimbConstants.MAX_VELOCITY)
+                .maxAcceleration(ClimbConstants.MAX_ACCELERATION);
+        m_leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_rightMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
-    /**
-     * Example command factory method.
-     *
-     * @return a command
-     */
-    public Command exampleMethodCommand() {
-        // Inline construction of command goes here.
-        // Subsystem::RunOnce implicitly requires `this` subsystem.
-        return runOnce(() -> {
-            /* one-time action goes here */
+    public Command motorTestCommand(DoubleSupplier leftMotorPowerSupplier, DoubleSupplier rightMotorPowerSupplier) {
+        return this.run(() -> {
+            m_leftMotor.set(leftMotorPowerSupplier.getAsDouble());
+            m_rightMotor.set(rightMotorPowerSupplier.getAsDouble());
         });
     }
 

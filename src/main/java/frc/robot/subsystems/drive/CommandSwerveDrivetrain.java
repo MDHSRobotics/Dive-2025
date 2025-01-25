@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NetworkTableValue;
@@ -131,19 +132,34 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* NetworkTables logging */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     /**
-     * Provides the limelight bot pose estimate to the drivetrain.
+     * Provides the front limelight's bot pose estimate to the drivetrain.
      * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#getBotPoseEstimate_wpiBlue_MegaTag2(String) getBotPoseEstimate_wpiBlue_MegaTag2()}.
      */
-    private final DoubleArraySubscriber poseEstimateSub = inst.getTable(VisionConstants.LIMELIGHT_NAME)
+    private final DoubleArraySubscriber frontPoseEstimateSub = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+            .getDoubleArrayTopic("botpose_orb_wpiblue")
+            .subscribe(null);
+    /**
+     * Provides the back limelight's bot pose estimate to the drivetrain.
+     * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#getBotPoseEstimate_wpiBlue_MegaTag2(String) getBotPoseEstimate_wpiBlue_MegaTag2()}.
+     */
+    private final DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
             .getDoubleArrayTopic("botpose_orb_wpiblue")
             .subscribe(null);
 
+    private final NetworkTable stateTable = inst.getTable("DriveState");
     /**
-     * Logs the currently visible tags to AdvantageScope.
+     * Logs the tags that are currently visible from the front to AdvantageScope.
      * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
      */
-    private final StructArrayPublisher<Translation3d> visibleTagsPub = inst.getTable("DriveState")
-            .getStructArrayTopic("Visible Tags", Translation3d.struct)
+    private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = stateTable
+            .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
+            .publish();
+    /**
+     * Logs the tags that are currently visible from the back to AdvantageScope.
+     * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
+     */
+    private final StructArrayPublisher<Translation3d> backVisibleTagsPub = stateTable
+            .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
 
     /**
@@ -168,7 +184,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        registerPoseEstimateListener();
+        registerPoseEstimateListeners();
     }
 
     /**
@@ -198,7 +214,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        registerPoseEstimateListener();
+        registerPoseEstimateListeners();
     }
 
     /**
@@ -241,7 +257,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        registerPoseEstimateListener();
+        registerPoseEstimateListeners();
     }
 
     private void configureAutoBuilder() {
@@ -351,14 +367,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     /**
-     * Registers a limelight pose listener,
-     * so the pose can be used as soon as it is recieved from the limelight.
+     * Registers the limelight pose listeners,
+     * so the poses can be used as soon as they are recieved from the limelights.
      * @see frc.robot.util.LimelightHelpers#getBotPoseEstimate(String, String, boolean) the reference code for processing the input from this NetworkTable entry
      * @see <a href="https://docs.wpilib.org/en/stable/docs/software/networktables/listening-for-change.html">the explanation for listeners</a>
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">the limelight NetworkTables API</a> (look for botpose_orb_wpiblue)
      */
-    private void registerPoseEstimateListener() {
-        inst.addListener(poseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+    private void registerPoseEstimateListeners() {
+        inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             NetworkTableValue value = event.valueData.value;
             double[] poseArray = value.getDoubleArray();
             // If there is no data available, don't log anything
@@ -397,7 +413,49 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 int id = (int) poseArray[currentIndex];
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id - 1];
             }
-            visibleTagsPub.set(visibleTagPositions);
+            frontVisibleTagsPub.set(visibleTagPositions, timestamp);
+        });
+
+        inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            NetworkTableValue value = event.valueData.value;
+            double[] poseArray = value.getDoubleArray();
+            // If there is no data available, don't log anything
+            if (poseArray.length < 11) {
+                return;
+            }
+
+            /* Get bot pose estimate */
+            Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
+            Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
+            Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
+
+            /* Get timestamp */
+            long timestamp = value.getTime();
+            double latency = poseArray[6];
+
+            // Convert timestamp from microseconds to seconds and adjust for latency
+            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+
+            /* Add the vision measurement to the pose estimator */
+            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
+
+            /* Log which apriltags are currently visible */
+            int tagCount = (int) poseArray[7];
+            int valsPerFiducial = 7;
+            int expectedTotalVals = 11 + valsPerFiducial * tagCount;
+
+            // If there is no more data available, stop logging
+            if (poseArray.length != expectedTotalVals || tagCount == 0) {
+                return;
+            }
+
+            Translation3d[] visibleTagPositions = new Translation3d[tagCount];
+            for (int i = 0; i < tagCount; i++) {
+                int currentIndex = 11 + (i * valsPerFiducial);
+                int id = (int) poseArray[currentIndex];
+                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id - 1];
+            }
+            backVisibleTagsPub.set(visibleTagPositions, timestamp);
         });
     }
 }

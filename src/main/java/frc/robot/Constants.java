@@ -8,7 +8,10 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Minute;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Second;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -18,6 +21,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.drive.TunerConstants;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -95,34 +99,63 @@ public final class Constants {
          * used in custom swerve requests.
          * This still needs to be tuned.
          */
-        public static final Angle GOAL_TOLERANCE = Degrees.of(10);
+        public static final Angle GOAL_TOLERANCE = Degrees.of(0);
     }
 
     public static class ClimbConstants {
         private ClimbConstants() {}
 
-        public static final int CURRENT_LIMIT = 80;
-        public static final double GEAR_RATIO = 1;
+        /** The CAN id of the left motor. */
+        public static final int LEFT_ID = 2;
+        /** The CAN id of the right motor. */
+        public static final int RIGHT_ID = 3;
 
         /**
-         * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-         * used in custom swerve requests.
+         * The current limit for the climb motors.
+         * This is currently set to the value suggested by
+         * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
+         */
+        public static final int CURRENT_LIMIT = 80;
+
+        /**
+         * The conversion of motor input rotations to aluminum hook output rotations.
+         * This is equal to 1 over the gear ratio.
+         */
+        public static final double ENOCDER_CONVERSION_FACTOR = 1.0 / 80.0;
+
+        /**
+         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
          * This still needs to be tuned.
          */
         public static final double K_P = 0;
 
         /**
-         * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-         * used in custom swerve requests.
+         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
          * This still needs to be tuned.
          */
         public static final double K_D = 0;
+
+        /**
+         * Maximum allowed velocity for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * in rotations per minute.
+         * This still needs to be tuned.
+         */
+        public static final double MAX_VELOCITY = Rotations.per(Minute).of(0).in(Rotations.per(Minute));
+
+        /**
+         * Maximum allowed acceleration for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * in rotations per minute per second.
+         * This still needs to be tuned.
+         */
+        public static final double MAX_ACCELERATION =
+                Rotations.per(Minute).per(Second).of(0).in(Rotations.per(Minute).per(Second));
     }
 
     public static class VisionConstants {
         private VisionConstants() {}
 
-        public static final String LIMELIGHT_NAME = "limelight-front";
+        public static final String FRONT_LIMELIGHT_NAME = "limelight-front";
+        public static final String BACK_LIMELIGHT_NAME = "limelight-back";
 
         /*
          * Used for setting the limelight's fiducial 3D offset.
@@ -295,4 +328,8 @@ public final class Constants {
         public static final int MINIMUM_BLUE_REEF_TAG_ID = 17;
         public static final int MAXIMUM_BLUE_REEF_TAG_ID = 22;
     }
+
+    /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
+    public static final Map<Integer, String> REV_CAN_ID_ALIASES =
+            Map.of(ClimbConstants.LEFT_ID, "Climb-Left", ClimbConstants.RIGHT_ID, "Climb-Right");
 }

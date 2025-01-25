@@ -66,7 +66,7 @@ public class RobotContainer {
                     .withTolerance(DriveConstants.GOAL_TOLERANCE);
 
     private final ProfiledFieldCentricVisualServoing driveFacingVisionTarget = new ProfiledFieldCentricVisualServoing(
-                    DriveConstants.ANGULAR_MOTION_CONSTRAINTS)
+                    DriveConstants.ANGULAR_MOTION_CONSTRAINTS, VisionConstants.FRONT_LIMELIGHT_NAME)
             .withPIDGains(DriveConstants.K_P, 0, DriveConstants.K_D)
             .withTolerance(DriveConstants.GOAL_TOLERANCE);
 
@@ -82,7 +82,7 @@ public class RobotContainer {
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
     /* Robot States */
-    private boolean slowMode = false;
+    private boolean m_slowMode = false;
 
     /* NetworkTables Logging */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
@@ -93,8 +93,9 @@ public class RobotContainer {
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">limelight NetworkTables API</a>
      * @see {@link frc.robot.util.LimelightHelpers#getFiducialID(String) LimelightHelpers equivalent}
      */
-    private final IntegerSubscriber apriltagID =
-            inst.getTable(VisionConstants.LIMELIGHT_NAME).getIntegerTopic("tid").subscribe(0);
+    private final IntegerSubscriber apriltagID = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+            .getIntegerTopic("tid")
+            .subscribe(0);
 
     private final StringPublisher selectedDirectionIndicator =
             driverInfoTable.getStringTopic("Selected Tree Direction").publish();
@@ -150,9 +151,9 @@ public class RobotContainer {
         driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
         // Slow Mode
-        driverController.L2().onTrue(Commands.runOnce(() -> this.slowMode = true));
+        driverController.L2().onTrue(Commands.runOnce(() -> this.m_slowMode = true));
         // Fast Mode
-        driverController.R2().onTrue(Commands.runOnce(() -> this.slowMode = false));
+        driverController.R2().onTrue(Commands.runOnce(() -> this.m_slowMode = false));
         // Select left tree
         driverController.L1().onTrue(Commands.runOnce(this::selectLeftTree));
         // Select right tree
@@ -344,9 +345,10 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-        // cancelling on release.
-        operatorController.b().whileTrue(m_climb.exampleMethodCommand());
+        operatorController
+                .rightTrigger()
+                .onTrue(m_climb.motorTestCommand(
+                        () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
     }
 
     /**
@@ -363,7 +365,7 @@ public class RobotContainer {
      */
     public double getVelocityX() {
         double velocityX = DriveConstants.MAX_LINEAR_SPEED * -driverController.getLeftY();
-        if (slowMode) {
+        if (m_slowMode) {
             velocityX *= 0.5;
         }
         return velocityX;
@@ -375,7 +377,7 @@ public class RobotContainer {
      */
     public double getVelocityY() {
         double velocityY = DriveConstants.MAX_LINEAR_SPEED * -driverController.getLeftX();
-        if (slowMode) {
+        if (m_slowMode) {
             velocityY *= 0.5;
         }
         return velocityY;
@@ -387,7 +389,7 @@ public class RobotContainer {
      */
     public double getRotationalRate() {
         double rotationalRate = DriveConstants.MAX_ANGULAR_RATE * -driverController.getRightX();
-        if (slowMode) {
+        if (m_slowMode) {
             rotationalRate *= 0.5;
         }
         return rotationalRate;
@@ -400,7 +402,7 @@ public class RobotContainer {
      */
     public double getDeadband() {
         double deadband = DriveConstants.MAX_LINEAR_SPEED * 0.1;
-        if (slowMode) {
+        if (m_slowMode) {
             deadband *= 0.5;
         }
         return deadband;
@@ -413,7 +415,7 @@ public class RobotContainer {
      */
     public double getRotationalDeadband() {
         double rotationalDeadband = DriveConstants.MAX_ANGULAR_RATE * 0.1;
-        if (slowMode) {
+        if (m_slowMode) {
             rotationalDeadband *= 0.5;
         }
         return rotationalDeadband;
@@ -422,7 +424,7 @@ public class RobotContainer {
     private void selectLeftTree() {
         // Update the target for tx values
         LimelightHelpers.SetFidcuial3DOffset(
-                VisionConstants.LIMELIGHT_NAME,
+                VisionConstants.FRONT_LIMELIGHT_NAME,
                 VisionConstants.TAG_TO_LEFT_TREE_FORWARD_OFFSET,
                 VisionConstants.TAG_TO_LEFT_TREE_RIGHT_OFFSET,
                 0);
@@ -433,7 +435,7 @@ public class RobotContainer {
     private void selectRightTree() {
         // Update the target for tx values
         LimelightHelpers.SetFidcuial3DOffset(
-                VisionConstants.LIMELIGHT_NAME,
+                VisionConstants.FRONT_LIMELIGHT_NAME,
                 VisionConstants.TAG_TO_RIGHT_TREE_FORWARD_OFFSET,
                 VisionConstants.TAG_TO_RIGHT_TREE_RIGHT_OFFSET,
                 0);

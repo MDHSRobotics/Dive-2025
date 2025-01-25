@@ -7,10 +7,12 @@ package frc.robot;
 import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import org.littletonrobotics.urcl.URCL;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -36,6 +38,10 @@ public class Robot extends TimedRobot {
 
         // Set USB drive path for logging
         SignalLogger.setPath("/logs");
+        DataLogManager.start();
+        DriverStation.startDataLog(DataLogManager.getLog());
+        URCL.start(Constants.REV_CAN_ID_ALIASES);
+        SignalLogger.start();
     }
 
     /**
@@ -56,10 +62,7 @@ public class Robot extends TimedRobot {
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {
-        DataLogManager.stop();
-        SignalLogger.stop();
-    }
+    public void disabledInit() {}
 
     @Override
     public void disabledPeriodic() {}
@@ -98,9 +101,6 @@ public class Robot extends TimedRobot {
     public void testInit() {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
-
-        DataLogManager.start();
-        SignalLogger.start();
 
         // robotContainer.resetFieldPosition(new Pose2d(Meters.of(17), Meters.of(0.5), Rotation2d.fromDegrees(180)));
     }

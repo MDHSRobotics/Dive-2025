@@ -104,7 +104,7 @@ public class ProfiledFieldCentricFacingAngle implements ProfiledSwerveRequest {
     private boolean motionIsFinished = false;
 
     /**
-     * Creates a new profiled FieldCentricFacingAngle request with the given constraints.
+     * Creates a new profiled request with the given constraints.
      *
      * @param constraints Constraints for the trapezoid profile
      */

@@ -15,7 +15,6 @@ import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
-import frc.robot.Constants.VisionConstants;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner,
@@ -88,23 +87,26 @@ public class ProfiledFieldCentricVisualServoing implements ProfiledSwerveRequest
     /* Profile used for the target direction */
     private final TrapezoidProfile profile;
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
-    private TrapezoidProfile.State goal = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State goal = new TrapezoidProfile.State();
 
     private boolean resetRequested = false;
     private boolean motionIsFinished = false;
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable limelightTable = inst.getTable(VisionConstants.LIMELIGHT_NAME);
-    private final DoubleSubscriber txSub = limelightTable.getDoubleTopic("tx").subscribe(0);
+    private final NetworkTable cameraTable;
+    private final DoubleSubscriber txSub;
 
     /**
-     * Creates a new profiled FieldCentricFacingAngle request with the given constraints.
+     * Creates a new profiled request with the given constraints and camera.
      *
      * @param constraints Constraints for the trapezoid profile
+     * @param cameraName The NetworkTable key for the camera. The camera's NetworkTable must be in the global default instance, and it must have a double topic called "tx".
      */
-    public ProfiledFieldCentricVisualServoing(TrapezoidProfile.Constraints constraints) {
+    public ProfiledFieldCentricVisualServoing(TrapezoidProfile.Constraints constraints, String cameraName) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         profile = new TrapezoidProfile(constraints);
+        cameraTable = inst.getTable(cameraName);
+        txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
     }
 
     /**
