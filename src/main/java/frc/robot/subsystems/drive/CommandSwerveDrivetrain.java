@@ -184,7 +184,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        registerPoseEstimateListeners();
+        // registerPoseEstimateListeners();
     }
 
     /**
@@ -214,7 +214,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        registerPoseEstimateListeners();
+        // registerPoseEstimateListeners();
     }
 
     /**
@@ -257,7 +257,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        registerPoseEstimateListeners();
+        // registerPoseEstimateListeners();
     }
 
     private void configureAutoBuilder() {

@@ -117,6 +117,8 @@ public class RobotContainer {
 
         // Select left tree on startup
         selectLeftTree();
+
+        // m_drivetrain.resetRotation(Rotation2d.fromDegrees(54));
     }
 
     private void setDefaultCommands() {
@@ -125,6 +127,7 @@ public class RobotContainer {
                 .withRotationalRate(getRotationalRate())
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
+        m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
     }
 
     /**
@@ -347,8 +350,12 @@ public class RobotContainer {
     private void configureOperatorControls() {
         operatorController
                 .rightTrigger()
-                .onTrue(m_climb.motorTestCommand(
+                .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
+        operatorController
+                .leftTrigger()
+                .whileTrue(m_climb.motorTestCommand(
+                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
     }
 
     /**

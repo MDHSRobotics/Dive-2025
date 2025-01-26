@@ -21,10 +21,17 @@ public class DriveTelemetry {
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
     /**
-     * Provides the robot orientation to the limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
+     * Provides the robot orientation to the front limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
      * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.
      */
-    private final DoubleArrayPublisher megatag2Updater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+    private final DoubleArrayPublisher megatag2FrontUpdater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+            .getDoubleArrayTopic("robot_orientation_set")
+            .publish();
+    /**
+     * Provides the robot orientation to the back limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
+     * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.
+     */
+    private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
             .publish();
 
@@ -66,7 +73,9 @@ public class DriveTelemetry {
         /* Send the robot orientation to the limelight for megatag2 */
         megatag2Orientation[0] = state.Pose.getRotation().getDegrees();
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
-        megatag2Updater.set(megatag2Orientation, timestamp);
+        megatag2FrontUpdater.set(megatag2Orientation, timestamp);
+        megatag2BackUpdater.set(megatag2Orientation, timestamp);
+        inst.flush();
 
         /* Telemeterize the swerve drive state */
         drivePose.set(state.Pose, timestamp);
