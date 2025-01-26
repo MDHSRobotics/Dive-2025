@@ -378,6 +378,13 @@ public final class Constants {
     }
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
-    public static final Map<Integer, String> REV_CAN_ID_ALIASES =
-            Map.of(ClimbConstants.LEFT_ID, "Climb-Left", ClimbConstants.RIGHT_ID, "Climb-Right");
+    public static final Map<Integer, String> REV_CAN_ID_ALIASES = Map.of(
+            ClimbConstants.LEFT_ID,
+            "Climb-Left",
+            ClimbConstants.RIGHT_ID,
+            "Climb-Right",
+            CatcherConstants.ARM_ID,
+            "Catcher-Arm",
+            CatcherConstants.WHEELS_ID,
+            "Catcher-Wheels");
 }
