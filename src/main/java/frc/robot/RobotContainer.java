@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.Catcher;
 import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveTelemetry;
@@ -45,6 +46,7 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
+    private final Catcher m_catcher = new Catcher();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -128,6 +130,7 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
+        m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
     }
 
     /**
@@ -354,6 +357,10 @@ public class RobotContainer {
                         () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
         operatorController
                 .leftTrigger()
+                .whileTrue(m_climb.motorTestCommand(
+                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
+        operatorController
+                .rightBumper()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
     }
