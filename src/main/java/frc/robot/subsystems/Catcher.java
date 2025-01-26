@@ -28,8 +28,7 @@ public class Catcher extends SubsystemBase {
         config.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .p(CatcherConstants.K_P)
-                .d(CatcherConstants.K_D)
-                .positionWrappingInputRange(0, 1);
+                .d(CatcherConstants.K_D);
         config.closedLoop
                 .maxMotion
                 .maxVelocity(CatcherConstants.MAX_VELOCITY)

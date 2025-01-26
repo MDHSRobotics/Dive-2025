@@ -35,8 +35,7 @@ public class Climb extends SubsystemBase {
         config.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .p(ClimbConstants.K_P)
-                .d(ClimbConstants.K_D)
-                .positionWrappingInputRange(0, 1);
+                .d(ClimbConstants.K_D);
         config.closedLoop
                 .maxMotion
                 .maxVelocity(ClimbConstants.MAX_VELOCITY)
