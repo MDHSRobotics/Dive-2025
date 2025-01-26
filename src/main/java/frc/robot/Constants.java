@@ -60,7 +60,7 @@ public final class Constants {
         /**
          * Distance from center of robot to a module (cancoder)
          */
-        private static final Distance DRIVEBASE_RADIUS =
+        public static final Distance DRIVEBASE_RADIUS =
                 Inches.of(Math.hypot(TRACKWIDTH.in(Inches) / 2.0, WHEELBASE.in(Inches) / 2.0));
 
         /** Max linear speed of the robot in meters per second. This still needs to be tuned. */

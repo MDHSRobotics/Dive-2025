@@ -59,6 +59,8 @@ public class DriveTelemetry {
             driveStateTable.getDoubleTopic("OdometryFrequency").publish();
     private final DoublePublisher driveOdometryPeriod =
             driveStateTable.getDoubleTopic("OdometryPeriod").publish();
+    private final DoublePublisher linearSpeed =
+            driveStateTable.getDoubleTopic("Linear Speed").publish();
     private final DoublePublisher angularAccel =
             driveStateTable.getDoubleTopic("Angular Accel").publish();
 
@@ -85,10 +87,12 @@ public class DriveTelemetry {
         driveModulePositions.set(state.ModulePositions, timestamp);
         driveOdometryFrequency.set(1.0 / state.OdometryPeriod, timestamp);
         driveOdometryPeriod.set(state.OdometryPeriod, timestamp);
-        angularAccel.set((state.Speeds.omegaRadiansPerSecond - previousYawRate) / state.OdometryPeriod, timestamp);
 
+        angularAccel.set((state.Speeds.omegaRadiansPerSecond - previousYawRate) / state.OdometryPeriod, timestamp);
         // Update previous angular velocity
         previousYawRate = state.Speeds.omegaRadiansPerSecond;
+
+        linearSpeed.set(Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond), timestamp);
 
         /* Also write to log file */
         poseArray[0] = state.Pose.getX();

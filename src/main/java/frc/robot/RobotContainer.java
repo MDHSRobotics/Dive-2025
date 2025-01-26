@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.Catcher;
 import frc.robot.subsystems.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
@@ -115,6 +116,9 @@ public class RobotContainer {
         m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
         autoChooser = AutoBuilder.buildAutoChooser();
+        autoChooser.addOption(
+                "Drive Wheel Radius Characterization",
+                WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
         SmartDashboard.putData("Select your auto:", autoChooser);
 
         // Select left tree on startup
