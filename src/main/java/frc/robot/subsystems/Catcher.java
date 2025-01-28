@@ -36,8 +36,8 @@ public class Catcher extends SubsystemBase {
         config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
         m_wheelsMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         config.encoder
-                .positionConversionFactor(CatcherConstants.ARM_ENOCDER_CONVERSION_FACTOR)
-                .velocityConversionFactor(CatcherConstants.ARM_ENOCDER_CONVERSION_FACTOR);
+                .positionConversionFactor(CatcherConstants.ARM_POSITION_CONVERSION_FACTOR)
+                .velocityConversionFactor(CatcherConstants.ARM_VELOCITY_CONVERSION_FACTOR);
         m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 

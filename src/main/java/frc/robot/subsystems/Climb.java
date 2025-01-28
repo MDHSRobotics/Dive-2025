@@ -30,8 +30,8 @@ public class Climb extends SubsystemBase {
         SparkFlexConfig config = new SparkFlexConfig();
         config.smartCurrentLimit(ClimbConstants.CURRENT_LIMIT).idleMode(IdleMode.kBrake);
         config.encoder
-                .positionConversionFactor(ClimbConstants.ENOCDER_CONVERSION_FACTOR)
-                .velocityConversionFactor(ClimbConstants.ENOCDER_CONVERSION_FACTOR);
+                .positionConversionFactor(ClimbConstants.POSITION_CONVERSION_FACTOR)
+                .velocityConversionFactor(ClimbConstants.VELOCITY_CONVERSION_FACTOR);
         config.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .p(ClimbConstants.K_P)

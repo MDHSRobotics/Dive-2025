@@ -8,10 +8,9 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.Minute;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.Rotations;
-import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -121,7 +120,13 @@ public final class Constants {
          * The conversion of motor input rotations to aluminum hook output rotations.
          * This is equal to 1 over the gear ratio.
          */
-        public static final double ENOCDER_CONVERSION_FACTOR = 1.0 / 80.0;
+        public static final double POSITION_CONVERSION_FACTOR = 1.0 / 80.0;
+
+        /**
+         * The conversion of motor input rotations per minute to aluminum hook output rotations per second.
+         * This is equal to 1 over the gear ratio (times 1 minute over 60 seconds).
+         */
+        public static final double VELOCITY_CONVERSION_FACTOR = (1.0 / 80.0) / 60.0;
 
         /**
          * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
@@ -137,18 +142,18 @@ public final class Constants {
 
         /**
          * Maximum allowed velocity for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
-         * in rotations per minute.
+         * in rotations per second.
          * This still needs to be tuned.
          */
-        public static final double MAX_VELOCITY = Rotations.per(Minute).of(0).in(Rotations.per(Minute));
+        public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
 
         /**
          * Maximum allowed acceleration for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
-         * in rotations per minute per second.
+         * in rotations per second per second.
          * This still needs to be tuned.
          */
         public static final double MAX_ACCELERATION =
-                Rotations.per(Minute).per(Second).of(0).in(Rotations.per(Minute).per(Second));
+                RotationsPerSecondPerSecond.of(0).in(RotationsPerSecondPerSecond);
     }
 
     public static class CatcherConstants {
@@ -169,7 +174,14 @@ public final class Constants {
          * This is equal to 1 over the gear ratio.
          * The gear ratio has not been decided yet.
          */
-        public static final double ARM_ENOCDER_CONVERSION_FACTOR = 1.0 / 1.0;
+        public static final double ARM_POSITION_CONVERSION_FACTOR = 1.0 / 1.0;
+
+        /**
+         * The conversion of motor input rotations per minute to arm output rotations per second.
+         * This is equal to 1 over the gear ratio (times 1 minute over 60 seconds).
+         * The gear ratio has not been decided yet.
+         */
+        public static final double ARM_VELOCITY_CONVERSION_FACTOR = (1.0 / 1.0) / 60.0;
 
         /**
          * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
@@ -185,18 +197,18 @@ public final class Constants {
 
         /**
          * Maximum allowed velocity for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
-         * in rotations per minute.
+         * in rotations per second.
          * This still needs to be tuned.
          */
-        public static final double MAX_VELOCITY = Rotations.per(Minute).of(0).in(Rotations.per(Minute));
+        public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
 
         /**
          * Maximum allowed acceleration for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
-         * in rotations per minute per second.
+         * in rotations per second per second.
          * This still needs to be tuned.
          */
         public static final double MAX_ACCELERATION =
-                Rotations.per(Minute).per(Second).of(0).in(Rotations.per(Minute).per(Second));
+                RotationsPerSecondPerSecond.of(0).in(RotationsPerSecondPerSecond);
     }
 
     public static class VisionConstants {
