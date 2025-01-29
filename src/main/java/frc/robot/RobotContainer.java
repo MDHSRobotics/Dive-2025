@@ -27,6 +27,7 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.Catcher;
 import frc.robot.subsystems.Climb;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
@@ -48,6 +49,7 @@ public class RobotContainer {
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
     private final Catcher m_catcher = new Catcher();
+    private final Intake m_intake = new Intake();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -135,6 +137,7 @@ public class RobotContainer {
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
         m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
+        m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
     }
 
     /**
@@ -355,7 +358,7 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        operatorController
+        /*operatorController
                 .rightTrigger()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
@@ -366,7 +369,8 @@ public class RobotContainer {
         operatorController
                 .rightBumper()
                 .whileTrue(m_climb.motorTestCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
+                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));*/
+        operatorController.rightTrigger().whileTrue(m_intake.motorTestCommand(() -> -operatorController.getLeftY()));
     }
 
     /**
