@@ -25,6 +25,7 @@ import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.NetworkTableValue;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -146,18 +147,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .getDoubleArrayTopic("botpose_orb_wpiblue")
             .subscribe(null);
 
-    private final NetworkTable stateTable = inst.getTable("DriveState");
     /**
-     * Logs the tags that are currently visible from the front to AdvantageScope.
+     * This NetworkTable is used to display driving information to AdvantageScope.
      * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
      */
+    private final NetworkTable stateTable = inst.getTable("DriveState");
+    /** Logs the front bot pose estimate to AdvantageScope. */
+    private final StructPublisher<Pose2d> frontPoseEstimatePub =
+            stateTable.getStructTopic("Front Pose Estimate", Pose2d.struct).publish();
+    /** Logs the back bot pose estimate to AdvantageScope. */
+    private final StructPublisher<Pose2d> backPoseEstimatePub =
+            stateTable.getStructTopic("Back Pose Estimate", Pose2d.struct).publish();
+    /** Logs the tags that are currently visible from the front to AdvantageScope. */
     private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = stateTable
             .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
             .publish();
-    /**
-     * Logs the tags that are currently visible from the back to AdvantageScope.
-     * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
-     */
+    /** Logs the tags that are currently visible from the back to AdvantageScope. */
     private final StructArrayPublisher<Translation3d> backVisibleTagsPub = stateTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
@@ -379,6 +384,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double[] poseArray = value.getDoubleArray();
             // If there is no data available, don't log anything
             if (poseArray.length < 11) {
+                DriverStation.reportWarning("An empty bot pose estimate was received from the front limelight.", false);
                 return;
             }
 
@@ -389,9 +395,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             /* Get timestamp */
             long timestamp = value.getTime();
-            double latency = poseArray[6];
+
+            /* Log pose estimate to AdvantageScope */
+            frontPoseEstimatePub.set(botPoseEstimate, timestamp);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
+            double latency = poseArray[6];
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
             /* Add the vision measurement to the pose estimator */
@@ -404,6 +413,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
+                DriverStation.reportWarning(
+                        "There are no valid tags reported by the front limelight pose estimate.", false);
                 return;
             }
 
@@ -421,6 +432,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double[] poseArray = value.getDoubleArray();
             // If there is no data available, don't log anything
             if (poseArray.length < 11) {
+                DriverStation.reportWarning("An empty bot pose estimate was received from the back limelight.", false);
                 return;
             }
 
@@ -431,9 +443,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             /* Get timestamp */
             long timestamp = value.getTime();
-            double latency = poseArray[6];
+
+            /* Log pose estimate to AdvantageScope */
+            backPoseEstimatePub.set(botPoseEstimate, timestamp);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
+            double latency = poseArray[6];
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
             /* Add the vision measurement to the pose estimator */
@@ -446,6 +461,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
+                DriverStation.reportWarning(
+                        "There are no valid tags reported by the back limelight pose estimate.", false);
                 return;
             }
 

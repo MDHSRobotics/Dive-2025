@@ -29,6 +29,9 @@ public class Robot extends TimedRobot {
      * initialization code.
      */
     public Robot() {
+        // Silence joystick warnings because they get in the way of other warnings
+        DriverStation.silenceJoystickConnectionWarning(true);
+
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         robotContainer = new RobotContainer();
