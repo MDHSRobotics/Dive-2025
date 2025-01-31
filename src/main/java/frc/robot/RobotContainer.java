@@ -20,10 +20,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
-import frc.robot.commands.ExampleCommand;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.Catcher;
 import frc.robot.subsystems.Climb;
@@ -143,25 +141,22 @@ public class RobotContainer {
     /**
      * Use this method to define trigger->command mappings that don't involve controller inputs.
      */
-    private void configureTriggers() {
-        // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-        new Trigger(m_climb::exampleCondition).onTrue(new ExampleCommand(m_climb));
-    }
+    private void configureTriggers() {}
 
     /**
      * Use this method to define controller input->command mappings.
-     * please use <a href="https://www.padcrafter.com/?templates=Driver%20Controller&plat=1&leftStick=Drive&aButton=Lock%20on%20to%20tree&xButton&yButton&leftBumper=Select%20Left%20Tree&backButton=Reset%20robot%20orientation&rightBumper=Select%20Right%20Tree&bButton=Lock%20on%20to%20reef&leftTrigger=Slow%20Mode&rightTrigger=Fast%20Mode&dpadLeft=Point%20wheels%20with%20right%20joystick&rightStick">this controller map</a>
+     * please use <a href="https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+on+to+tree&xButton=Lock+on+to+tree+%28no+limelight%29&yButton=&leftBumper=Select+Left+Tree&backButton=Reset+robot+orientation&rightBumper=Select+Right+Tree&bButton=Lock+on+to+reef&leftTrigger=Slow+Mode&rightTrigger=Fast+Mode&dpadLeft=Point+wheels+with+right+joystick&rightStick=">this controller map</a>
      * to update and view the current controls.
      */
     private void configureDriverControls() {
-        driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
-                        DriveConstants.MAX_LINEAR_SPEED)
-                .withVelocityY(0)
-                .withRotationalRate(0)
-                .withDeadband(getDeadband())
-                .withRotationalDeadband(getRotationalDeadband())));
+        /*driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
+                DriveConstants.MAX_LINEAR_SPEED)
+        .withVelocityY(0)
+        .withRotationalRate(0)
+        .withDeadband(getDeadband())
+        .withRotationalDeadband(getRotationalDeadband())));*/
 
-        driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
+        // driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
         // Slow Mode
         driverController.L2().onTrue(Commands.runOnce(() -> this.m_slowMode = true));
@@ -255,8 +250,7 @@ public class RobotContainer {
          * This lengthy sequence is for locking on to a tree. Here is the explanation:
          * Once the driver presses this button, the robot will rotate to face the center of the reef.
          * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-         * Once this movement is finished, it will attempt to lock onto the nearest tree using its position.
-         * If a reef tag is in view or enters view, the robot will instead start aiming at an offset from the tag using tx.
+         * If a reef tag is in view or enters view when the movement is finished, the robot will start aiming at an offset from the tag using tx.
          * The offset is to the left if the operator has selected the left tree,
          * or to the right if the operator has selected the right tree.
          * (They can change their selection any time.)
@@ -292,12 +286,34 @@ public class RobotContainer {
                                             .withVelocityY(getVelocityY())
                                             .withDeadband(getDeadband());
                                 })
-                                // This will return false if drive is applied instead of driveFacingPosition.
-                                .until(driveFacingPosition::motionIsFinished))
+                                // motionIsFinished() will return false if drive is applied instead of
+                                // driveFacingPosition.
+                                .until(() -> driveFacingPosition.motionIsFinished()
+                                        && Aiming.isReefTag((int) apriltagID.get())))
+                        // Face the selected tree
+                        .andThen(m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
+                                .withVelocityX(getVelocityX())
+                                .withVelocityY(getVelocityY())
+                                .withDeadband(getDeadband()))));
+
+        /**
+         * This is a backup sequence for locking onto the tree without needing to see apriltags.
+         * Once the driver presses this button, the robot will rotate to face the nearest tree.
+         * If a reef tag is in view or enters view when the movement is finished, the robot will return to limelight aiming.
+         * It will start aiming at an offset from the tag using tx.
+         * The offset is to the left if the operator has selected the left tree,
+         * or to the right if the operator has selected the right tree.
+         * (They can change their selection any time.)
+         * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
+         * and then stop rotating unless a tag returns in view.
+         * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
+         */
+        driverController
+                .square()
+                .toggleOnTrue(m_drivetrain
                         // We have to reset the profile manually because the following request may or may not be a
                         // profiled request
-                        .andThen(driveFacingNearestPosition::resetProfile)
-                        // Drive facing either the nearest blue tree or nearest red tree
+                        .runOnce(driveFacingNearestPosition::resetProfile)
                         .andThen(m_drivetrain
                                 .applyRequest(() -> {
                                     Alliance alliance =
@@ -322,8 +338,9 @@ public class RobotContainer {
                                             .withVelocityY(getVelocityY())
                                             .withDeadband(getDeadband());
                                 })
-                                .until(() -> Aiming.isReefTag((int) apriltagID.get())))
-                        // Face the middle of the tag
+                                .until(() -> driveFacingPosition.motionIsFinished()
+                                        && Aiming.isReefTag((int) apriltagID.get())))
+                        // Face the tag
                         .andThen(m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
                                 .withVelocityX(getVelocityX())
                                 .withVelocityY(getVelocityY())
@@ -336,19 +353,19 @@ public class RobotContainer {
          */
         driverController
                 .share()
-                .and(driverController.triangle())
+                .and(driverController.povUp())
                 .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
         driverController
                 .share()
-                .and(driverController.square())
+                .and(driverController.povDown())
                 .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         driverController
                 .options()
-                .and(driverController.triangle())
+                .and(driverController.povUp())
                 .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         driverController
                 .options()
-                .and(driverController.square())
+                .and(driverController.povDown())
                 .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
@@ -370,7 +387,7 @@ public class RobotContainer {
                 .rightBumper()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));*/
-        operatorController.rightTrigger().whileTrue(m_intake.motorTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.rightTrigger().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
     }
 
     /**

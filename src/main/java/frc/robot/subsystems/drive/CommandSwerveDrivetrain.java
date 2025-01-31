@@ -385,6 +385,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If there is no data available, don't log anything
             if (poseArray.length < 11) {
                 DriverStation.reportWarning("An empty bot pose estimate was received from the front limelight.", false);
+                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
 
@@ -415,6 +416,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
                 DriverStation.reportWarning(
                         "There are no valid tags reported by the front limelight pose estimate.", false);
+                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
 
@@ -433,6 +435,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If there is no data available, don't log anything
             if (poseArray.length < 11) {
                 DriverStation.reportWarning("An empty bot pose estimate was received from the back limelight.", false);
+                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
 
@@ -463,6 +466,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
                 DriverStation.reportWarning(
                         "There are no valid tags reported by the back limelight pose estimate.", false);
+                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
 

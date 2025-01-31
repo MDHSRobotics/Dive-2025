@@ -14,12 +14,18 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ClimbConstants;
 import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
     private final SparkFlex m_leftMotor = new SparkFlex(ClimbConstants.LEFT_ID, MotorType.kBrushless);
     private final SparkFlex m_rightMotor = new SparkFlex(ClimbConstants.RIGHT_ID, MotorType.kBrushless);
+
+    private final SysIdRoutine m_leftRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_leftMotor::setVoltage, null, this));
+    private final SysIdRoutine m_rightRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_rightMotor::setVoltage, null, this));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -48,8 +54,8 @@ public class Climb extends SubsystemBase {
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
-                    m_leftMotor.set(0);
-                    m_rightMotor.set(0);
+                    m_rightMotor.stopMotor();
+                    m_leftMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
     }
@@ -61,23 +67,19 @@ public class Climb extends SubsystemBase {
         });
     }
 
-    /**
-     * An example method querying a boolean state of the subsystem (for example, a digital sensor).
-     *
-     * @return value of some boolean subsystem state, such as a digital sensor.
-     */
-    public boolean exampleCondition() {
-        // Query some boolean state, such as a digital sensor.
-        return false;
+    public Command leftSysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_leftRoutine.quasistatic(direction);
     }
 
-    @Override
-    public void periodic() {
-        // This method will be called once per scheduler run
+    public Command leftSysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_leftRoutine.dynamic(direction);
     }
 
-    @Override
-    public void simulationPeriodic() {
-        // This method will be called once per scheduler run during simulation
+    public Command rightSysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_rightRoutine.quasistatic(direction);
+    }
+
+    public Command rightSysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_rightRoutine.dynamic(direction);
     }
 }

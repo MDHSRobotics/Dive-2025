@@ -10,12 +10,16 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.CatcherConstants;
 import java.util.function.DoubleSupplier;
 
 public class Catcher extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(CatcherConstants.ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_wheelsMotor = new SparkFlex(CatcherConstants.WHEELS_ID, MotorType.kBrushless);
+
+    private final SysIdRoutine m_armRoutine =
+            new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -54,5 +58,13 @@ public class Catcher extends SubsystemBase {
             m_armMotor.set(leftMotorPowerSupplier.getAsDouble());
             m_wheelsMotor.set(rightMotorPowerSupplier.getAsDouble());
         });
+    }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_armRoutine.quasistatic(direction);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_armRoutine.dynamic(direction);
     }
 }

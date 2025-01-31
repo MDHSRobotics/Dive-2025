@@ -141,14 +141,14 @@ public final class Constants {
         public static final double K_D = 0;
 
         /**
-         * Maximum allowed velocity for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * Maximum allowed velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
          * in rotations per second.
          * This still needs to be tuned.
          */
         public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
 
         /**
-         * Maximum allowed acceleration for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * Maximum allowed acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
          * in rotations per second per second.
          * This still needs to be tuned.
          */
@@ -196,14 +196,14 @@ public final class Constants {
         public static final double K_D = 0;
 
         /**
-         * Maximum allowed velocity for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * Maximum allowed velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
          * in rotations per second.
          * This still needs to be tuned.
          */
         public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
 
         /**
-         * Maximum allowed acceleration for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * Maximum allowed acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
          * in rotations per second per second.
          * This still needs to be tuned.
          */
@@ -215,13 +215,21 @@ public final class Constants {
         private IntakeConstants() {}
 
         public static final int ARM_ID = 6;
+        public static final int WHEEL_RIGHT_ID = 7;
+        public static final int WHEEL_LEFT_ID = 8;
 
         /**
-         * The current limit for the arm and wheels.
+         * The current limit for the arm.
          * This is currently set to the value suggested by
          * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
          */
-        public static final int CURRENT_LIMIT = 80;
+        public static final int ARM_CURRENT_LIMIT = 80;
+        /**
+         * The current limit for the wheels.
+         * This is currently set to the value suggested by
+         * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO 550.</a>
+         */
+        public static final int WHEEL_CURRENT_LIMIT = 40;
 
         /**
          * The conversion of motor input rotations to arm output rotations.
@@ -236,6 +244,18 @@ public final class Constants {
         public static final double ARM_VELOCITY_CONVERSION_FACTOR = (1.0 / 78.0) / 60.0;
 
         /**
+         * The conversion of motor input rotations to wheel output rotations.
+         * This is equal to 1 over the total gear ratio.
+         */
+        public static final double WHEEL_POSITION_CONVERSION_FACTOR = 1.0 / 4.0;
+
+        /**
+         * The conversion of motor input rotations per minute to arm output rotations per second.
+         * This is equal to 1 over the total gear ratio (times 1 minute over 60 seconds).
+         */
+        public static final double WHEEL_VELOCITY_CONVERSION_FACTOR = (1.0 / 4.0) / 60.0;
+
+        /**
          * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
          * This still needs to be tuned.
          */
@@ -248,14 +268,14 @@ public final class Constants {
         public static final double K_D = 0;
 
         /**
-         * Maximum allowed velocity for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * Maximum allowed velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
          * in rotations per second.
          * This still needs to be tuned.
          */
         public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
 
         /**
-         * Maximum allowed acceleration for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop/maxmotion-position-control">MAXMotion Position Control</a>
+         * Maximum allowed acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
          * in rotations per second per second.
          * This still needs to be tuned.
          */
@@ -389,10 +409,14 @@ public final class Constants {
             new Translation3d(Inches.of(193.10), Inches.of(130.17), Inches.of(12.13))
         };
 
+        /** Log this array to AdvantageScope when there are no tags reported by the limelight. */
+        public static final Translation3d[] NO_VISIBLE_TAGS = new Translation3d[0];
+
         /**
          * Rotations of the reef walls for for aligning perpendicular to them. The rotations are in no particular order.
          * <p>
-         * These rotations correspond to the Z-Rotation of the reef wall tags on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a> plus 180 degrees.
+         * These rotations correspond to the Z-Rotation of the reef wall tags on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a>
+         * plus 180 degrees.
          */
         public static final List<Rotation2d> REEF_WALL_ROTATIONS = List.of(
                 new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
@@ -405,7 +429,8 @@ public final class Constants {
         /**
          * Rotations of the Apriltags for aligning perpendicular to them.
          * <p>
-         * These rotations correspond to the Z-Rotation on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a> plus 180 degrees.
+         * These rotations correspond to the Z-Rotation on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a>
+         * plus 180 degrees.
          * <p>
          * IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22.
          * Basically, index into the array by subtracting one from the id.
@@ -452,5 +477,9 @@ public final class Constants {
             CatcherConstants.WHEELS_ID,
             "Catcher-Wheels",
             IntakeConstants.ARM_ID,
-            "Intake-Arm");
+            "Intake-Arm",
+            IntakeConstants.WHEEL_LEFT_ID,
+            "Intake-Wheel-Left",
+            IntakeConstants.WHEEL_RIGHT_ID,
+            "Intake-Wheel-Right");
 }
