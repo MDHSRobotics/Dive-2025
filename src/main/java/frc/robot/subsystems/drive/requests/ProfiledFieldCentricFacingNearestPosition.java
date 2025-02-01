@@ -16,11 +16,8 @@ import java.util.List;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a
- * specified heading angle to ensure the robot is facing the desired position.
+ * specified heading angle to ensure the robot is facing the nearest of the given positions.
  * Rotation to the target direction is profiled using a trapezoid profile.
- * <p>
- * When users use this request, they specify the direction the robot should
- * travel oriented against the field, and a list of positions the robot could be facing.
  * <p>
  * An example scenario is that the robot is at (0,0),
  * and the user provides a list of (1,1) and (-50,-50).

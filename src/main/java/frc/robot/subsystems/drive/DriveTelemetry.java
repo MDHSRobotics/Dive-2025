@@ -17,9 +17,7 @@ import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.VisionConstants;
 
 public class DriveTelemetry {
-    /* What to publish over networktables for telemetry */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-
     /**
      * Provides the robot orientation to the front limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
      * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.

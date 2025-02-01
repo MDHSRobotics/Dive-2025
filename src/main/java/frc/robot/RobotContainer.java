@@ -154,46 +154,8 @@ public class RobotContainer {
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
-        /*
-         * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
-         * Once the driver presses this button, the robot will orient to face the center of the reef.
-         * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-         * Once this movement is finished, the robot will snap to the closest angle that orients itself with a reef wall.
-         * If a reef tag is in view or enters view, the robot will instead orient itself perpendicular to the tag.
-         * It does this by looking for the closest tag (based on tag size in the camera view),
-         * and snapping to an angle that faces the wall (based on the tag's id).
-         * The point of this is to allow the robot to snap to each wall as it rotates around the reef.
-         * If the robot loses sight of all reef tags, it will finish rotating based on the last known angle,
-         * and then stop rotating unless a tag returns in view.
-         */
         driverController.circle().toggleOnTrue(aimingRoutines.orientToFaceReefWall());
-
-        /*
-         * This lengthy sequence is for locking on to a tree. Here is the explanation:
-         * Once the driver presses this button, the robot will rotate to face the center of the reef.
-         * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-         * If a reef tag is in view or enters view when the movement is finished, the robot will start aiming at an offset from the tag using tx.
-         * The offset is to the left if the operator has selected the left tree,
-         * or to the right if the operator has selected the right tree.
-         * (They can change their selection any time.)
-         * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
-         * and then stop rotating unless a tag returns in view.
-         * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
-         */
         driverController.cross().toggleOnTrue(aimingRoutines.orientToFaceTree());
-
-        /**
-         * This is a backup sequence for locking onto the tree without needing to see apriltags.
-         * Once the driver presses this button, the robot will rotate to face the nearest tree.
-         * If a reef tag is in view or enters view when the movement is finished, the robot will return to limelight aiming.
-         * It will start aiming at an offset from the tag using tx.
-         * The offset is to the left if the operator has selected the left tree,
-         * or to the right if the operator has selected the right tree.
-         * (They can change their selection any time.)
-         * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
-         * and then stop rotating unless a tag returns in view.
-         * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
-         */
         driverController.square().toggleOnTrue(aimingRoutines.orientToFaceTreeWithoutLimelight());
 
         /*
@@ -240,6 +202,9 @@ public class RobotContainer {
         operatorController.rightTrigger().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
     }
 
+    /**
+     * Registers the <a href="https://pathplanner.dev/pplib-named-commands.html">Named Commands</a> used in PathPlanner.
+     */
     private void registerNamedCommands() {
         // NamedCommands.registerCommand("Lower Arm", null);
     }

@@ -6,6 +6,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
@@ -17,6 +18,11 @@ import frc.robot.subsystems.drive.requests.ProfiledFieldCentricVisualServoing;
 import frc.robot.util.Aiming;
 import java.util.function.DoubleSupplier;
 
+/**
+ * This class provides instanced command factories for swerve drive aiming.
+ * <p>
+ * Since these commands are so long, they have been moved here to shorten RobotContainer.
+ */
 public class AimingRoutines {
     private final CommandSwerveDrivetrain m_drivetrain;
 
@@ -48,17 +54,26 @@ public class AimingRoutines {
             .withPIDGains(DriveConstants.K_P, 0, DriveConstants.K_D)
             .withTolerance(DriveConstants.GOAL_TOLERANCE);
 
-    /* NetworkTables Logging */
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     /**
      * Gets the ID of the primary in-view apriltag.
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">limelight NetworkTables API</a>
      * @see {@link frc.robot.util.LimelightHelpers#getFiducialID(String) LimelightHelpers equivalent}
      */
-    private final IntegerSubscriber apriltagID = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+    private final IntegerSubscriber apriltagID = NetworkTableInstance.getDefault()
+            .getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
             .getIntegerTopic("tid")
             .subscribe(0);
 
+    /**
+     * Constructs an object that provides <a href="https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#non-static-command-factories">instanced command factories</a> for swerve drive aiming.
+     * @param drivetrain The drivetrain to drive and aim with.
+     * @param backupDrive A backup driving request to use in case the custom requests cannot be used.
+     * @param velocityXSupplier A method reference or lambda that returns X velocity.
+     * @param velocityYSupplierA method reference or lambda that returns Y velocity.
+     * @param rotationalRateSupplier A method reference or lambda that returns rotational rate. Only used in backup driving.
+     * @param deadbandSupplier A method reference or lambda that returns deadband.
+     * @param rotationalDeadbandSupplier A method reference or lambda that returns rotational deadband. Only used in backup driving.
+     */
     public AimingRoutines(
             CommandSwerveDrivetrain drivetrain,
             FieldCentric backupDrive,
@@ -89,38 +104,32 @@ public class AimingRoutines {
      * and then stop rotating unless a tag returns in view.
      */
     public Command orientToFaceReefWall() {
-        return m_drivetrain
-                // We have to reset the profile manually because the following request may or may not be a
-                // profiled request
-                .runOnce(driveFacingPosition::resetProfile)
-                .andThen(
-                        // Face either the blue or red reef
-                        m_drivetrain
-                                .applyRequest(() -> {
-                                    Alliance alliance =
-                                            DriverStation.getAlliance().orElse(null);
-                                    if (alliance == Alliance.Blue) {
-                                        driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
-                                    } else if (alliance == Alliance.Red) {
-                                        driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                                    } else {
-                                        DriverStation.reportWarning(
-                                                "Driver Station not connected, robot will drive normally!", false);
-                                        return backupDrive
-                                                .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                                .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                                .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
-                                                .withDeadband(m_deadbandSupplier.getAsDouble())
-                                                .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble());
-                                    }
-                                    return driveFacingPosition
-                                            .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                            .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                            .withDeadband(m_deadbandSupplier.getAsDouble());
-                                })
-                                // This will return false if drive is applied instead of driveFacingPosition.
-                                .until(driveFacingPosition::motionIsFinished))
-                .andThen(m_drivetrain
+        return Commands.sequence(
+                m_drivetrain
+                        .startRun(driveFacingPosition::resetProfile, () -> {
+                            Alliance alliance = DriverStation.getAlliance().orElse(null);
+                            if (alliance == Alliance.Blue) {
+                                driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
+                            } else if (alliance == Alliance.Red) {
+                                driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                            } else {
+                                DriverStation.reportWarning(
+                                        "Driver Station not connected, robot will drive normally!", false);
+                                m_drivetrain.setControl(backupDrive
+                                        .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                        .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                        .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
+                                        .withDeadband(m_deadbandSupplier.getAsDouble())
+                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble()));
+                            }
+                            m_drivetrain.setControl(driveFacingPosition
+                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                        })
+                        // motionIsFinished() will return false if drive is applied instead of driveFacingPosition.
+                        .until(driveFacingPosition::motionIsFinished),
+                m_drivetrain
                         .startRun(
                                 () -> {
                                     driveFacingAngle.resetProfile();
@@ -136,9 +145,8 @@ public class AimingRoutines {
                                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                                         .withDeadband(m_deadbandSupplier.getAsDouble())))
-                        .until(() -> Aiming.isReefTag((int) apriltagID.get())))
-                // Drive facing perpendicular to the apriltag
-                .andThen(m_drivetrain.applyProfiledRequest(() -> {
+                        .until(() -> Aiming.isReefTag((int) apriltagID.get())),
+                m_drivetrain.applyProfiledRequest(() -> {
                     int id = (int) apriltagID.get();
                     if (Aiming.isReefTag(id)) {
                         driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
@@ -163,12 +171,9 @@ public class AimingRoutines {
      * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
      */
     public Command orientToFaceTree() {
-        return m_drivetrain
-                // We have to reset the profile manually because the following request may or may not be a
-                // profiled request
-                .runOnce(driveFacingPosition::resetProfile)
-                .andThen(m_drivetrain
-                        .applyRequest(() -> {
+        return Commands.sequence(
+                m_drivetrain
+                        .startRun(driveFacingPosition::resetProfile, () -> {
                             Alliance alliance = DriverStation.getAlliance().orElse(null);
                             if (alliance == Alliance.Blue) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
@@ -177,29 +182,27 @@ public class AimingRoutines {
                             } else {
                                 DriverStation.reportWarning(
                                         "Driver Station not connected, robot will drive normally!", false);
-                                return backupDrive
+                                m_drivetrain.setControl(backupDrive
                                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                                         .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
                                         .withDeadband(m_deadbandSupplier.getAsDouble())
-                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble());
+                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble()));
                             }
-                            return driveFacingPosition
+                            m_drivetrain.setControl(driveFacingPosition
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble());
+                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
                         })
-                        // motionIsFinished() will return false if drive is applied instead of
-                        // driveFacingPosition.
+                        // motionIsFinished() will return false if drive is applied instead of driveFacingPosition.
                         .until(() ->
-                                driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())))
+                                driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
                 // Face the selected tree
-                .andThen(m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
+                m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                         .withDeadband(m_deadbandSupplier.getAsDouble())));
     }
-    ;
 
     /**
      * This is a backup sequence for locking onto the tree without needing to see apriltags.
@@ -214,12 +217,9 @@ public class AimingRoutines {
      * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
      */
     public Command orientToFaceTreeWithoutLimelight() {
-        return m_drivetrain
-                // We have to reset the profile manually because the following request may or may not be a
-                // profiled request
-                .runOnce(driveFacingNearestPosition::resetProfile)
-                .andThen(m_drivetrain
-                        .applyRequest(() -> {
+        return Commands.sequence(
+                m_drivetrain
+                        .startRun(driveFacingNearestPosition::resetProfile, () -> {
                             Alliance alliance = DriverStation.getAlliance().orElse(null);
                             if (alliance == Alliance.Blue) {
                                 driveFacingNearestPosition.withTargetPositions(FieldConstants.BLUE_REEF_TREE_POSITIONS);
@@ -228,22 +228,23 @@ public class AimingRoutines {
                             } else {
                                 DriverStation.reportWarning(
                                         "Driver Station not connected, robot will drive normally!", false);
-                                return backupDrive
+                                m_drivetrain.setControl(backupDrive
                                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                                         .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
                                         .withDeadband(m_deadbandSupplier.getAsDouble())
-                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble());
+                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble()));
                             }
-                            return driveFacingNearestPosition
+                            m_drivetrain.setControl(driveFacingNearestPosition
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble());
+                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
                         })
+                        // motionIsFinished() will return false if drive is applied instead of driveFacingPosition.
                         .until(() ->
-                                driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())))
+                                driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
                 // Face the tag
-                .andThen(m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
+                m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                         .withDeadband(m_deadbandSupplier.getAsDouble())));

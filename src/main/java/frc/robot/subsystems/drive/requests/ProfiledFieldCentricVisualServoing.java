@@ -18,7 +18,7 @@ import edu.wpi.first.units.measure.*;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner,
- * maintaining a heading at which tx on a limelight is 0.
+ * maintaining a heading angle to ensure that limelight tx is 0.
  * Rotation to the target direction is profiled using a trapezoid profile.
  * <p>
  * An example scenario is that the robot sees an apriltag at tx = 10 (degrees clockwise).
@@ -97,7 +97,7 @@ public class ProfiledFieldCentricVisualServoing implements ProfiledSwerveRequest
      * Creates a new profiled request with the given constraints and camera.
      *
      * @param constraints Constraints for the trapezoid profile
-     * @param cameraName The NetworkTable key for the camera. The camera's NetworkTable must be in the global default instance, and it must have a double topic called "tx".
+     * @param cameraName The NetworkTable key for the limelight.
      */
     public ProfiledFieldCentricVisualServoing(TrapezoidProfile.Constraints constraints, String cameraName) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);

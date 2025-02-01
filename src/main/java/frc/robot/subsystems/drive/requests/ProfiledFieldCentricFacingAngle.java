@@ -18,9 +18,6 @@ import edu.wpi.first.units.measure.*;
  * specified heading angle to ensure the robot is facing the desired direction.
  * Rotation to the target direction is profiled using a trapezoid profile.
  * <p>
- * When users use this request, they specify the direction the robot should
- * travel oriented against the field, and the direction the robot should be facing.
- * <p>
  * An example scenario is that the robot is oriented to the east, the VelocityX
  * is +5 m/s, VelocityY is 0 m/s, and TargetDirection is 180 degrees.
  * In this scenario, the robot would drive northward at 5 m/s and turn clockwise
