@@ -21,9 +21,6 @@ import edu.wpi.first.units.measure.*;
  * maintaining a heading at which tx on a limelight is 0.
  * Rotation to the target direction is profiled using a trapezoid profile.
  * <p>
- * When users use this request, they just specify the direction the robot should
- * travel oriented against the field.
- * <p>
  * An example scenario is that the robot sees an apriltag at tx = 10 (degrees clockwise).
  * The robot would then rotate 10 degrees clockwise to face the tag.
  * <p>
