@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import static frc.robot.Constants.ClimbConstants.*;
+
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
@@ -11,21 +13,28 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.ClimbConstants;
 import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
-    private final SparkFlex m_backMotor = new SparkFlex(ClimbConstants.BACK_ID, MotorType.kBrushless);
-    private final SparkFlex m_frontMotor = new SparkFlex(ClimbConstants.FRONT_ID, MotorType.kBrushless);
+    private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
+    private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
 
     private final SysIdRoutine m_backRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backMotor::setVoltage, null, this));
+            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backHookMotor::setVoltage, null, this));
     private final SysIdRoutine m_frontRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_frontMotor::setVoltage, null, this));
+            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_frontHookMotor::setVoltage, null, this));
+
+    private final SimpleMotorFeedforward m_hookFeedforward = new SimpleMotorFeedforward(K_S, K_V, K_A);
+
+    // Two motion profiles are needed because trapezoid profiles have their own internal state.
+    private final TrapezoidProfile m_backProfile = new TrapezoidProfile(ANGULAR_MOTION_CONSTRAINTS);
+    private final TrapezoidProfile m_frontProfile = new TrapezoidProfile(ANGULAR_MOTION_CONSTRAINTS);
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -34,32 +43,29 @@ public class Climb extends SubsystemBase {
      */
     public Climb() {
         SparkFlexConfig config = new SparkFlexConfig();
-        config.smartCurrentLimit(ClimbConstants.CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
         config.encoder
-                .positionConversionFactor(ClimbConstants.POSITION_CONVERSION_FACTOR)
-                .velocityConversionFactor(ClimbConstants.VELOCITY_CONVERSION_FACTOR);
-        config.closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .p(ClimbConstants.K_P)
-                .d(ClimbConstants.K_D);
+                .positionConversionFactor(POSITION_CONVERSION_FACTOR)
+                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR);
+        config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
         config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
-        m_backMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         config.inverted(true);
-        m_frontMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
-                    m_frontMotor.stopMotor();
-                    m_backMotor.stopMotor();
+                    m_frontHookMotor.stopMotor();
+                    m_backHookMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
     }
 
     public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
-            m_backMotor.set(backMotorPowerSupplier.getAsDouble());
-            m_frontMotor.set(frontMotorPowerSupplier.getAsDouble());
+            m_backHookMotor.set(backMotorPowerSupplier.getAsDouble());
+            m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble());
         });
     }
 

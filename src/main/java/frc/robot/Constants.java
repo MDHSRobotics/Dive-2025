@@ -4,19 +4,29 @@
 
 package frc.robot;
 
+import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Minute;
+import static edu.wpi.first.units.Units.Radian;
+import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.RotationsPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Seconds;
+import static edu.wpi.first.units.Units.Volts;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecond;
+import static edu.wpi.first.units.Units.VoltsPerRadianPerSecondSquared;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularAcceleration;
+import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.drive.TunerConstants;
 import java.util.List;
@@ -32,6 +42,12 @@ import java.util.Map;
  */
 public final class Constants {
     private Constants() {}
+
+    /**
+     * The amount of time between runs of the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a>
+     * used in every subsystem.
+     */
+    public static final double K_DT = Seconds.of(0.02).in(Seconds);
 
     public static class ControllerConstants {
         private ControllerConstants() {}
@@ -82,16 +98,20 @@ public final class Constants {
         /**
          * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
          * used in custom swerve requests.
+         * The gain is output angular velocity (radians per second) per error (radians).
          * This still needs to be tuned.
          */
-        public static final double K_P = 0;
+        public static final double K_P =
+                RadiansPerSecond.per(Radian).ofNative(0).in(RadiansPerSecond.per(Radian));
 
         /**
          * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
          * used in custom swerve requests.
+         * The gain is output angular velocity (radians per second) per the rate of change of error (radians per second).
          * This still needs to be tuned.
          */
-        public static final double K_D = 0;
+        public static final double K_D =
+                RadiansPerSecond.per(RadiansPerSecond).ofNative(0).in(RadiansPerSecond.per(RadiansPerSecond));
 
         /**
          * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
@@ -110,50 +130,75 @@ public final class Constants {
         public static final int FRONT_ID = 3;
 
         /**
-         * The current limit for the climb motors.
+         * The current limit for the climb motors in amps.
          * This is currently set to the value suggested by
          * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
          */
-        public static final int CURRENT_LIMIT = 80;
+        public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
 
         /**
-         * The conversion of motor input rotations to aluminum hook output rotations.
-         * This is equal to 1 over the gear ratio.
+         * The conversion of motor input rotations to climb hook output radians.
+         * Motor input rotations will be divided by the gear ratio, and then converted to radians.
          */
-        public static final double POSITION_CONVERSION_FACTOR = 1.0 / 80.0;
-
+        public static final double POSITION_CONVERSION_FACTOR =
+                Rotations.of(1).div(80.0).in(Radians);
         /**
-         * The conversion of motor input rotations per minute to aluminum hook output rotations per second.
-         * This is equal to 1 over the gear ratio (times 1 minute over 60 seconds).
+         * The conversion of motor input rotations per minute to climb hook output radians per second.
+         * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
          */
-        public static final double VELOCITY_CONVERSION_FACTOR = (1.0 / 80.0) / 60.0;
+        public static final double VELOCITY_CONVERSION_FACTOR =
+                Rotations.per(Minute).of(1).div(80.0).in(RadiansPerSecond);
 
         /**
-         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
+         * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
+         * in volts.
          * This still needs to be tuned.
          */
-        public static final double K_P = 0;
-
+        public static final double K_S = Volts.of(0).in(Volts);
         /**
-         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
+         * Velocity gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
+         * in volts per radian per second.
          * This still needs to be tuned.
          */
-        public static final double K_D = 0;
-
+        public static final double K_V = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
         /**
-         * Maximum allowed velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
-         * in rotations per second.
+         * Acceleration gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
+         * in volts per radian per second squared.
          * This still needs to be tuned.
          */
-        public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
+        public static final double K_A =
+                VoltsPerRadianPerSecondSquared.ofNative(0).in(VoltsPerRadianPerSecondSquared);
 
         /**
-         * Maximum allowed acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
-         * in rotations per second per second.
+         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
+         * in volts per radian.
          * This still needs to be tuned.
          */
-        public static final double MAX_ACCELERATION =
-                RotationsPerSecondPerSecond.of(0).in(RotationsPerSecondPerSecond);
+        public static final double K_P = Volts.per(Radian).ofNative(0).in(Volts.per(Radian));
+        /**
+         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
+         * in volts per radian per second.
+         * This still needs to be tuned.
+         */
+        public static final double K_D = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
+
+        /**
+         * Maximum allowed angular velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
+         * This still needs to be tuned.
+         */
+        private static final AngularVelocity MAX_VELOCITY = RadiansPerSecond.of(0);
+        /**
+         * Maximum allowed angular acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
+         * This still needs to be tuned.
+         */
+        private static final AngularAcceleration MAX_ACCELERATION = RadiansPerSecondPerSecond.of(0);
+
+        /**
+         * Maximum allowed angular velocity (in radians per second) and acceleration (in radians per second per second).
+         * @see <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">explanation for motion profiles</a>
+         */
+        public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
+                MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
     }
 
     public static class CatcherConstants {
@@ -163,52 +208,82 @@ public final class Constants {
         public static final int WHEELS_ID = 5;
 
         /**
-         * The current limit for the arm and wheels.
+         * The current limit for the arm and wheels in amps.
          * This is currently set to the value suggested by
          * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
          */
-        public static final int CURRENT_LIMIT = 80;
+        public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
 
         /**
-         * The conversion of motor input rotations to arm output rotations.
-         * This is equal to 1 over the gear ratio.
-         * The gear ratio has not been decided yet.
+         * The conversion of motor input rotations to arm output radians.
+         * Motor input rotations will be divided by the gear ratio, and then converted to radians.
          */
-        public static final double ARM_POSITION_CONVERSION_FACTOR = 1.0 / 27.0;
-
+        public static final double ARM_POSITION_CONVERSION_FACTOR =
+                Rotations.of(1).div(27.0).in(Radians);
         /**
-         * The conversion of motor input rotations per minute to arm output rotations per second.
-         * This is equal to 1 over the gear ratio (times 1 minute over 60 seconds).
-         * The gear ratio has not been decided yet.
+         * The conversion of motor input rotations per minute to arm output radians per second.
+         * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
          */
-        public static final double ARM_VELOCITY_CONVERSION_FACTOR = (1.0 / 27.0) / 60.0;
+        public static final double ARM_VELOCITY_CONVERSION_FACTOR =
+                Rotations.per(Minute).of(1).div(27.0).in(RadiansPerSecond);
 
         /**
-         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
+         * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts.
          * This still needs to be tuned.
          */
-        public static final double K_P = 0;
-
+        public static final double K_S = Volts.of(0).in(Volts);
         /**
-         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
+         * Gravity gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts.
          * This still needs to be tuned.
          */
-        public static final double K_D = 0;
-
+        public static final double K_G = Volts.of(0).in(Volts);
         /**
-         * Maximum allowed velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
-         * in rotations per second.
+         * Velocity gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts per radian per second.
          * This still needs to be tuned.
          */
-        public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
-
+        public static final double K_V = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
         /**
-         * Maximum allowed acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
-         * in rotations per second per second.
+         * Acceleration gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts per radian per second squared.
          * This still needs to be tuned.
          */
-        public static final double MAX_ACCELERATION =
-                RotationsPerSecondPerSecond.of(0).in(RotationsPerSecondPerSecond);
+        public static final double K_A =
+                VoltsPerRadianPerSecondSquared.ofNative(0).in(VoltsPerRadianPerSecondSquared);
+
+        /**
+         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
+         * in volts per radian.
+         * This still needs to be tuned.
+         */
+        public static final double K_P = Volts.per(Radian).ofNative(0).in(Volts.per(Radian));
+        /**
+         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
+         * in volts per radian per second.
+         * This still needs to be tuned.
+         */
+        public static final double K_D = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
+
+        /**
+         * Maximum allowed angular velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
+         * This still needs to be tuned.
+         */
+        private static final AngularVelocity MAX_VELOCITY = RadiansPerSecond.of(0);
+        /**
+         * Maximum allowed angular acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
+         * This still needs to be tuned.
+         */
+        private static final AngularAcceleration MAX_ACCELERATION = RadiansPerSecondPerSecond.of(0);
+
+        /**
+         * Maximum allowed angular velocity (in radians per second) and acceleration (in radians per second per second).
+         * @see <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">explanation for motion profiles</a>
+         */
+        public static final TrapezoidProfile.Constraints ARM_ANGULAR_MOTION_CONSTRAINTS =
+                new TrapezoidProfile.Constraints(
+                        MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
     }
 
     public static class IntakeConstants {
@@ -219,68 +294,101 @@ public final class Constants {
         public static final int WHEEL_LEFT_ID = 8;
 
         /**
-         * The current limit for the arm.
+         * The current limit for the arm in amps.
          * This is currently set to the value suggested by
          * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
          */
-        public static final int ARM_CURRENT_LIMIT = 80;
+        public static final int ARM_CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
         /**
-         * The current limit for the wheels.
+         * The current limit for the wheels in amps.
          * This is currently set to the value suggested by
          * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO 550.</a>
          */
-        public static final int WHEEL_CURRENT_LIMIT = 40;
+        public static final int WHEEL_CURRENT_LIMIT = (int) Amps.of(40).in(Amps);
 
         /**
-         * The conversion of motor input rotations to arm output rotations.
-         * This is equal to 1 over the total gear ratio.
+         * The conversion of motor input rotations to arm output radians.
+         * Motor input rotations will be divided by the gear ratio, and then converted to radians.
          */
-        public static final double ARM_POSITION_CONVERSION_FACTOR = 1.0 / 78.0;
-
+        public static final double ARM_POSITION_CONVERSION_FACTOR =
+                Rotations.of(1).div(78.0).in(Radians);
         /**
-         * The conversion of motor input rotations per minute to arm output rotations per second.
-         * This is equal to 1 over the total gear ratio (times 1 minute over 60 seconds).
+         * The conversion of motor input rotations per minute to arm output radians per second.
+         * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
          */
-        public static final double ARM_VELOCITY_CONVERSION_FACTOR = (1.0 / 78.0) / 60.0;
+        public static final double ARM_VELOCITY_CONVERSION_FACTOR =
+                Rotations.per(Minute).of(1).div(78.0).in(RadiansPerSecond);
 
         /**
-         * The conversion of motor input rotations to wheel output rotations.
-         * This is equal to 1 over the total gear ratio.
+         * The conversion of motor input rotations to wheel output radians.
+         * Motor input rotations will be divided by the gear ratio, and then converted to radians.
          */
-        public static final double WHEEL_POSITION_CONVERSION_FACTOR = 1.0 / 4.0;
-
+        public static final double WHEEL_POSITION_CONVERSION_FACTOR =
+                Rotations.of(1).div(4).in(Radians);
         /**
-         * The conversion of motor input rotations per minute to arm output rotations per second.
-         * This is equal to 1 over the total gear ratio (times 1 minute over 60 seconds).
+         * The conversion of motor input rotations per minute to wheel output radians per second.
+         * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
          */
-        public static final double WHEEL_VELOCITY_CONVERSION_FACTOR = (1.0 / 4.0) / 60.0;
+        public static final double WHEEL_VELOCITY_CONVERSION_FACTOR =
+                Rotations.per(Minute).of(1).div(4.0).in(RadiansPerSecond);
 
         /**
-         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
+         * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts.
          * This still needs to be tuned.
          */
-        public static final double K_P = 0;
-
+        public static final double K_S = Volts.of(0).in(Volts);
         /**
-         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
+         * Gravity gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts.
          * This still needs to be tuned.
          */
-        public static final double K_D = 0;
-
+        public static final double K_G = Volts.of(0).in(Volts);
         /**
-         * Maximum allowed velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
-         * in rotations per second.
+         * Velocity gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts per radian per second.
          * This still needs to be tuned.
          */
-        public static final double MAX_VELOCITY = RotationsPerSecond.of(0).in(RotationsPerSecond);
-
+        public static final double K_V = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
         /**
-         * Maximum allowed acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
-         * in rotations per second per second.
+         * Acceleration gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
+         * in volts per radian per second squared.
          * This still needs to be tuned.
          */
-        public static final double MAX_ACCELERATION =
-                RotationsPerSecondPerSecond.of(0).in(RotationsPerSecondPerSecond);
+        public static final double K_A =
+                VoltsPerRadianPerSecondSquared.ofNative(0).in(VoltsPerRadianPerSecondSquared);
+
+        /**
+         * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
+         * in volts per radian.
+         * This still needs to be tuned.
+         */
+        public static final double K_P = Volts.per(Radian).ofNative(0).in(Volts.per(Radian));
+        /**
+         * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
+         * in volts per radian per second.
+         * This still needs to be tuned.
+         */
+        public static final double K_D = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
+
+        /**
+         * Maximum allowed angular velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
+         * This still needs to be tuned.
+         */
+        private static final AngularVelocity MAX_VELOCITY = RadiansPerSecond.of(0);
+        /**
+         * Maximum allowed angular acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
+         * This still needs to be tuned.
+         */
+        private static final AngularAcceleration MAX_ACCELERATION = RadiansPerSecondPerSecond.of(0);
+
+        /**
+         * Maximum allowed angular velocity (in radians per second) and acceleration (in radians per second per second).
+         * @see <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">explanation for motion profiles</a>
+         */
+        public static final TrapezoidProfile.Constraints ARM_ANGULAR_MOTION_CONSTRAINTS =
+                new TrapezoidProfile.Constraints(
+                        MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
     }
 
     public static class VisionConstants {
