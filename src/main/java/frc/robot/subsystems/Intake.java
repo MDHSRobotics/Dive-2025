@@ -41,10 +41,6 @@ public class Intake extends SubsystemBase {
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .p(IntakeConstants.K_P)
                 .d(IntakeConstants.K_D);
-        config.closedLoop
-                .maxMotion
-                .maxVelocity(IntakeConstants.MAX_VELOCITY)
-                .maxAcceleration(IntakeConstants.MAX_ACCELERATION);
         config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 

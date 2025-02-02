@@ -26,6 +26,7 @@ import java.text.NumberFormat;
  * @see <a href="https://docs.advantagekit.org/getting-started/template-projects/talonfx-swerve-template#wheel-radius-characterization">AdvantageKit's explanation on how to use the command</a>
  */
 public class WheelRadiusCharacterization {
+    private WheelRadiusCharacterization() {}
 
     private static class WheelRadiusCharacterizationState {
         double[] positions = new double[4];

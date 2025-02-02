@@ -105,9 +105,9 @@ public final class Constants {
         private ClimbConstants() {}
 
         /** The CAN id of the left motor. */
-        public static final int LEFT_ID = 2;
+        public static final int BACK_ID = 2;
         /** The CAN id of the right motor. */
-        public static final int RIGHT_ID = 3;
+        public static final int FRONT_ID = 3;
 
         /**
          * The current limit for the climb motors.
@@ -174,14 +174,14 @@ public final class Constants {
          * This is equal to 1 over the gear ratio.
          * The gear ratio has not been decided yet.
          */
-        public static final double ARM_POSITION_CONVERSION_FACTOR = 1.0 / 1.0;
+        public static final double ARM_POSITION_CONVERSION_FACTOR = 1.0 / 27.0;
 
         /**
          * The conversion of motor input rotations per minute to arm output rotations per second.
          * This is equal to 1 over the gear ratio (times 1 minute over 60 seconds).
          * The gear ratio has not been decided yet.
          */
-        public static final double ARM_VELOCITY_CONVERSION_FACTOR = (1.0 / 1.0) / 60.0;
+        public static final double ARM_VELOCITY_CONVERSION_FACTOR = (1.0 / 27.0) / 60.0;
 
         /**
          * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>.
@@ -468,10 +468,10 @@ public final class Constants {
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
     public static final Map<Integer, String> REV_CAN_ID_ALIASES = Map.of(
-            ClimbConstants.LEFT_ID,
-            "Climb-Left",
-            ClimbConstants.RIGHT_ID,
-            "Climb-Right",
+            ClimbConstants.BACK_ID,
+            "Climb-Back",
+            ClimbConstants.FRONT_ID,
+            "Climb-Front",
             CatcherConstants.ARM_ID,
             "Catcher-Arm",
             CatcherConstants.WHEELS_ID,

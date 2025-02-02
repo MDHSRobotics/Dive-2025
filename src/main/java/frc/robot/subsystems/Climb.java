@@ -19,13 +19,13 @@ import frc.robot.Constants.ClimbConstants;
 import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
-    private final SparkFlex m_leftMotor = new SparkFlex(ClimbConstants.LEFT_ID, MotorType.kBrushless);
-    private final SparkFlex m_rightMotor = new SparkFlex(ClimbConstants.RIGHT_ID, MotorType.kBrushless);
+    private final SparkFlex m_backMotor = new SparkFlex(ClimbConstants.BACK_ID, MotorType.kBrushless);
+    private final SparkFlex m_frontMotor = new SparkFlex(ClimbConstants.FRONT_ID, MotorType.kBrushless);
 
-    private final SysIdRoutine m_leftRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_leftMotor::setVoltage, null, this));
-    private final SysIdRoutine m_rightRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_rightMotor::setVoltage, null, this));
+    private final SysIdRoutine m_backRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backMotor::setVoltage, null, this));
+    private final SysIdRoutine m_frontRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_frontMotor::setVoltage, null, this));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -42,44 +42,40 @@ public class Climb extends SubsystemBase {
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
                 .p(ClimbConstants.K_P)
                 .d(ClimbConstants.K_D);
-        config.closedLoop
-                .maxMotion
-                .maxVelocity(ClimbConstants.MAX_VELOCITY)
-                .maxAcceleration(ClimbConstants.MAX_ACCELERATION);
         config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
-        m_leftMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_backMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         config.inverted(true);
-        m_rightMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_frontMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
-                    m_rightMotor.stopMotor();
-                    m_leftMotor.stopMotor();
+                    m_frontMotor.stopMotor();
+                    m_backMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
     }
 
-    public Command motorTestCommand(DoubleSupplier leftMotorPowerSupplier, DoubleSupplier rightMotorPowerSupplier) {
+    public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
-            m_leftMotor.set(leftMotorPowerSupplier.getAsDouble());
-            m_rightMotor.set(rightMotorPowerSupplier.getAsDouble());
+            m_backMotor.set(backMotorPowerSupplier.getAsDouble());
+            m_frontMotor.set(frontMotorPowerSupplier.getAsDouble());
         });
     }
 
     public Command leftSysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_leftRoutine.quasistatic(direction);
+        return m_backRoutine.quasistatic(direction);
     }
 
     public Command leftSysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_leftRoutine.dynamic(direction);
+        return m_backRoutine.dynamic(direction);
     }
 
     public Command rightSysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_rightRoutine.quasistatic(direction);
+        return m_frontRoutine.quasistatic(direction);
     }
 
     public Command rightSysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_rightRoutine.dynamic(direction);
+        return m_frontRoutine.dynamic(direction);
     }
 }
