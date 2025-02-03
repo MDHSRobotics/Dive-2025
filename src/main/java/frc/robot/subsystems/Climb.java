@@ -48,7 +48,11 @@ public class Climb extends SubsystemBase {
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR);
         config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
-        config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
+        config.signals
+                .primaryEncoderPositionPeriodMs(10)
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(10)
+                .primaryEncoderVelocityAlwaysOn(true);
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         config.inverted(true);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

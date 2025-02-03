@@ -43,7 +43,11 @@ public class Intake extends SubsystemBase {
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR);
         config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
-        config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
+        config.signals
+                .primaryEncoderPositionPeriodMs(10)
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(10)
+                .primaryEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkMaxConfig wheelConfig = new SparkMaxConfig();

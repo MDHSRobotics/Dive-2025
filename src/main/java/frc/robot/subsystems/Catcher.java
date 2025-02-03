@@ -37,7 +37,11 @@ public class Catcher extends SubsystemBase {
     public Catcher() {
         SparkFlexConfig config = new SparkFlexConfig();
         config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
-        config.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
+        config.signals
+                .primaryEncoderPositionPeriodMs(10)
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(10)
+                .primaryEncoderVelocityAlwaysOn(true);
         m_wheelsMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         config.encoder
