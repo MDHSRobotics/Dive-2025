@@ -187,7 +187,7 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        /*operatorController
+        operatorController
                 .rightTrigger()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
@@ -195,11 +195,12 @@ public class RobotContainer {
                 .leftTrigger()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
-        operatorController
-                .rightBumper()
-                .whileTrue(m_climb.motorTestCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));*/
-        operatorController.rightTrigger().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.a().whileTrue(m_catcher.wheelTestCommand());
+        operatorController.x().whileTrue(m_catcher.wheelBackwardsTestCommand());
+        operatorController.x().whileTrue(m_intake.wheelsTestCommand());
+        operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
     }
 
     /**

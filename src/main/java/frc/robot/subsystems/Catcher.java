@@ -53,17 +53,24 @@ public class Catcher extends SubsystemBase {
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
-                    m_armMotor.set(0);
-                    m_wheelsMotor.set(0);
+                    m_armMotor.stopMotor();
+                    m_wheelsMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
     }
 
-    public Command motorTestCommand(DoubleSupplier leftMotorPowerSupplier, DoubleSupplier rightMotorPowerSupplier) {
+    public Command armTestCommand(DoubleSupplier armPowerSupplier) {
         return this.run(() -> {
-            m_armMotor.set(leftMotorPowerSupplier.getAsDouble());
-            m_wheelsMotor.set(rightMotorPowerSupplier.getAsDouble());
+            m_armMotor.set(armPowerSupplier.getAsDouble());
         });
+    }
+
+    public Command wheelTestCommand() {
+        return this.run(() -> m_wheelsMotor.set(0.5));
+    }
+
+    public Command wheelBackwardsTestCommand() {
+        return this.run(() -> m_wheelsMotor.set(-0.5));
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

@@ -69,16 +69,23 @@ public class Intake extends SubsystemBase {
                 .andThen(Commands.idle(this));
     }
 
-    public Command armTestCommand(DoubleSupplier motorPowerSupplier) {
+    public Command armTestCommand(DoubleSupplier armPowerSupplier) {
         return this.run(() -> {
-            m_armMotor.set(motorPowerSupplier.getAsDouble());
+            m_armMotor.set(armPowerSupplier.getAsDouble());
         });
     }
 
-    public Command wheelsTestCommand(DoubleSupplier leftPowerSupplier, DoubleSupplier rightPowerSupplier) {
+    public Command wheelsTestCommand() {
         return this.run(() -> {
-            m_wheelLeftMotor.set(leftPowerSupplier.getAsDouble());
-            m_wheelRightMotor.set(rightPowerSupplier.getAsDouble());
+            m_wheelLeftMotor.set(0.5);
+            m_wheelRightMotor.set(0.5);
+        });
+    }
+
+    public Command wheelsBackwardsTestCommand() {
+        return this.run(() -> {
+            m_wheelLeftMotor.set(-0.5);
+            m_wheelRightMotor.set(-0.5);
         });
     }
 
