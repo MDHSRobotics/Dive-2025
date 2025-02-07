@@ -11,6 +11,9 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -28,6 +31,11 @@ public class Catcher extends SubsystemBase {
     private final ArmFeedforward m_armFeedforward = new ArmFeedforward(K_S, K_G, K_V, K_A);
 
     private final TrapezoidProfile m_armProfile = new TrapezoidProfile(ARM_ANGULAR_MOTION_CONSTRAINTS);
+
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable table = inst.getTable("Catcher");
+    private final DoubleEntry wheelSpeedEntry =
+            table.getDoubleTopic("Wheel Speed").getEntry(0.5);
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -49,6 +57,9 @@ public class Catcher extends SubsystemBase {
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR);
         config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
         m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // You need to publish a value for the entry to appear in NetworkTables
+        wheelSpeedEntry.set(0.5);
     }
 
     public Command disableMotorsCommand() {
@@ -66,11 +77,11 @@ public class Catcher extends SubsystemBase {
     }
 
     public Command wheelTestCommand() {
-        return this.run(() -> m_wheelsMotor.set(0.5));
+        return this.run(() -> m_wheelsMotor.set(wheelSpeedEntry.get()));
     }
 
     public Command wheelBackwardsTestCommand() {
-        return this.run(() -> m_wheelsMotor.set(-0.5));
+        return this.run(() -> m_wheelsMotor.set(-wheelSpeedEntry.get()));
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

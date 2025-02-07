@@ -13,6 +13,9 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -30,6 +33,13 @@ public class Intake extends SubsystemBase {
     private final ArmFeedforward m_armFeedforward = new ArmFeedforward(K_S, K_G, K_V, K_A);
 
     private final TrapezoidProfile m_armProfile = new TrapezoidProfile(ARM_ANGULAR_MOTION_CONSTRAINTS);
+
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable table = inst.getTable("Intake");
+    private final DoubleEntry leftWheelSpeedEntry =
+            table.getDoubleTopic("Left Wheel Speed").getEntry(0.5);
+    private final DoubleEntry rightWheelSpeedEntry =
+            table.getDoubleTopic("Right Wheel Speed").getEntry(0.5);
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -59,6 +69,10 @@ public class Intake extends SubsystemBase {
         wheelConfig.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
         m_wheelLeftMotor.configure(wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         m_wheelRightMotor.configure(wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // You need to publish a value for the entry to appear in NetworkTables
+        leftWheelSpeedEntry.set(0.5);
+        rightWheelSpeedEntry.set(0.5);
     }
 
     public Command disableMotorsCommand() {
@@ -77,15 +91,15 @@ public class Intake extends SubsystemBase {
 
     public Command wheelsTestCommand() {
         return this.run(() -> {
-            m_wheelLeftMotor.set(0.5);
-            m_wheelRightMotor.set(0.5);
+            m_wheelLeftMotor.set(leftWheelSpeedEntry.get());
+            m_wheelRightMotor.set(rightWheelSpeedEntry.get());
         });
     }
 
     public Command wheelsBackwardsTestCommand() {
         return this.run(() -> {
-            m_wheelLeftMotor.set(-0.5);
-            m_wheelRightMotor.set(-0.5);
+            m_wheelLeftMotor.set(-leftWheelSpeedEntry.get());
+            m_wheelRightMotor.set(-rightWheelSpeedEntry.get());
         });
     }
 
