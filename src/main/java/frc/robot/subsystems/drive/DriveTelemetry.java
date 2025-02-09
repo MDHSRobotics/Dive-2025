@@ -38,31 +38,35 @@ public class DriveTelemetry {
     /** Limelight requires this to be a array of size 6. */
     private double[] megatag2Orientation = new double[6];
 
+    /** Used to derive linear accel */
+    private double previousLinearSpeed = 0;
     /** Used to derive angular accel */
     private double previousYawRate = 0;
 
     /* Robot swerve drive state */
     private final NetworkTable driveStateTable = inst.getTable("DriveState");
-    private final StructPublisher<Pose2d> drivePose =
+    private final StructPublisher<Pose2d> drivePosePub =
             driveStateTable.getStructTopic("Pose", Pose2d.struct).publish();
-    private final StructPublisher<ChassisSpeeds> driveSpeeds =
+    private final StructPublisher<ChassisSpeeds> driveSpeedsPub =
             driveStateTable.getStructTopic("Speeds", ChassisSpeeds.struct).publish();
-    private final StructArrayPublisher<SwerveModuleState> driveModuleStates = driveStateTable
+    private final StructArrayPublisher<SwerveModuleState> driveModuleStatesPub = driveStateTable
             .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
             .publish();
-    private final StructArrayPublisher<SwerveModuleState> driveModuleTargets = driveStateTable
+    private final StructArrayPublisher<SwerveModuleState> driveModuleTargetsPub = driveStateTable
             .getStructArrayTopic("ModuleTargets", SwerveModuleState.struct)
             .publish();
-    private final StructArrayPublisher<SwerveModulePosition> driveModulePositions = driveStateTable
+    private final StructArrayPublisher<SwerveModulePosition> driveModulePositionsPub = driveStateTable
             .getStructArrayTopic("ModulePositions", SwerveModulePosition.struct)
             .publish();
-    private final DoublePublisher driveOdometryFrequency =
+    private final DoublePublisher driveOdometryFrequencyPub =
             driveStateTable.getDoubleTopic("OdometryFrequency").publish();
-    private final DoublePublisher driveOdometryPeriod =
+    private final DoublePublisher driveOdometryPeriodPub =
             driveStateTable.getDoubleTopic("OdometryPeriod").publish();
-    private final DoublePublisher linearSpeed =
+    private final DoublePublisher linearSpeedPub =
             driveStateTable.getDoubleTopic("Linear Speed").publish();
-    private final DoublePublisher angularAccel =
+    private final DoublePublisher linearAccelPub =
+            driveStateTable.getDoubleTopic("Linear Accel").publish();
+    private final DoublePublisher angularAccelPub =
             driveStateTable.getDoubleTopic("Angular Accel").publish();
 
     private final double[] poseArray = new double[3];
@@ -81,19 +85,24 @@ public class DriveTelemetry {
         inst.flush();
 
         /* Telemeterize the swerve drive state */
-        drivePose.set(state.Pose, timestamp);
-        driveSpeeds.set(state.Speeds, timestamp);
-        driveModuleStates.set(state.ModuleStates, timestamp);
-        driveModuleTargets.set(state.ModuleTargets, timestamp);
-        driveModulePositions.set(state.ModulePositions, timestamp);
-        driveOdometryFrequency.set(1.0 / state.OdometryPeriod, timestamp);
-        driveOdometryPeriod.set(state.OdometryPeriod, timestamp);
+        drivePosePub.set(state.Pose, timestamp);
+        driveSpeedsPub.set(state.Speeds, timestamp);
+        driveModuleStatesPub.set(state.ModuleStates, timestamp);
+        driveModuleTargetsPub.set(state.ModuleTargets, timestamp);
+        driveModulePositionsPub.set(state.ModulePositions, timestamp);
+        driveOdometryFrequencyPub.set(1.0 / state.OdometryPeriod, timestamp);
+        driveOdometryPeriodPub.set(state.OdometryPeriod, timestamp);
 
-        angularAccel.set((state.Speeds.omegaRadiansPerSecond - previousYawRate) / state.OdometryPeriod, timestamp);
+        double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
+        linearSpeedPub.set(linearSpeed, timestamp);
+
+        linearAccelPub.set((linearSpeed - previousLinearSpeed) / state.OdometryPeriod, timestamp);
+        // Update previous linear velocity
+        previousLinearSpeed = linearSpeed;
+
+        angularAccelPub.set((state.Speeds.omegaRadiansPerSecond - previousYawRate) / state.OdometryPeriod, timestamp);
         // Update previous angular velocity
         previousYawRate = state.Speeds.omegaRadiansPerSecond;
-
-        linearSpeed.set(Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond), timestamp);
 
         /* Also write to log file */
         poseArray[0] = state.Pose.getX();

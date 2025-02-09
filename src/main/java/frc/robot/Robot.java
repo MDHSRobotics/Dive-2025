@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.util.LimelightHelpers;
 import org.littletonrobotics.urcl.URCL;
@@ -50,6 +51,10 @@ public class Robot extends TimedRobot {
                 0,
                 0,
                 0);
+
+        // Ensure that the PathPlanner GUI displays the robot's actual config.
+        // If there are differences, they will be reported in SmartDashboard.
+        DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
 
         // Set USB drive path for logging
         SignalLogger.setPath("/logs");

@@ -22,7 +22,7 @@
         "layouts": [
           {
             "title": "Catcher",
-            "x": 0.0,
+            "x": 256.0,
             "y": 0.0,
             "width": 256.0,
             "height": 384.0,
@@ -52,7 +52,7 @@
           },
           {
             "title": "Intake",
-            "x": 256.0,
+            "x": 512.0,
             "y": 0.0,
             "width": 256.0,
             "height": 384.0,
@@ -98,7 +98,20 @@
             ]
           }
         ],
-        "containers": []
+        "containers": [
+          {
+            "title": "Alerts",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 384.0,
+            "type": "Alerts",
+            "properties": {
+              "topic": "/SmartDashboard/Alerts",
+              "period": 0.06
+            }
+          }
+        ]
       }
     }
   ]

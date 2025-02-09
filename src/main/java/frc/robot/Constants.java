@@ -74,7 +74,7 @@ public final class Constants {
     /**
      * Contains constants for the swerve drive that haven't been specified in {@link frc.robot.subsystems.drive.TunerConstants TunerConstants}.
      * <p>
-     * Max linear speed is restated here because we want to avoid constant unit conversions in the main robot loop.
+     * Some constants are pre-converted to avoid repeated unit conversions in the main robot loop.
      */
     public static class DriveConstants {
         private DriveConstants() {}
@@ -90,13 +90,14 @@ public final class Constants {
         /**
          * Distance from center of robot to a module (cancoder)
          */
-        public static final Distance DRIVEBASE_RADIUS =
-                Inches.of(Math.hypot(TRACKWIDTH.in(Inches) / 2.0, WHEELBASE.in(Inches) / 2.0));
+        public static final Distance DRIVEBASE_RADIUS = Inches.of(
+                Math.hypot(TRACKWIDTH.div(2.0).in(Inches), WHEELBASE.div(2.0).in(Inches)));
 
         /** Max linear speed of the robot in meters per second. This still needs to be tuned. */
         public static final double MAX_LINEAR_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
-        /** Max angular rate of the robot in radians per second.
+        /**
+         * Max angular rate of the robot in radians per second.
          * @see <a href="https://math.libretexts.org/Bookshelves/Precalculus/Elementary_Trigonometry_(Corral)/04%3A_Radian_Measure/4.04%3A_Circular_Motion-_Linear_and_Angular_Speed">explanation on how to convert from linear velocity to angular velocity</a>
          */
         public static final double MAX_ANGULAR_RATE = RadiansPerSecond.of(
@@ -104,11 +105,17 @@ public final class Constants {
                 .in(RadiansPerSecond);
 
         /**
+         * Max angular acceleration of the robot.
+         * This still needs to be found.
+         */
+        private static final AngularAcceleration MAX_ANGULAR_ACCEL = RadiansPerSecondPerSecond.of(0);
+
+        /**
          * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
          * This still needs to be tuned.
          */
         public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS =
-                new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, 0);
+                new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL.in(RadiansPerSecondPerSecond));
 
         /**
          * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
@@ -174,9 +181,10 @@ public final class Constants {
          * I'm not sure if the units are actually KG*M^2, but this how PathPlanner says to calculate it.
          * @see <a href="https://pathplanner.dev/robot-config.html#calculating-moi-through-sysid-recommended">the equation for calculating MOI through SysId</a>
          * @see <a href="https://choreo.autos/usage/estimating-moi/">the equation, but with some units specified</a>
+         * @see <a href="https://www.chiefdelphi.com/t/question-about-calculating-moi-with-sysid/490893">why we use drivebase radius instead of trackwidth / 2</a>
          */
         private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(ROBOT_MASS.in(Kilograms)
-                * (TRACKWIDTH.in(Meters) / 2)
+                * (DRIVEBASE_RADIUS.in(Meters))
                 * (K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared) / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared)));
 
         /** Wheel coefficient of friction for <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels.</a> */
