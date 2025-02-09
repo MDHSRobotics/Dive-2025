@@ -35,7 +35,7 @@ public class Catcher extends SubsystemBase {
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Catcher");
     private final DoubleEntry wheelSpeedEntry =
-            table.getDoubleTopic("Wheel Speed").getEntry(0.5);
+            table.getDoubleTopic("Wheel Speed").getEntry(1);
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -44,7 +44,7 @@ public class Catcher extends SubsystemBase {
      */
     public Catcher() {
         SparkFlexConfig config = new SparkFlexConfig();
-        config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         config.signals
                 .primaryEncoderPositionPeriodMs(10)
                 .primaryEncoderPositionAlwaysOn(true)
@@ -52,6 +52,7 @@ public class Catcher extends SubsystemBase {
                 .primaryEncoderVelocityAlwaysOn(true);
         m_wheelsMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+        config.inverted(false);
         config.encoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR);
@@ -59,7 +60,7 @@ public class Catcher extends SubsystemBase {
         m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // You need to publish a value for the entry to appear in NetworkTables
-        wheelSpeedEntry.set(0.5);
+        wheelSpeedEntry.set(1);
     }
 
     public Command disableMotorsCommand() {
@@ -72,16 +73,16 @@ public class Catcher extends SubsystemBase {
 
     public Command armTestCommand(DoubleSupplier armPowerSupplier) {
         return this.run(() -> {
-            m_armMotor.set(armPowerSupplier.getAsDouble());
+            m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25);
         });
     }
 
     public Command wheelTestCommand() {
-        return this.run(() -> m_wheelsMotor.set(wheelSpeedEntry.get()));
+        return this.run(() -> m_wheelsMotor.set(wheelSpeedEntry.get() * 0.25));
     }
 
     public Command wheelBackwardsTestCommand() {
-        return this.run(() -> m_wheelsMotor.set(-wheelSpeedEntry.get()));
+        return this.run(() -> m_wheelsMotor.set(-wheelSpeedEntry.get() * 0.5));
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Amps;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
+import static edu.wpi.first.units.Units.Kilograms;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Minute;
@@ -28,6 +29,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.Mass;
 import frc.robot.subsystems.drive.TunerConstants;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +121,13 @@ public final class Constants {
          * This still needs to be tuned.
          */
         public static final Angle GOAL_TOLERANCE = Degrees.of(0);
+
+        /**
+         * Robot mass with battery.
+         * Last measured value: 105 pounds-force, coverted to kg.
+         * This should be used for robot MOI in Pathplanner.
+         */
+        private static final Mass ROBOT_MASS = Kilograms.of(47.6272);
     }
 
     public static class ClimbConstants {
@@ -396,6 +405,16 @@ public final class Constants {
 
         public static final String FRONT_LIMELIGHT_NAME = "limelight-front";
         public static final String BACK_LIMELIGHT_NAME = "limelight-back";
+
+        /**
+         * Distance from the center of the robot to the front limelight lens in meters.
+         */
+        public static final double FRONT_LIMELIGHT_FORWARD_OFFSET =
+                Inches.of(15).in(Meters);
+        /**
+         * Distance from the floor to the front limelight lens in meters.
+         */
+        public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(8.5).in(Meters);
 
         /*
          * Used for setting the limelight's fiducial 3D offset.

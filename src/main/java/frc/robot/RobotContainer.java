@@ -124,12 +124,12 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureDriverControls() {
-        /*driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
-                DriveConstants.MAX_LINEAR_SPEED)
-        .withVelocityY(0)
-        .withRotationalRate(0)
-        .withDeadband(getDeadband())
-        .withRotationalDeadband(getRotationalDeadband())));*/
+        driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
+                        DriveConstants.MAX_LINEAR_SPEED)
+                .withVelocityY(0)
+                .withRotationalRate(0)
+                .withDeadband(getDeadband())
+                .withRotationalDeadband(getRotationalDeadband())));
 
         // driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
@@ -198,7 +198,7 @@ public class RobotContainer {
         operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
         operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
         operatorController.a().whileTrue(m_catcher.wheelTestCommand());
-        operatorController.x().whileTrue(m_catcher.wheelBackwardsTestCommand());
+        operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
         operatorController.x().whileTrue(m_intake.wheelsTestCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
     }

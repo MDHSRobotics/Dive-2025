@@ -21,6 +21,7 @@ public class DriveTelemetry {
     /**
      * Provides the robot orientation to the front limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
      * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.
+     * @see {@link https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data api documentation}
      */
     private final DoubleArrayPublisher megatag2FrontUpdater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
@@ -28,11 +29,13 @@ public class DriveTelemetry {
     /**
      * Provides the robot orientation to the back limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
      * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.
+     * @see {@link https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data api documentation}
      */
     private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
             .publish();
 
+    /** Limelight requires this to be a array of size 6. */
     private double[] megatag2Orientation = new double[6];
 
     /** Used to derive angular accel */

@@ -12,6 +12,8 @@ import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.Constants.VisionConstants;
+import frc.robot.util.LimelightHelpers;
 import org.littletonrobotics.urcl.URCL;
 
 /**
@@ -38,6 +40,16 @@ public class Robot extends TimedRobot {
 
         // Create the webserver for accessing Elastic's saved layout across computers
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+        // Configure limelight position
+        LimelightHelpers.setCameraPose_RobotSpace(
+                VisionConstants.FRONT_LIMELIGHT_NAME,
+                VisionConstants.FRONT_LIMELIGHT_FORWARD_OFFSET,
+                0,
+                VisionConstants.FRONT_LIMELIGHT_UP_OFFSET,
+                0,
+                0,
+                0);
 
         // Set USB drive path for logging
         SignalLogger.setPath("/logs");

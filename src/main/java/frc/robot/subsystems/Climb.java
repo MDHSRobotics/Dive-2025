@@ -43,7 +43,7 @@ public class Climb extends SubsystemBase {
      */
     public Climb() {
         SparkFlexConfig config = new SparkFlexConfig();
-        config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         config.encoder
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR);
@@ -54,7 +54,6 @@ public class Climb extends SubsystemBase {
                 .primaryEncoderVelocityPeriodMs(10)
                 .primaryEncoderVelocityAlwaysOn(true);
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        config.inverted(true);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
@@ -68,8 +67,8 @@ public class Climb extends SubsystemBase {
 
     public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
-            m_backHookMotor.set(backMotorPowerSupplier.getAsDouble());
-            m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble());
+            m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.5);
+            m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
         });
     }
 

@@ -36,10 +36,8 @@ public class Intake extends SubsystemBase {
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Intake");
-    private final DoubleEntry leftWheelSpeedEntry =
-            table.getDoubleTopic("Left Wheel Speed").getEntry(0.5);
-    private final DoubleEntry rightWheelSpeedEntry =
-            table.getDoubleTopic("Right Wheel Speed").getEntry(0.5);
+    private final DoubleEntry wheelSpeedEntry =
+            table.getDoubleTopic("Wheel Speed").getEntry(1);
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -61,46 +59,41 @@ public class Intake extends SubsystemBase {
         m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkMaxConfig wheelConfig = new SparkMaxConfig();
-        wheelConfig.smartCurrentLimit(WHEEL_CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        wheelConfig
+                .smartCurrentLimit(WHEEL_CURRENT_LIMIT)
+                .idleMode(IdleMode.kBrake)
+                .inverted(true);
         wheelConfig
                 .encoder
                 .positionConversionFactor(WHEEL_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(WHEEL_VELOCITY_CONVERSION_FACTOR);
         wheelConfig.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
         m_wheelLeftMotor.configure(wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        wheelConfig.follow(m_wheelLeftMotor, true);
         m_wheelRightMotor.configure(wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // You need to publish a value for the entry to appear in NetworkTables
-        leftWheelSpeedEntry.set(0.5);
-        rightWheelSpeedEntry.set(0.5);
+        wheelSpeedEntry.set(1);
     }
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
-                    ;
+                    m_wheelLeftMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
     }
 
     public Command armTestCommand(DoubleSupplier armPowerSupplier) {
-        return this.run(() -> {
-            m_armMotor.set(armPowerSupplier.getAsDouble());
-        });
+        return this.run(() -> m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25));
     }
 
     public Command wheelsTestCommand() {
-        return this.run(() -> {
-            m_wheelLeftMotor.set(leftWheelSpeedEntry.get());
-            m_wheelRightMotor.set(rightWheelSpeedEntry.get());
-        });
+        return this.run(() -> m_wheelLeftMotor.set(wheelSpeedEntry.get() * 0.25));
     }
 
     public Command wheelsBackwardsTestCommand() {
-        return this.run(() -> {
-            m_wheelLeftMotor.set(-leftWheelSpeedEntry.get());
-            m_wheelRightMotor.set(-rightWheelSpeedEntry.get());
-        });
+        return this.run(() -> m_wheelLeftMotor.set(-wheelSpeedEntry.get() * 0.25));
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
