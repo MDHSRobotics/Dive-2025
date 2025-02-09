@@ -11,7 +11,7 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTable;
@@ -24,20 +24,20 @@ import java.util.function.DoubleSupplier;
 
 public class Intake extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
-    private final SparkMax m_wheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
-    private final SparkMax m_wheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
+    private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
+    private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
 
     private final SysIdRoutine m_armRoutine =
             new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
 
-    private final ArmFeedforward m_armFeedforward = new ArmFeedforward(K_S, K_G, K_V, K_A);
+    private final SimpleMotorFeedforward m_armFeedforward = new SimpleMotorFeedforward(K_S, K_V, K_A);
 
     private final TrapezoidProfile m_armProfile = new TrapezoidProfile(ARM_ANGULAR_MOTION_CONSTRAINTS);
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Intake");
-    private final DoubleEntry wheelSpeedEntry =
-            table.getDoubleTopic("Wheel Speed").getEntry(1);
+    private final DoubleEntry flyheelSpeedEntry =
+            table.getDoubleTopic("Flywheel Speed").getEntry(1);
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -45,41 +45,48 @@ public class Intake extends SubsystemBase {
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Intake() {
-        SparkFlexConfig config = new SparkFlexConfig();
-        config.smartCurrentLimit(ARM_CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
-        config.encoder
+        SparkFlexConfig armConfig = new SparkFlexConfig();
+        armConfig.smartCurrentLimit(ARM_CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
+        armConfig
+                .encoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR);
-        config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
-        config.signals
+        armConfig
+                .closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .p(K_P)
+                .d(K_D);
+        armConfig
+                .signals
                 .primaryEncoderPositionPeriodMs(10)
                 .primaryEncoderPositionAlwaysOn(true)
                 .primaryEncoderVelocityPeriodMs(10)
                 .primaryEncoderVelocityAlwaysOn(true);
-        m_armMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_armMotor.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        SparkMaxConfig wheelConfig = new SparkMaxConfig();
-        wheelConfig
+        SparkMaxConfig flywheelConfig = new SparkMaxConfig();
+        flywheelConfig
                 .smartCurrentLimit(WHEEL_CURRENT_LIMIT)
                 .idleMode(IdleMode.kBrake)
                 .inverted(true);
-        wheelConfig
+        flywheelConfig
                 .encoder
                 .positionConversionFactor(WHEEL_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(WHEEL_VELOCITY_CONVERSION_FACTOR);
-        wheelConfig.signals.primaryEncoderPositionAlwaysOn(true).primaryEncoderVelocityAlwaysOn(true);
-        m_wheelLeftMotor.configure(wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        wheelConfig.follow(m_wheelLeftMotor, true);
-        m_wheelRightMotor.configure(wheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        flywheelConfig.signals.appliedOutputPeriodMs(5);
+        m_flywheelLeftMotor.configure(flywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        flywheelConfig.follow(m_flywheelLeftMotor, true);
+        m_flywheelRightMotor.configure(flywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // You need to publish a value for the entry to appear in NetworkTables
-        wheelSpeedEntry.set(1);
+        flyheelSpeedEntry.set(1);
     }
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
-                    m_wheelLeftMotor.stopMotor();
+                    m_flywheelLeftMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
     }
@@ -89,11 +96,11 @@ public class Intake extends SubsystemBase {
     }
 
     public Command wheelsTestCommand() {
-        return this.run(() -> m_wheelLeftMotor.set(wheelSpeedEntry.get() * 0.25));
+        return this.run(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * 0.25));
     }
 
     public Command wheelsBackwardsTestCommand() {
-        return this.run(() -> m_wheelLeftMotor.set(-wheelSpeedEntry.get() * 0.25));
+        return this.run(() -> m_flywheelLeftMotor.set(-flyheelSpeedEntry.get() * 0.25));
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
