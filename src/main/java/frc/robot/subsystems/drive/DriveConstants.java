@@ -15,6 +15,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Per;
@@ -45,6 +46,37 @@ public class DriveConstants {
     public static final double MAX_LINEAR_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
 
     /**
+     * Max linear acceleration of the robot.
+     * This still needs to be found.
+     */
+    public static final LinearAcceleration MAX_LINEAR_ACCEL = MetersPerSecondPerSecond.of(0);
+
+    /**
+     * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
+     * This still needs to be tuned.
+     */
+    public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
+            new TrapezoidProfile.Constraints(MAX_LINEAR_SPEED, MAX_LINEAR_ACCEL.in(MetersPerSecondPerSecond));
+
+    /**
+     * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
+     * used in custom swerve requests.
+     * The gain is output linear velocity (meters per second) per error (meters).
+     * This still needs to be tuned.
+     */
+    public static final double K_TRANSLATION_P =
+            MetersPerSecond.per(Meter).ofNative(0).in(MetersPerSecond.per(Meter));
+
+    /**
+     * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
+     * used in custom swerve requests.
+     * The gain is output linear velocity (meters per second) per the rate of change of error (meters per second).
+     * This still needs to be tuned.
+     */
+    public static final double K_TRANSLATION_D =
+            MetersPerSecond.per(MetersPerSecond).ofNative(0).in(MetersPerSecond.per(MetersPerSecond));
+
+    /**
      * Max angular rate of the robot in radians per second.
      * @see <a href="https://math.libretexts.org/Bookshelves/Precalculus/Elementary_Trigonometry_(Corral)/04%3A_Radian_Measure/4.04%3A_Circular_Motion-_Linear_and_Angular_Speed">explanation on how to convert from linear velocity to angular velocity</a>
      */
@@ -70,7 +102,8 @@ public class DriveConstants {
      * The gain is output angular velocity (radians per second) per error (radians).
      * This still needs to be tuned.
      */
-    public static final double K_P = RadiansPerSecond.per(Radian).ofNative(0).in(RadiansPerSecond.per(Radian));
+    public static final double K_ANGULAR_P =
+            RadiansPerSecond.per(Radian).ofNative(0).in(RadiansPerSecond.per(Radian));
 
     /**
      * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
@@ -78,7 +111,7 @@ public class DriveConstants {
      * The gain is output angular velocity (radians per second) per the rate of change of error (radians per second).
      * This still needs to be tuned.
      */
-    public static final double K_D =
+    public static final double K_ANGULAR_D =
             RadiansPerSecond.per(RadiansPerSecond).ofNative(0).in(RadiansPerSecond.per(RadiansPerSecond));
 
     /**

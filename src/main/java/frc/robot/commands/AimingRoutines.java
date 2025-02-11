@@ -1,5 +1,9 @@
 package frc.robot.commands;
 
+import static frc.robot.Constants.K_DT;
+import static frc.robot.subsystems.drive.DriveConstants.*;
+
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -9,11 +13,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingAngle;
-import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingNearestPosition;
-import frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingPosition;
-import frc.robot.subsystems.drive.requests.ProfiledFieldCentricVisualServoing;
+import frc.robot.subsystems.drive.requests.ProfiledDriveFacingAngle;
+import frc.robot.subsystems.drive.requests.ProfiledDriveFacingNearestPosition;
+import frc.robot.subsystems.drive.requests.ProfiledDriveFacingPosition;
+import frc.robot.subsystems.drive.requests.ProfiledDriveWithVisualServoing;
+import frc.robot.subsystems.drive.requests.ProfiledXYHeadingAlignment;
 import frc.robot.util.Aiming;
 import java.util.function.DoubleSupplier;
 
@@ -29,25 +33,30 @@ public class AimingRoutines {
     private final DoubleSupplier m_velocityYSupplier;
     private final DoubleSupplier m_deadbandSupplier;
 
-    private final ProfiledFieldCentricFacingAngle driveFacingAngle = new ProfiledFieldCentricFacingAngle(
-                    DriveConstants.ANGULAR_MOTION_CONSTRAINTS)
-            .withPIDGains(DriveConstants.K_P, 0, DriveConstants.K_D)
-            .withTolerance(DriveConstants.GOAL_TOLERANCE);
+    private final ProfiledDriveFacingAngle driveFacingAngle = new ProfiledDriveFacingAngle(
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT)
+            .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withTolerance(GOAL_TOLERANCE);
 
-    private final ProfiledFieldCentricFacingPosition driveFacingPosition = new ProfiledFieldCentricFacingPosition(
-                    DriveConstants.ANGULAR_MOTION_CONSTRAINTS)
-            .withPIDGains(DriveConstants.K_P, 0, DriveConstants.K_D)
-            .withTolerance(DriveConstants.GOAL_TOLERANCE);
+    private final ProfiledDriveFacingPosition driveFacingPosition = new ProfiledDriveFacingPosition(
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT)
+            .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withTolerance(GOAL_TOLERANCE);
 
-    private final ProfiledFieldCentricFacingNearestPosition driveFacingNearestPosition =
-            new ProfiledFieldCentricFacingNearestPosition(DriveConstants.ANGULAR_MOTION_CONSTRAINTS)
-                    .withPIDGains(DriveConstants.K_P, 0, DriveConstants.K_D)
-                    .withTolerance(DriveConstants.GOAL_TOLERANCE);
+    private final ProfiledDriveFacingNearestPosition driveFacingNearestPosition =
+            new ProfiledDriveFacingNearestPosition(ANGULAR_MOTION_CONSTRAINTS, K_DT)
+                    .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+                    .withTolerance(GOAL_TOLERANCE);
 
-    private final ProfiledFieldCentricVisualServoing driveFacingVisionTarget = new ProfiledFieldCentricVisualServoing(
-                    DriveConstants.ANGULAR_MOTION_CONSTRAINTS, VisionConstants.FRONT_LIMELIGHT_NAME)
-            .withPIDGains(DriveConstants.K_P, 0, DriveConstants.K_D)
-            .withTolerance(DriveConstants.GOAL_TOLERANCE);
+    private final ProfiledDriveWithVisualServoing driveFacingVisionTarget = new ProfiledDriveWithVisualServoing(
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT, VisionConstants.FRONT_LIMELIGHT_NAME)
+            .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withTolerance(GOAL_TOLERANCE);
+
+    private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
+                    LINEAR_MOTION_CONSTRAINTS, ANGULAR_MOTION_CONSTRAINTS, K_DT)
+            .withTranslationalPIDGains(K_TRANSLATION_P, 0, K_TRANSLATION_D)
+            .withRotationalPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D);
 
     /**
      * Gets the ID of the primary in-view apriltag.
@@ -207,5 +216,45 @@ public class AimingRoutines {
                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                         .withDeadband(m_deadbandSupplier.getAsDouble())));
+    }
+
+    /**
+     * This command attempts to drive in front of the cage,
+     * and rotate so that the robot's side opening is facing the cage.
+     */
+    public Command driveInFrontOfCage() {
+        return m_drivetrain.startRun(
+                () -> {
+                    driveToPosition.resetProfile();
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    Pose2d currentPose = m_drivetrain.getState().Pose;
+                    if (alliance == Alliance.Blue) {
+                        driveToPosition.withTargetPose(
+                                currentPose.nearest(FieldConstants.BLUE_CAGE_STARTING_POSITIONS));
+                    } else {
+                        driveToPosition.withTargetPose(currentPose.nearest(FieldConstants.RED_CAGE_STARTING_POSITIONS));
+                    }
+                    m_drivetrain.setControl(driveToPosition);
+                },
+                () -> m_drivetrain.setControl(driveToPosition));
+    }
+
+    /**
+     * This command attempts to automatically drive into the cage.
+     */
+    public Command driveIntoCage() {
+        return m_drivetrain.startRun(
+                () -> {
+                    driveToPosition.resetProfile();
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    Pose2d currentPose = m_drivetrain.getState().Pose;
+                    if (alliance == Alliance.Blue) {
+                        driveToPosition.withTargetPose(currentPose.nearest(FieldConstants.BLUE_CAGE_POSITIONS));
+                    } else {
+                        driveToPosition.withTargetPose(currentPose.nearest(FieldConstants.RED_CAGE_POSITIONS));
+                    }
+                    m_drivetrain.setControl(driveToPosition);
+                },
+                () -> m_drivetrain.setControl(driveToPosition));
     }
 }

@@ -11,26 +11,30 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.units.measure.*;
-import java.util.List;
 
 /**
- * Drives the swerve drivetrain in a field-centric manner, maintaining a
- * specified heading angle to ensure the robot is facing the nearest of the given positions.
+ * Drives the swerve drivetrain in a field-centric manner,
+ * maintaining a heading angle to ensure that limelight tx is 0.
  * Rotation to the target direction is profiled using a trapezoid profile.
  * <p>
- * An example scenario is that the robot is at (0,0),
- * and the user provides a list of (1,1) and (-50,-50).
- * In this scenario, the robot would face (1,1).
+ * An example scenario is that the robot sees an apriltag at tx = 10 (degrees clockwise).
+ * The robot would then rotate 10 degrees clockwise to face the tag.
+ * <p>
+ * If no tag is visible, the robot will finish rotating based on the last known tx value, and then stop rotating.
  * <p>
  * This swerve request is based on {@link com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle FieldCentricFacingAngle},
  * and makes some other improvements besides the motion profile.
  * <p>
  * We opted to take some code from {@link edu.wpi.first.math.controller.ProfiledPIDController ProfiledPIDController}
  * so we could use a {@link PhoenixPIDController PhoenixPIDController} instead of a normal PID controller.
+ * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/tutorials/tutorial-aiming-with-visual-servoing">Explanation of visual servoing</a>
  * @see <a href="https://www.chiefdelphi.com/t/implementing-feedforward-with-ctre-s-fieldcentricfacingangle-request/475822/14">Original source of this code</a>
  */
-public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerveRequest {
+public class ProfiledDriveWithVisualServoing implements ProfiledSwerveRequest {
     /**
      * The velocity in the X direction, in m/s.
      * X is defined as forward according to WPILib convention,
@@ -43,11 +47,6 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * so this determines how fast to travel to the left.
      */
     private double velocityY = 0;
-    /**
-     * The desired positions to face.
-     */
-    private List<Translation2d> targetPositions = List.of(new Translation2d());
-
     /**
      * The allowable deadband of the request, in m/s.
      */
@@ -82,41 +81,46 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
 
     private final PhoenixPIDController headingController = new PhoenixPIDController(0, 0, 0);
 
-    private boolean resetRequested = false;
-    private boolean motionIsFinished = false;
-
     /* Profile used for the target direction */
     private final TrapezoidProfile profile;
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
-    private TrapezoidProfile.State goal = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State goal = new TrapezoidProfile.State();
+
+    private final double kDt;
+
+    private boolean resetRequested = false;
+    private boolean motionIsFinished = false;
+
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable cameraTable;
+    private final DoubleSubscriber txSub;
 
     /**
-     * Creates a new profiled request with the given constraints.
+     * Creates a new profiled request with the given constraints and camera.
      *
      * @param constraints Constraints for the trapezoid profile
+     * @param kDt Update period for the motion profile
+     * @param cameraName The NetworkTable key for the limelight.
      */
-    public ProfiledFieldCentricFacingNearestPosition(TrapezoidProfile.Constraints constraints) {
+    public ProfiledDriveWithVisualServoing(TrapezoidProfile.Constraints constraints, double kDt, String cameraName) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         profile = new TrapezoidProfile(constraints);
+        this.kDt = kDt;
+        cameraTable = inst.getTable(cameraName);
+        txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
     }
 
     /**
      * @see edu.wpi.first.math.controller.ProfiledPIDController#calculate(double, double)
      * @see edu.wpi.first.math.controller.ProfiledPIDController#calculate(double)
-     * @see edu.wpi.first.math.controller.ProfiledPIDController#atGoal()
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Translation2d targetPosition = parameters.currentPose.getTranslation().nearest(targetPositions);
-
-        // Find the angle of the vector that the goal would make if the robot was the origin
-        double xDistance = targetPosition.getX() - parameters.currentPose.getX();
-        double yDistance = targetPosition.getY() - parameters.currentPose.getY();
-        double yawRadians = Math.atan2(yDistance, xDistance);
-        Rotation2d targetDirection = Rotation2d.fromRadians(yawRadians);
-
         Rotation2d currentAngle = parameters.currentPose.getRotation();
         double currentAngularVelocity = parameters.currentChassisSpeed.omegaRadiansPerSecond;
+        double tx = txSub.getAtomic().value;
+        // You need to subtract instead of adding because the current angle is counterclockwise, but tx is clockwise.
+        Rotation2d fakeTargetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
 
         if (resetRequested) {
             setpoint.position = currentAngle.getRadians();
@@ -130,7 +134,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
          * The same happens with setpoint.
          */
         // Get the smallest possible distance between goal and measurement
-        double goalMinDistance = MathUtil.angleModulus(targetDirection.getRadians() - currentAngle.getRadians());
+        double goalMinDistance = MathUtil.angleModulus(fakeTargetDirection.getRadians() - currentAngle.getRadians());
         double setpointMinDistance = MathUtil.angleModulus(setpoint.position - currentAngle.getRadians());
 
         // Recompute the profile goal with the smallest error, thus giving the shortest path. The goal
@@ -141,7 +145,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
         setpoint.position = setpointMinDistance + currentAngle.getRadians();
 
         // Progress the setpoint of the motion profile
-        setpoint = profile.calculate(parameters.updatePeriod, setpoint, goal);
+        setpoint = profile.calculate(kDt, setpoint, goal);
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
         double errorCorrectionOutput =
@@ -149,7 +153,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
 
         double toApplyOmega = setpoint.velocity + errorCorrectionOutput;
 
-        this.motionIsFinished = headingController.atSetpoint() && goal.equals(setpoint);
+        this.motionIsFinished = (headingController.atSetpoint() && goal.equals(setpoint));
 
         return fieldCentric
                 .withVelocityX(velocityX)
@@ -182,7 +186,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newVelocityX Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withVelocityX(double newVelocityX) {
+    public ProfiledDriveWithVisualServoing withVelocityX(double newVelocityX) {
         this.velocityX = newVelocityX;
         return this;
     }
@@ -196,7 +200,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newVelocityX Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withVelocityX(LinearVelocity newVelocityX) {
+    public ProfiledDriveWithVisualServoing withVelocityX(LinearVelocity newVelocityX) {
         this.velocityX = newVelocityX.in(MetersPerSecond);
         return this;
     }
@@ -211,7 +215,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newVelocityY Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withVelocityY(double newVelocityY) {
+    public ProfiledDriveWithVisualServoing withVelocityY(double newVelocityY) {
         this.velocityY = newVelocityY;
         return this;
     }
@@ -226,22 +230,8 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newVelocityY Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withVelocityY(LinearVelocity newVelocityY) {
+    public ProfiledDriveWithVisualServoing withVelocityY(LinearVelocity newVelocityY) {
         this.velocityY = newVelocityY.in(MetersPerSecond);
-        return this;
-    }
-
-    /**
-     * Modifies the targetPositions parameter and returns itself.
-     * <p>
-     * The desired positions to face.
-     * The origin for this position should be <a href="https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#always-blue-origin">the blue alliance.</a>
-     *
-     * @param newTargetPositions Parameter to modify
-     * @return this object
-     */
-    public ProfiledFieldCentricFacingNearestPosition withTargetPositions(List<Translation2d> newTargetPositions) {
-        this.targetPositions = newTargetPositions;
         return this;
     }
 
@@ -253,7 +243,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withDeadband(double newDeadband) {
+    public ProfiledDriveWithVisualServoing withDeadband(double newDeadband) {
         this.deadband = newDeadband;
         return this;
     }
@@ -266,7 +256,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withDeadband(LinearVelocity newDeadband) {
+    public ProfiledDriveWithVisualServoing withDeadband(LinearVelocity newDeadband) {
         this.deadband = newDeadband.in(MetersPerSecond);
         return this;
     }
@@ -280,7 +270,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newCenterOfRotation Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withCenterOfRotation(Translation2d newCenterOfRotation) {
+    public ProfiledDriveWithVisualServoing withCenterOfRotation(Translation2d newCenterOfRotation) {
         this.centerOfRotation = newCenterOfRotation;
         return this;
     }
@@ -293,8 +283,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newDriveRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withDriveRequestType(
-            SwerveModule.DriveRequestType newDriveRequestType) {
+    public ProfiledDriveWithVisualServoing withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
         this.driveRequestType = newDriveRequestType;
         return this;
     }
@@ -307,8 +296,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newSteerRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withSteerRequestType(
-            SwerveModule.SteerRequestType newSteerRequestType) {
+    public ProfiledDriveWithVisualServoing withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
         this.steerRequestType = newSteerRequestType;
         return this;
     }
@@ -322,7 +310,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newDesaturateWheelSpeeds Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
+    public ProfiledDriveWithVisualServoing withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
         this.desaturateWheelSpeeds = newDesaturateWheelSpeeds;
         return this;
     }
@@ -335,8 +323,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param newDrivingPerspective Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withDrivingPerspective(
-            ForwardPerspectiveValue newDrivingPerspective) {
+    public ProfiledDriveWithVisualServoing withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
         this.drivingPerspective = newDrivingPerspective;
         return this;
     }
@@ -349,7 +336,7 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withPIDGains(double kp, double ki, double kd) {
+    public ProfiledDriveWithVisualServoing withPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
         return this;
     }
@@ -360,14 +347,14 @@ public class ProfiledFieldCentricFacingNearestPosition implements ProfiledSwerve
      * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public ProfiledFieldCentricFacingNearestPosition withTolerance(Angle toleranceAmount) {
+    public ProfiledDriveWithVisualServoing withTolerance(Angle toleranceAmount) {
         this.headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
 
     /**
      * @return Whether or not the robot has reached its target rotation,
-     * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingNearestPosition#withTolerance(Angle) withTolerance()}
+     * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.ProfiledDriveFacingAngle#withTolerance(Angle) withTolerance()}
      */
     public boolean motionIsFinished() {
         return this.motionIsFinished;

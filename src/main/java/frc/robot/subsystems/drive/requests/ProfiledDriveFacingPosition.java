@@ -29,7 +29,7 @@ import edu.wpi.first.units.measure.*;
  * so we could use a {@link PhoenixPIDController PhoenixPIDController} instead of a normal PID controller.
  * @see <a href="https://www.chiefdelphi.com/t/implementing-feedforward-with-ctre-s-fieldcentricfacingangle-request/475822/14">Original source of this code</a>
  */
-public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest {
+public class ProfiledDriveFacingPosition implements ProfiledSwerveRequest {
     /**
      * The velocity in the X direction, in m/s.
      * X is defined as forward according to WPILib convention,
@@ -81,22 +81,26 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
 
     private final PhoenixPIDController headingController = new PhoenixPIDController(0, 0, 0);
 
+    private final double kDt;
+
     private boolean resetRequested = false;
     private boolean motionIsFinished = false;
 
     /* Profile used for the target direction */
     private final TrapezoidProfile profile;
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
-    private TrapezoidProfile.State goal = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State goal = new TrapezoidProfile.State();
 
     /**
      * Creates a new profiled request with the given constraints.
      *
      * @param constraints Constraints for the trapezoid profile
+     * @param kDt Update period for the motion profile
      */
-    public ProfiledFieldCentricFacingPosition(TrapezoidProfile.Constraints constraints) {
+    public ProfiledDriveFacingPosition(TrapezoidProfile.Constraints constraints, double kDt) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         profile = new TrapezoidProfile(constraints);
+        this.kDt = kDt;
     }
 
     /**
@@ -138,7 +142,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
         setpoint.position = setpointMinDistance + currentAngle.getRadians();
 
         // Progress the setpoint of the motion profile
-        setpoint = profile.calculate(parameters.updatePeriod, setpoint, goal);
+        setpoint = profile.calculate(kDt, setpoint, goal);
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
         double errorCorrectionOutput =
@@ -179,7 +183,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newVelocityX Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withVelocityX(double newVelocityX) {
+    public ProfiledDriveFacingPosition withVelocityX(double newVelocityX) {
         this.velocityX = newVelocityX;
         return this;
     }
@@ -193,7 +197,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newVelocityX Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withVelocityX(LinearVelocity newVelocityX) {
+    public ProfiledDriveFacingPosition withVelocityX(LinearVelocity newVelocityX) {
         this.velocityX = newVelocityX.in(MetersPerSecond);
         return this;
     }
@@ -208,7 +212,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newVelocityY Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withVelocityY(double newVelocityY) {
+    public ProfiledDriveFacingPosition withVelocityY(double newVelocityY) {
         this.velocityY = newVelocityY;
         return this;
     }
@@ -223,7 +227,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newVelocityY Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withVelocityY(LinearVelocity newVelocityY) {
+    public ProfiledDriveFacingPosition withVelocityY(LinearVelocity newVelocityY) {
         this.velocityY = newVelocityY.in(MetersPerSecond);
         return this;
     }
@@ -237,7 +241,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newTargetPosition Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withTargetPosition(Translation2d newTargetPosition) {
+    public ProfiledDriveFacingPosition withTargetPosition(Translation2d newTargetPosition) {
         this.targetPosition = newTargetPosition;
         return this;
     }
@@ -250,7 +254,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withDeadband(double newDeadband) {
+    public ProfiledDriveFacingPosition withDeadband(double newDeadband) {
         this.deadband = newDeadband;
         return this;
     }
@@ -263,7 +267,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newDeadband Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withDeadband(LinearVelocity newDeadband) {
+    public ProfiledDriveFacingPosition withDeadband(LinearVelocity newDeadband) {
         this.deadband = newDeadband.in(MetersPerSecond);
         return this;
     }
@@ -277,7 +281,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newCenterOfRotation Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withCenterOfRotation(Translation2d newCenterOfRotation) {
+    public ProfiledDriveFacingPosition withCenterOfRotation(Translation2d newCenterOfRotation) {
         this.centerOfRotation = newCenterOfRotation;
         return this;
     }
@@ -290,7 +294,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newDriveRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
+    public ProfiledDriveFacingPosition withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
         this.driveRequestType = newDriveRequestType;
         return this;
     }
@@ -303,7 +307,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newSteerRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
+    public ProfiledDriveFacingPosition withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
         this.steerRequestType = newSteerRequestType;
         return this;
     }
@@ -317,7 +321,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newDesaturateWheelSpeeds Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
+    public ProfiledDriveFacingPosition withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
         this.desaturateWheelSpeeds = newDesaturateWheelSpeeds;
         return this;
     }
@@ -330,7 +334,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param newDrivingPerspective Parameter to modify
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
+    public ProfiledDriveFacingPosition withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
         this.drivingPerspective = newDrivingPerspective;
         return this;
     }
@@ -343,7 +347,7 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withPIDGains(double kp, double ki, double kd) {
+    public ProfiledDriveFacingPosition withPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
         return this;
     }
@@ -354,14 +358,14 @@ public class ProfiledFieldCentricFacingPosition implements ProfiledSwerveRequest
      * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public ProfiledFieldCentricFacingPosition withTolerance(Angle toleranceAmount) {
+    public ProfiledDriveFacingPosition withTolerance(Angle toleranceAmount) {
         this.headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
 
     /**
      * @return Whether or not the robot has reached its target rotation,
-     * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.ProfiledFieldCentricFacingPosition#withTolerance(Angle) withTolerance()}
+     * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.ProfiledDriveFacingPosition#withTolerance(Angle) withTolerance()}
      */
     public boolean motionIsFinished() {
         return this.motionIsFinished;

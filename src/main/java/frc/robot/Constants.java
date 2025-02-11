@@ -9,9 +9,11 @@ import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.Seconds;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.catcher.CatcherConstants;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.intake.IntakeConstants;
@@ -233,6 +235,111 @@ public final class Constants {
         public static final int MAXIMUM_RED_REEF_TAG_ID = 11;
         public static final int MINIMUM_BLUE_REEF_TAG_ID = 17;
         public static final int MAXIMUM_BLUE_REEF_TAG_ID = 22;
+
+        /** Distance from wall to the left blue line under the barge. */
+        private static final Distance BARGE_LEFT_X_DISTANCE = Inches.of(323.875);
+        /** Distance from wall to the middle of the barge. */
+        private static final Distance BARGE_CENTER_X_DISTANCE = Inches.of(344.875);
+        /** Distance from wall to right blue line under the barge. */
+        private static final Distance BARGE_RIGHT_X_DISTANCE = Inches.of(365.875);
+        /** Distance from the colored part of the barge to the center of the cage. */
+        private static final Distance SEMICIRCLE_TO_CAGE_DISTANCE = Inches.of(1.250);
+
+        /**
+         * A list of the positions right in front of the red cages.
+         * These were found by generating a drawing in Onshape.
+         * <p>
+         * For x, I took the distance from the wall to the blue line next to the cage.
+         * <p>
+         * For y, I took the distance from the wall to each of the barge's red semicircles minus the distance from the semicircles to the center of the cage.
+         * <p>
+         * The rotation represents the angle the robot needs to face so that the robot's side opening aligns with the cage.
+         */
+        public static final List<Pose2d> RED_CAGE_STARTING_POSITIONS = List.of(
+                new Pose2d(
+                        BARGE_RIGHT_X_DISTANCE,
+                        Inches.of(32.432).minus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCCW_90deg),
+                new Pose2d(
+                        BARGE_RIGHT_X_DISTANCE,
+                        Inches.of(75.375).minus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCCW_90deg),
+                new Pose2d(
+                        BARGE_RIGHT_X_DISTANCE,
+                        Inches.of(118.312).minus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCCW_90deg));
+
+        /**
+         * A list of red cage positions.
+         * These were found by generating a drawing in Onshape.
+         * <p>
+         * For x, I took the distance from the wall to the center of the barge.
+         * <p>
+         * For y, I took the distance from the wall to each of the barge's red semicircles minus the distance from the semicircles to the center of the cage.
+         * <p>
+         * The rotation represents the angle the robot needs to face so that the robot's side opening aligns with the cage.
+         */
+        public static final List<Pose2d> RED_CAGE_POSITIONS = List.of(
+                new Pose2d(
+                        BARGE_CENTER_X_DISTANCE,
+                        Inches.of(32.432).minus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCCW_90deg),
+                new Pose2d(
+                        BARGE_CENTER_X_DISTANCE,
+                        Inches.of(75.375).minus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCCW_90deg),
+                new Pose2d(
+                        BARGE_CENTER_X_DISTANCE,
+                        Inches.of(118.312).minus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCCW_90deg));
+
+        /**
+         * A list of positions right in front of the blue cages.
+         * These were found by generating a drawing in Onshape.
+         * <p>
+         * For x, I took the distance from the wall to the blue line next to the cage.
+         * <p>
+         * For y, I took the distance from the wall to each of the barge's blue semicircles plus the distance from the semicircles to the center of the cage.
+         * <p>
+         * The rotation represents the angle the robot needs to face so that the robot's side opening aligns with the cage.
+         */
+        public static final List<Pose2d> BLUE_CAGE_STARTING_POSITIONS = List.of(
+                new Pose2d(
+                        BARGE_LEFT_X_DISTANCE,
+                        Inches.of(198.688).plus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCW_90deg),
+                new Pose2d(
+                        BARGE_LEFT_X_DISTANCE,
+                        Inches.of(241.625).plus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCW_90deg),
+                new Pose2d(
+                        BARGE_LEFT_X_DISTANCE,
+                        Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCW_90deg));
+
+        /**
+         * A list of blue cage positions.
+         * These were found by generating a drawing in Onshape.
+         * <p>
+         * For x, I took the distance from the wall to the center of the barge.
+         * <p>
+         * For y, I took the distance from the wall to each of the barge's blue semicircles plus the distance from the semicircles to the center of the cage.
+         * <p>
+         * The rotation represents the angle the robot needs to face so that the robot's side opening aligns with the cage.
+         */
+        public static final List<Pose2d> BLUE_CAGE_POSITIONS = List.of(
+                new Pose2d(
+                        BARGE_CENTER_X_DISTANCE,
+                        Inches.of(198.688).plus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCW_90deg),
+                new Pose2d(
+                        BARGE_CENTER_X_DISTANCE,
+                        Inches.of(241.625).plus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCW_90deg),
+                new Pose2d(
+                        BARGE_CENTER_X_DISTANCE,
+                        Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE),
+                        Rotation2d.kCW_90deg));
     }
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
