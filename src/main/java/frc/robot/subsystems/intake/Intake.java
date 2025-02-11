@@ -1,6 +1,6 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.intake;
 
-import static frc.robot.Constants.IntakeConstants.*;
+import static frc.robot.subsystems.intake.IntakeConstants.*;
 
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;

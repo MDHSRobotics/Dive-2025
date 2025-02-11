@@ -1,6 +1,6 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.catcher;
 
-import static frc.robot.Constants.CatcherConstants.*;
+import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;

@@ -31,7 +31,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.DriveConstants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.TunerConstants.TunerSwerveDrivetrain;
@@ -188,7 +187,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        // registerPoseEstimateListeners();
+        registerPoseEstimateListeners();
     }
 
     /**
@@ -218,7 +217,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        // registerPoseEstimateListeners();
+        registerPoseEstimateListeners();
     }
 
     /**
@@ -261,7 +260,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
          */
         setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
-        // registerPoseEstimateListeners();
+        registerPoseEstimateListeners();
     }
 
     private void configureAutoBuilder() {
@@ -422,7 +421,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             frontVisibleTagsPub.set(visibleTagPositions, timestamp);
         });
 
-        inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+        /*inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             NetworkTableValue value = event.valueData.value;
             double[] poseArray = value.getDoubleArray();
             // If there is no data available, don't log anything
@@ -432,25 +431,25 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 return;
             }
 
-            /* Get bot pose estimate */
+            // Get bot pose estimate
             Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
             Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
             Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
-            /* Get timestamp */
+            // Get timestamp
             long timestamp = value.getTime();
 
-            /* Log pose estimate to AdvantageScope */
+            // Log pose estimate to AdvantageScope
             backPoseEstimatePub.set(botPoseEstimate, timestamp);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
             double latency = poseArray[6];
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
-            /* Add the vision measurement to the pose estimator */
+            // Add the vision measurement to the pose estimator
             this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
 
-            /* Log which apriltags are currently visible */
+            // Log which apriltags are currently visible
             int tagCount = (int) poseArray[7];
             int valsPerFiducial = 7;
             int expectedTotalVals = 11 + valsPerFiducial * tagCount;
@@ -470,6 +469,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id - 1];
             }
             backVisibleTagsPub.set(visibleTagPositions, timestamp);
-        });
+        });*/
     }
 }

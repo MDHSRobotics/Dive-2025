@@ -21,12 +21,13 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
-import frc.robot.subsystems.Catcher;
-import frc.robot.subsystems.Climb;
-import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.catcher.Catcher;
+import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.util.LimelightHelpers;
 
 /**
