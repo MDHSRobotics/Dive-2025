@@ -58,14 +58,8 @@ public class RobotContainer {
     private final CommandXboxController operatorController =
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
-    private final AimingRoutines aimingRoutines = new AimingRoutines(
-            m_drivetrain,
-            drive,
-            this::getVelocityX,
-            this::getVelocityY,
-            this::getRotationalRate,
-            this::getDeadband,
-            this::getRotationalDeadband);
+    private final AimingRoutines aimingRoutines =
+            new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
 
     /* Robot States */
     private boolean m_slowMode = false;
@@ -184,7 +178,7 @@ public class RobotContainer {
 
     /**
      * Use this method to define controller input->command mappings.
-     * please use <a href="https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF">this controller map</a>
+     * please use <a href="https://www.padcrafter.com/index.php?templates=Operator%20Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Control%20Climb%20with%20joysticks&leftTrigger=Control%20both%20Climb%20with%20left%20joystick&leftBumper=Control%20catcher%20arm%20with%20left%20joystick&rightBumper=Control%20intake%20arm%20with%20left%20joystick&aButton=Intake%20coral&bButton=Spit%20out%20coral&xButton=Intake%20algae&yButton=Spit%20out%20algae">this controller map</a>
      * to update and view the current controls.
      */
     private void configureOperatorControls() {

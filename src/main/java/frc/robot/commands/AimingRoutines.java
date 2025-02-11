@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import com.ctre.phoenix6.swerve.SwerveRequest.FieldCentric;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -28,11 +27,7 @@ public class AimingRoutines {
 
     private final DoubleSupplier m_velocityXSupplier;
     private final DoubleSupplier m_velocityYSupplier;
-    private final DoubleSupplier m_rotationalRateSupplier;
     private final DoubleSupplier m_deadbandSupplier;
-    private final DoubleSupplier m_rotationalDeadbandSupplier;
-
-    private final FieldCentric backupDrive;
 
     private final ProfiledFieldCentricFacingAngle driveFacingAngle = new ProfiledFieldCentricFacingAngle(
                     DriveConstants.ANGULAR_MOTION_CONSTRAINTS)
@@ -76,19 +71,13 @@ public class AimingRoutines {
      */
     public AimingRoutines(
             CommandSwerveDrivetrain drivetrain,
-            FieldCentric backupDrive,
             DoubleSupplier velocityXSupplier,
             DoubleSupplier velocityYSupplier,
-            DoubleSupplier rotationalRateSupplier,
-            DoubleSupplier deadbandSupplier,
-            DoubleSupplier rotationalDeadbandSupplier) {
+            DoubleSupplier deadbandSupplier) {
         m_drivetrain = drivetrain;
-        this.backupDrive = backupDrive;
         m_velocityXSupplier = velocityXSupplier;
         m_velocityYSupplier = velocityYSupplier;
-        m_rotationalRateSupplier = rotationalRateSupplier;
         m_deadbandSupplier = deadbandSupplier;
-        m_rotationalDeadbandSupplier = rotationalDeadbandSupplier;
     }
 
     /*
@@ -106,28 +95,18 @@ public class AimingRoutines {
     public Command orientToFaceReefWall() {
         return Commands.sequence(
                 m_drivetrain
-                        .startRun(driveFacingPosition::resetProfile, () -> {
-                            Alliance alliance = DriverStation.getAlliance().orElse(null);
+                        .applyProfiledRequest(() -> {
+                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
                             } else if (alliance == Alliance.Red) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Driver Station not connected, robot will drive normally!", false);
-                                m_drivetrain.setControl(backupDrive
-                                        .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                        .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                        .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
-                                        .withDeadband(m_deadbandSupplier.getAsDouble())
-                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble()));
                             }
-                            m_drivetrain.setControl(driveFacingPosition
+                            return driveFacingPosition
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                    .withDeadband(m_deadbandSupplier.getAsDouble());
                         })
-                        // motionIsFinished() will return false if drive is applied instead of driveFacingPosition.
                         .until(driveFacingPosition::motionIsFinished),
                 m_drivetrain
                         .startRun(
@@ -173,28 +152,18 @@ public class AimingRoutines {
     public Command orientToFaceTree() {
         return Commands.sequence(
                 m_drivetrain
-                        .startRun(driveFacingPosition::resetProfile, () -> {
-                            Alliance alliance = DriverStation.getAlliance().orElse(null);
+                        .applyProfiledRequest(() -> {
+                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
                             } else if (alliance == Alliance.Red) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Driver Station not connected, robot will drive normally!", false);
-                                m_drivetrain.setControl(backupDrive
-                                        .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                        .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                        .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
-                                        .withDeadband(m_deadbandSupplier.getAsDouble())
-                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble()));
                             }
-                            m_drivetrain.setControl(driveFacingPosition
+                            return driveFacingPosition
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                    .withDeadband(m_deadbandSupplier.getAsDouble());
                         })
-                        // motionIsFinished() will return false if drive is applied instead of driveFacingPosition.
                         .until(() ->
                                 driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
                 // Face the selected tree
@@ -219,28 +188,18 @@ public class AimingRoutines {
     public Command orientToFaceTreeWithoutLimelight() {
         return Commands.sequence(
                 m_drivetrain
-                        .startRun(driveFacingNearestPosition::resetProfile, () -> {
-                            Alliance alliance = DriverStation.getAlliance().orElse(null);
+                        .applyProfiledRequest(() -> {
+                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 driveFacingNearestPosition.withTargetPositions(FieldConstants.BLUE_REEF_TREE_POSITIONS);
                             } else if (alliance == Alliance.Red) {
                                 driveFacingNearestPosition.withTargetPositions(FieldConstants.RED_REEF_TREE_POSITIONS);
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Driver Station not connected, robot will drive normally!", false);
-                                m_drivetrain.setControl(backupDrive
-                                        .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                        .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                        .withRotationalRate(m_rotationalRateSupplier.getAsDouble())
-                                        .withDeadband(m_deadbandSupplier.getAsDouble())
-                                        .withRotationalDeadband(m_rotationalDeadbandSupplier.getAsDouble()));
                             }
-                            m_drivetrain.setControl(driveFacingNearestPosition
+                            return driveFacingNearestPosition
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                    .withDeadband(m_deadbandSupplier.getAsDouble());
                         })
-                        // motionIsFinished() will return false if drive is applied instead of driveFacingPosition.
                         .until(() ->
                                 driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
                 // Face the tag
