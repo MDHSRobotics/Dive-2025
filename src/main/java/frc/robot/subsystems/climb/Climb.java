@@ -66,15 +66,16 @@ public class Climb extends SubsystemBase {
     public Climb() {
         SparkFlexConfig config = new SparkFlexConfig();
         config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
-        config.encoder
+        config.absoluteEncoder
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
-                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR);
-        config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
+                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
+                .averageDepth(2);
+        config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
-                .primaryEncoderPositionPeriodMs(10)
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(10)
-                .primaryEncoderVelocityAlwaysOn(true);
+                .absoluteEncoderPositionPeriodMs(10)
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(10)
+                .absoluteEncoderVelocityAlwaysOn(true);
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }

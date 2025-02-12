@@ -65,20 +65,21 @@ public class Intake extends SubsystemBase {
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(ARM_CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         armConfig
-                .encoder
+                .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
-                .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR);
+                .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
+                .averageDepth(2);
         armConfig
                 .closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .p(K_P)
                 .d(K_D);
         armConfig
                 .signals
-                .primaryEncoderPositionPeriodMs(10)
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(10)
-                .primaryEncoderVelocityAlwaysOn(true);
+                .absoluteEncoderPositionPeriodMs(10)
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(10)
+                .absoluteEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkMaxConfig flywheelConfig = new SparkMaxConfig();
