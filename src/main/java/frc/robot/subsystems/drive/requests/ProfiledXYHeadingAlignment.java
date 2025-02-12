@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.units.measure.*;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a
@@ -93,6 +94,10 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
         headingProfile = new TrapezoidProfile(angularConstraints);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.kDt = kDt;
+        // Make PID gains tunable from NetworkTables
+        SmartDashboard.putData("X Controller", xController);
+        SmartDashboard.putData("Y Controller", yController);
+        SmartDashboard.putData("Heading Controller", headingController);
     }
 
     /**

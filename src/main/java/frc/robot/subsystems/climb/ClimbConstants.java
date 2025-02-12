@@ -83,4 +83,21 @@ public class ClimbConstants {
      */
     public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
             MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
+
+    // Common climb positions
+    /**
+     * The position that keeps the claws out of the cage.
+     * This still needs to be found.
+     */
+    public static final double AWAY_POSITION = Radians.of(0).in(Radians);
+    /**
+     * The position that raises the claws straight up.
+     * This still needs to be found.
+     */
+    public static final double UP_POSITION = Radians.of(0).in(Radians);
+    /**
+     * The position that engages the hooks and keeps the robot off the ground.
+     * This still needs to be found.
+     */
+    public static final double ENGAGED_POSITION = Radians.of(0).in(Radians);
 }

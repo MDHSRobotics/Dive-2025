@@ -1,9 +1,14 @@
 package frc.robot.subsystems.intake;
 
+import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
@@ -23,9 +28,17 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.DoubleSupplier;
 
 public class Intake extends SubsystemBase {
+    public enum IntakeArmPositions {
+        UP,
+        ON_CORAL_PICKUP,
+        GROUND_PICKUP
+    }
+
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
+
+    private final RelativeEncoder m_armEncoder = m_armMotor.getEncoder();
 
     private final SysIdRoutine m_armRoutine =
             new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
@@ -33,6 +46,10 @@ public class Intake extends SubsystemBase {
     private final SimpleMotorFeedforward m_armFeedforward = new SimpleMotorFeedforward(K_S, K_V, K_A);
 
     private final TrapezoidProfile m_armProfile = new TrapezoidProfile(ARM_ANGULAR_MOTION_CONSTRAINTS);
+    private final TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_previousSetpoint = new TrapezoidProfile.State();
+
+    private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Intake");
@@ -83,6 +100,31 @@ public class Intake extends SubsystemBase {
         flyheelSpeedEntry.set(1);
     }
 
+    private void resetProfile(IntakeArmPositions armPosition) {
+        if (armPosition == IntakeArmPositions.UP) {
+            m_goal.position = UP_POSITION;
+        } else if (armPosition == IntakeArmPositions.ON_CORAL_PICKUP) {
+            m_goal.position = ON_CORAL_PICKUP_POSITION;
+        } else {
+            m_goal.position = GROUND_PICKUP_POSITION;
+        }
+        m_previousSetpoint.position = m_armEncoder.getPosition();
+        m_previousSetpoint.velocity = m_armEncoder.getVelocity();
+    }
+
+    private void runProfile() {
+        // Find the next position in the motion
+        TrapezoidProfile.State nextSetpoint = m_armProfile.calculate(K_DT, m_previousSetpoint, m_goal);
+        // Estimate the volts required to reach the position
+        double feedforwardVolts =
+                m_armFeedforward.calculateWithVelocities(m_previousSetpoint.velocity, nextSetpoint.velocity);
+        // Run the PID controller along with the estimated volts
+        m_armController.setReference(
+                nextSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
+        // Update current setpoint
+        m_previousSetpoint = nextSetpoint;
+    }
+
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
@@ -101,6 +143,10 @@ public class Intake extends SubsystemBase {
 
     public Command wheelsBackwardsTestCommand() {
         return this.run(() -> m_flywheelLeftMotor.set(-flyheelSpeedEntry.get() * 0.25));
+    }
+
+    public Command setArmPositionCommand(IntakeArmPositions armPosition) {
+        return this.startRun(() -> this.resetProfile(armPosition), this::runProfile);
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

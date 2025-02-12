@@ -257,4 +257,14 @@ public class AimingRoutines {
                 },
                 () -> m_drivetrain.setControl(driveToPosition));
     }
+
+    /** Sets the current translation and heading as the goal for driveToPosition. */
+    public Command setTargetPoseToCurrentPose() {
+        return m_drivetrain.runOnce(() -> driveToPosition.withTargetPose(m_drivetrain.getState().Pose));
+    }
+
+    /** Drives to the last known target position.  */
+    public Command driveToPositionTest() {
+        return m_drivetrain.applyProfiledRequest(() -> driveToPosition);
+    }
 }

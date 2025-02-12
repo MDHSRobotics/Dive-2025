@@ -1,9 +1,14 @@
 package frc.robot.subsystems.catcher;
 
+import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -21,8 +26,15 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.DoubleSupplier;
 
 public class Catcher extends SubsystemBase {
+    public enum CatcherArmPositions {
+        TROUGH,
+        CORAL_STATION
+    }
+
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
+
+    private final RelativeEncoder m_armEncoder = m_armMotor.getEncoder();
     // private final DigitalInput m_armBeamBreak = new DigitalInput(9);
 
     private final SysIdRoutine m_armRoutine =
@@ -31,6 +43,10 @@ public class Catcher extends SubsystemBase {
     private final SimpleMotorFeedforward m_armFeedforward = new SimpleMotorFeedforward(K_S, K_V, K_A);
 
     private final TrapezoidProfile m_armProfile = new TrapezoidProfile(ARM_ANGULAR_MOTION_CONSTRAINTS);
+    private final TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_previousSetpoint = new TrapezoidProfile.State();
+
+    private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Catcher");
@@ -73,6 +89,29 @@ public class Catcher extends SubsystemBase {
         flywheelSpeedEntry.set(1);
     }
 
+    private void resetProfile(CatcherArmPositions armPosition) {
+        if (armPosition == CatcherArmPositions.TROUGH) {
+            m_goal.position = TROUGH_POSITION;
+        } else {
+            m_goal.position = CORAL_STATION_POSITION;
+        }
+        m_previousSetpoint.position = m_armEncoder.getPosition();
+        m_previousSetpoint.velocity = m_armEncoder.getVelocity();
+    }
+
+    private void runProfile() {
+        // Find the next position in the motion
+        TrapezoidProfile.State nextSetpoint = m_armProfile.calculate(K_DT, m_previousSetpoint, m_goal);
+        // Estimate the volts required to reach the position
+        double feedforwardVolts =
+                m_armFeedforward.calculateWithVelocities(m_previousSetpoint.velocity, nextSetpoint.velocity);
+        // Run the PID controller along with the estimated volts
+        m_armController.setReference(
+                nextSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
+        // Update current setpoint
+        m_previousSetpoint = nextSetpoint;
+    }
+
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
@@ -93,6 +132,10 @@ public class Catcher extends SubsystemBase {
 
     public Command wheelBackwardsTestCommand() {
         return this.run(() -> m_flywheelsMotor.set(-flywheelSpeedEntry.get() * 0.5));
+    }
+
+    public Command setArmPositionCommand(CatcherArmPositions armPosition) {
+        return this.startRun(() -> this.resetProfile(armPosition), this::runProfile);
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

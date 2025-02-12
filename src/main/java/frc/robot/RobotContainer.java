@@ -115,16 +115,20 @@ public class RobotContainer {
 
     /**
      * Use this method to define controller input->command mappings.
-     * please use <a href="https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+on+to+tree&xButton=Lock+on+to+tree+%28no+limelight%29&yButton=&leftBumper=Select+Left+Tree&backButton=Reset+robot+orientation&rightBumper=Select+Right+Tree&bButton=Lock+on+to+reef&leftTrigger=Slow+Mode&rightTrigger=Fast+Mode&dpadLeft=Point+wheels+with+right+joystick&rightStick=">this controller map</a>
+     * please use <a href="https://www.padcrafter.com/?templates=Driver%20Controller&plat=1&leftStick=Drive&aButton=Lock%20on%20to%20reef&xButton&yButton&leftBumper=Select%20Left%20Tree&backButton=Reset%20robot%20orientation&rightBumper=Select%20Right%20Tree&bButton&leftTrigger=Slow%20Mode&rightTrigger=Fast%20Mode&dpadLeft=Point%20wheels%20with%20right%20joystick&rightStick
+     * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureDriverControls() {
-        driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
-                        DriveConstants.MAX_LINEAR_SPEED)
-                .withVelocityY(0)
-                .withRotationalRate(0)
-                .withDeadband(getDeadband())
-                .withRotationalDeadband(getRotationalDeadband())));
+        driverController.square().onTrue(aimingRoutines.setTargetPoseToCurrentPose());
+        driverController.triangle().whileTrue(aimingRoutines.driveToPositionTest());
+
+        // driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
+        //                 DriveConstants.MAX_LINEAR_SPEED)
+        //         .withVelocityY(0)
+        //         .withRotationalRate(0)
+        //         .withDeadband(getDeadband())
+        //         .withRotationalDeadband(getRotationalDeadband())));
 
         // driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
@@ -150,8 +154,6 @@ public class RobotContainer {
                         m_drivetrain.getState().Pose.getRotation())));
 
         driverController.circle().toggleOnTrue(aimingRoutines.orientToFaceReefWall());
-        driverController.cross().toggleOnTrue(aimingRoutines.orientToFaceTree());
-        driverController.square().toggleOnTrue(aimingRoutines.orientToFaceTreeWithoutLimelight());
 
         /*
          * Run SysId routines when holding back/start and X/Y.

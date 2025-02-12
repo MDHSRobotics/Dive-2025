@@ -4,10 +4,15 @@
 
 package frc.robot.subsystems.climb;
 
+import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
+import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
@@ -22,8 +27,17 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
+    public enum HookPositions {
+        AWAY,
+        UP,
+        ENGAGED
+    }
+
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
+
+    private final RelativeEncoder m_backEncoder = m_backHookMotor.getEncoder();
+    private final RelativeEncoder m_frontEncoder = m_frontHookMotor.getEncoder();
 
     private final SysIdRoutine m_backRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backHookMotor::setVoltage, null, this));
@@ -34,7 +48,15 @@ public class Climb extends SubsystemBase {
 
     // Two motion profiles are needed because trapezoid profiles have their own internal state.
     private final TrapezoidProfile m_backProfile = new TrapezoidProfile(ANGULAR_MOTION_CONSTRAINTS);
+    private TrapezoidProfile.State m_backPreviousSetpoint = new TrapezoidProfile.State();
+
     private final TrapezoidProfile m_frontProfile = new TrapezoidProfile(ANGULAR_MOTION_CONSTRAINTS);
+    private TrapezoidProfile.State m_frontPreviousSetpoint = new TrapezoidProfile.State();
+
+    private final TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
+
+    private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
+    private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -57,6 +79,39 @@ public class Climb extends SubsystemBase {
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
+    private void resetProfile(HookPositions hookPositions) {
+        if (hookPositions == HookPositions.AWAY) {
+            m_goal.position = AWAY_POSITION;
+        } else if (hookPositions == HookPositions.UP) {
+            m_goal.position = UP_POSITION;
+        } else {
+            m_goal.position = ENGAGED_POSITION;
+        }
+        m_backPreviousSetpoint.position = m_backEncoder.getPosition();
+        m_backPreviousSetpoint.velocity = m_backEncoder.getVelocity();
+        m_frontPreviousSetpoint.position = m_frontEncoder.getPosition();
+        m_frontPreviousSetpoint.velocity = m_frontEncoder.getVelocity();
+    }
+
+    private void runProfile() {
+        // Find the next position in the motion
+        TrapezoidProfile.State nextBackSetpoint = m_backProfile.calculate(K_DT, m_backPreviousSetpoint, m_goal);
+        TrapezoidProfile.State nextFrontSetpoint = m_frontProfile.calculate(K_DT, m_frontPreviousSetpoint, m_goal);
+        // Estimate the volts required to reach the position
+        double backFeedforwardVolts =
+                m_hookFeedforward.calculateWithVelocities(m_backPreviousSetpoint.velocity, nextBackSetpoint.velocity);
+        double frontFeedforwardVolts =
+                m_hookFeedforward.calculateWithVelocities(m_frontPreviousSetpoint.velocity, nextFrontSetpoint.velocity);
+        // Run the PID controller along with the estimated volts
+        m_backController.setReference(
+                nextBackSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, backFeedforwardVolts);
+        m_frontController.setReference(
+                nextFrontSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, frontFeedforwardVolts);
+        // Update current setpoint
+        m_backPreviousSetpoint = nextBackSetpoint;
+        m_frontPreviousSetpoint = nextFrontSetpoint;
+    }
+
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_frontHookMotor.stopMotor();
@@ -70,6 +125,10 @@ public class Climb extends SubsystemBase {
             m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.5);
             m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
         });
+    }
+
+    public Command setHookPositionCommand(HookPositions hookPositions) {
+        return this.startRun(() -> this.resetProfile(hookPositions), this::runProfile);
     }
 
     public Command leftSysIdQuasistatic(SysIdRoutine.Direction direction) {

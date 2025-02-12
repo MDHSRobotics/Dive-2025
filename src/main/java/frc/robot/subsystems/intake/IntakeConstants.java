@@ -107,4 +107,21 @@ public class IntakeConstants {
      */
     public static final TrapezoidProfile.Constraints ARM_ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
             MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
+
+    // Common intake positions
+    /**
+     * The position that raises the intake straight up.
+     * This still needs to be found.
+     */
+    public static final double UP_POSITION = Radians.of(0).in(Radians);
+    /**
+     * The position that aligns the arm with the algae resting on a coral.
+     * This still needs to be found.
+     */
+    public static final double ON_CORAL_PICKUP_POSITION = Radians.of(0).in(Radians);
+    /**
+     * The position that aligns the arm with the algae resting on the ground.
+     * This still needs to be found.
+     */
+    public static final double GROUND_PICKUP_POSITION = Radians.of(0).in(Radians);
 }

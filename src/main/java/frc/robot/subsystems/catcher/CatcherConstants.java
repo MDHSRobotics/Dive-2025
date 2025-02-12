@@ -87,4 +87,16 @@ public class CatcherConstants {
      */
     public static final TrapezoidProfile.Constraints ARM_ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
             MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
+
+    // Common catcher positions
+    /**
+     * The position that aligns the arm with the trough in radians.
+     * This still needs to be found.
+     */
+    public static final double TROUGH_POSITION = Radians.of(0).in(Radians);
+    /**
+     * The position that aligns the arm with the coral station in radians.
+     * This still needs to be found.
+     */
+    public static final double CORAL_STATION_POSITION = Radians.of(0).in(Radians);
 }
