@@ -3,8 +3,8 @@ package frc.robot.subsystems.intake;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -38,7 +38,7 @@ public class Intake extends SubsystemBase {
     private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
 
-    private final RelativeEncoder m_armEncoder = m_armMotor.getEncoder();
+    private final SparkAbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
 
     private final SysIdRoutine m_armRoutine =
             new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
