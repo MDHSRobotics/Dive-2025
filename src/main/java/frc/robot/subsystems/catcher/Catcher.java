@@ -1,5 +1,6 @@
 package frc.robot.subsystems.catcher;
 
+import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
@@ -65,7 +66,7 @@ public class Catcher extends SubsystemBase {
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(2);
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
         armConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)

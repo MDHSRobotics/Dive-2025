@@ -1,5 +1,6 @@
 package frc.robot.subsystems.intake;
 
+import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
@@ -68,7 +69,7 @@ public class Intake extends SubsystemBase {
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(2);
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
         armConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)

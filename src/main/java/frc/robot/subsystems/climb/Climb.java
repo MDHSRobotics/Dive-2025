@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems.climb;
 
+import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
@@ -69,7 +70,7 @@ public class Climb extends SubsystemBase {
         config.absoluteEncoder
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(2);
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
         config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
                 .absoluteEncoderPositionPeriodMs(10)

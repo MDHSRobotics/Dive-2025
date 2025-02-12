@@ -42,7 +42,7 @@ public final class Constants {
      * This is currently set to the value that is used in
      * <a href="https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/template_projects/sources/spark_swerve/src/main/java/frc/robot/subsystems/drive/ModuleIOSpark.java">AdvantageKit for their swerve modules.</a>
      */
-    public static final double ABSOLUTE_ENCODER_AVERAGE_DEPTH = 2;
+    public static final int ABSOLUTE_ENCODER_AVERAGE_DEPTH = 2;
 
     public static class ControllerConstants {
         private ControllerConstants() {}
