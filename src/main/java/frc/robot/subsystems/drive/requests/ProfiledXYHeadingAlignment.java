@@ -10,10 +10,14 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.*;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.subsystems.drive.DriveTelemetry;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a
@@ -78,6 +82,13 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
 
     private boolean resetRequested = false;
 
+    // Optional NetworkTables logging
+    private final StructPublisher<Pose2d> goalPositionPub;
+    private final StructPublisher<Pose2d> setpointPositionPub;
+    private final StructPublisher<ChassisSpeeds> setpointVelocityPub;
+    private final StructPublisher<ChassisSpeeds> errorCorrectionVelocityPub;
+    private final StructPublisher<ChassisSpeeds> appliedVelocityPub;
+
     /**
      * Creates a new profiled request with the given constraints.
      *
@@ -94,10 +105,58 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
         headingProfile = new TrapezoidProfile(angularConstraints);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.kDt = kDt;
+
         // Make PID gains tunable from NetworkTables
         SmartDashboard.putData("X Controller", xController);
         SmartDashboard.putData("Y Controller", yController);
         SmartDashboard.putData("Heading Controller", headingController);
+
+        goalPositionPub = null;
+        setpointPositionPub = null;
+        setpointVelocityPub = null;
+        errorCorrectionVelocityPub = null;
+        appliedVelocityPub = null;
+    }
+
+    /**
+     * Creates a new profiled request with the given constraints.
+     *
+     * @param linearConstraints Constraints for the X and Y trapezoid profiles
+     * @param angularConstraints Constraints for the heading profile
+     * @param kDt Update period for the motion profile
+     * @param loggingPath The NetworkTable to log data into.
+     */
+    public ProfiledXYHeadingAlignment(
+            TrapezoidProfile.Constraints linearConstraints,
+            TrapezoidProfile.Constraints angularConstraints,
+            double kDt,
+            NetworkTable loggingPath) {
+        xProfile = new TrapezoidProfile(linearConstraints);
+        yProfile = new TrapezoidProfile(linearConstraints);
+        headingProfile = new TrapezoidProfile(angularConstraints);
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
+        this.kDt = kDt;
+
+        // Make PID gains tunable from NetworkTables
+        SmartDashboard.putData("X Controller", xController);
+        SmartDashboard.putData("Y Controller", yController);
+        SmartDashboard.putData("Heading Controller", headingController);
+
+        NetworkTable motionTable = loggingPath.getSubTable("Facing Angle");
+        NetworkTable goalTable = motionTable.getSubTable("Goal");
+        this.goalPositionPub =
+                goalTable.getStructTopic("Position", Pose2d.struct).publish();
+        NetworkTable setpointTable = motionTable.getSubTable("Setpoint");
+        this.setpointPositionPub =
+                setpointTable.getStructTopic("Position", Pose2d.struct).publish();
+        this.setpointVelocityPub =
+                setpointTable.getStructTopic("Velocity", ChassisSpeeds.struct).publish();
+        this.errorCorrectionVelocityPub = motionTable
+                .getStructTopic("Error Correction Velocity", ChassisSpeeds.struct)
+                .publish();
+        this.appliedVelocityPub = motionTable
+                .getStructTopic("Applied Velocity", ChassisSpeeds.struct)
+                .publish();
     }
 
     /**
@@ -153,6 +212,24 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
                 headingController.calculate(currentAngle.getRadians(), headingSetpoint.position, parameters.timestamp);
 
         double toApplyOmega = headingSetpoint.velocity + headingCorrectionOutput;
+
+        // If one of the publishers isn't null, all of them were initialized, so log data
+        if (this.goalPositionPub != null) {
+            long timestamp = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
+
+            goalPositionPub.set(
+                    new Pose2d(xGoal.position, yGoal.position, Rotation2d.fromRadians(headingGoal.position)),
+                    timestamp);
+            setpointPositionPub.set(
+                    new Pose2d(
+                            xSetpoint.position, ySetpoint.position, Rotation2d.fromRadians(headingSetpoint.position)),
+                    timestamp);
+            setpointVelocityPub.set(
+                    new ChassisSpeeds(xSetpoint.velocity, ySetpoint.velocity, headingSetpoint.velocity), timestamp);
+            errorCorrectionVelocityPub.set(
+                    new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput), timestamp);
+            appliedVelocityPub.set(new ChassisSpeeds(toApplyX, toApplyY, toApplyOmega), timestamp);
+        }
 
         return fieldCentric
                 .withVelocityX(toApplyX)

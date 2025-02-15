@@ -131,37 +131,26 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /* NetworkTables logging */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     /**
-     * Provides the front limelight's bot pose estimate to the drivetrain.
-     * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#getBotPoseEstimate_wpiBlue_MegaTag2(String) getBotPoseEstimate_wpiBlue_MegaTag2()}.
-     */
-    private final DoubleArraySubscriber frontPoseEstimateSub = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
-            .getDoubleArrayTopic("botpose_orb_wpiblue")
-            .subscribe(null);
-    /**
-     * Provides the back limelight's bot pose estimate to the drivetrain.
-     * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#getBotPoseEstimate_wpiBlue_MegaTag2(String) getBotPoseEstimate_wpiBlue_MegaTag2()}.
-     */
-    private final DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
-            .getDoubleArrayTopic("botpose_orb_wpiblue")
-            .subscribe(null);
-
-    /**
      * This NetworkTable is used to display driving information to AdvantageScope.
      * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
      */
     private final NetworkTable stateTable = inst.getTable("DriveState");
+
+    private final NetworkTable poseTable = stateTable.getSubTable("Poses");
     /** Logs the front bot pose estimate to AdvantageScope. */
     private final StructPublisher<Pose2d> frontPoseEstimatePub =
-            stateTable.getStructTopic("Front Pose Estimate", Pose2d.struct).publish();
+            poseTable.getStructTopic("Front Pose Estimate", Pose2d.struct).publish();
     /** Logs the back bot pose estimate to AdvantageScope. */
     private final StructPublisher<Pose2d> backPoseEstimatePub =
-            stateTable.getStructTopic("Back Pose Estimate", Pose2d.struct).publish();
+            poseTable.getStructTopic("Back Pose Estimate", Pose2d.struct).publish();
+
+    private final NetworkTable tagsTable = stateTable.getSubTable("Apriltags");
     /** Logs the tags that are currently visible from the front to AdvantageScope. */
-    private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = stateTable
+    private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = tagsTable
             .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
             .publish();
     /** Logs the tags that are currently visible from the back to AdvantageScope. */
-    private final StructArrayPublisher<Translation3d> backVisibleTagsPub = stateTable
+    private final StructArrayPublisher<Translation3d> backVisibleTagsPub = tagsTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
 
@@ -371,6 +360,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">the limelight NetworkTables API</a> (look for botpose_orb_wpiblue)
      */
     private void registerPoseEstimateListeners() {
+        DoubleArraySubscriber frontPoseEstimateSub = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+                .getDoubleArrayTopic("botpose_orb_wpiblue")
+                .subscribe(null);
+        /*DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
+        .getDoubleArrayTopic("botpose_orb_wpiblue")
+        .subscribe(null);*/
+
         inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             NetworkTableValue value = event.valueData.value;
             double[] poseArray = value.getDoubleArray();

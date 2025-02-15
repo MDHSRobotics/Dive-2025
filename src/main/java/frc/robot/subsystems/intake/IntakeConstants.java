@@ -14,6 +14,13 @@ public class IntakeConstants {
     public static final int WHEEL_LEFT_ID = 8;
 
     /**
+     * The roboRIO DIO channel that the
+     * <a href="https://www.adafruit.com/product/2168">beam break sensor</a>
+     * is plugged into.
+     */
+    public static final int ARM_BEAM_BEAK_DIO_CHANNEL = 8;
+
+    /**
      * The current limit for the arm in amps.
      * This is currently set to the value suggested by
      * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
@@ -38,6 +45,12 @@ public class IntakeConstants {
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
             Rotations.per(Minute).of(1).div(78.0).in(RadiansPerSecond);
+
+    /**
+     * The position of the absolute encoder (before any position conversion factor) that reports 0.
+     * This is currently set outside the arm's range of motion to prevent the position wrapping around from 1 to 0.
+     */
+    public static final double ARM_ZERO_OFFSET = 0;
 
     /**
      * The conversion of motor input rotations to wheel output radians.

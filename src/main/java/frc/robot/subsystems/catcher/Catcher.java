@@ -1,7 +1,6 @@
 package frc.robot.subsystems.catcher;
 
-import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
-import static frc.robot.Constants.K_DT;
+import static frc.robot.Constants.*;
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -36,7 +35,6 @@ public class Catcher extends SubsystemBase {
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
 
     private final SparkAbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
-    // private final DigitalInput m_armBeamBreak = new DigitalInput(9);
 
     private final SysIdRoutine m_armRoutine =
             new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
@@ -66,7 +64,10 @@ public class Catcher extends SubsystemBase {
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
+                .startPulseUs(ABSOLUTE_ENCODER_START_PULSE)
+                .endPulseUs(ABSOLUTE_ENCODER_END_PULSE)
+                .zeroOffset(ARM_ZERO_OFFSET);
         armConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)

@@ -35,6 +35,18 @@ public class ClimbConstants {
             Rotations.per(Minute).of(1).div(80.0).in(RadiansPerSecond);
 
     /**
+     * The position of the absolute encoder (before any position conversion factor) that reports 0.
+     * This is currently set outside the motor's range of motion to prevent the position wrapping around from 1 to 0.
+     */
+    public static final double BACK_ZERO_OFFSET = 0.5;
+
+    /**
+     * The position of the absolute encoder (before any position conversion factor) that reports 0.
+     * This is currently set outside the motor's range of motion to prevent the position wrapping around from 1 to 0.
+     */
+    public static final double FRONT_ZERO_OFFSET = 0;
+
+    /**
      * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
      * in volts.
      * This still needs to be tuned.

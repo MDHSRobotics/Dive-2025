@@ -4,8 +4,7 @@
 
 package frc.robot.subsystems.climb;
 
-import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
-import static frc.robot.Constants.K_DT;
+import static frc.robot.Constants.*;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -70,7 +69,10 @@ public class Climb extends SubsystemBase {
         config.absoluteEncoder
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
+                .startPulseUs(ABSOLUTE_ENCODER_START_PULSE)
+                .endPulseUs(ABSOLUTE_ENCODER_END_PULSE)
+                .zeroOffset(BACK_ZERO_OFFSET);
         config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
                 .absoluteEncoderPositionPeriodMs(10)
@@ -78,6 +80,8 @@ public class Climb extends SubsystemBase {
                 .absoluteEncoderVelocityPeriodMs(10)
                 .absoluteEncoderVelocityAlwaysOn(true);
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        config.absoluteEncoder.zeroOffset(FRONT_ZERO_OFFSET);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 

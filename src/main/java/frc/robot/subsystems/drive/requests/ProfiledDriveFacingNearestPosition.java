@@ -11,7 +11,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.units.measure.*;
+import frc.robot.subsystems.drive.DriveTelemetry;
 import java.util.List;
 
 /**
@@ -92,6 +95,13 @@ public class ProfiledDriveFacingNearestPosition implements ProfiledSwerveRequest
     private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
     private final TrapezoidProfile.State goal = new TrapezoidProfile.State();
 
+    // Optional NetworkTables logging
+    private final DoublePublisher goalPositionPub;
+    private final DoublePublisher setpointPositionPub;
+    private final DoublePublisher setpointVelocityPub;
+    private final DoublePublisher errorCorrectionVelocityPub;
+    private final DoublePublisher appliedVelocityPub;
+
     /**
      * Creates a new profiled request with the given constraints.
      *
@@ -102,6 +112,41 @@ public class ProfiledDriveFacingNearestPosition implements ProfiledSwerveRequest
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
+
+        goalPositionPub = null;
+        setpointPositionPub = null;
+        setpointVelocityPub = null;
+        errorCorrectionVelocityPub = null;
+        appliedVelocityPub = null;
+    }
+
+    /**
+     * Creates a new profiled request with the given constraints,
+     * and logs motion profile data in a subtable named "Facing Nearest Position".
+     *
+     * @param constraints Constraints for the trapezoid profile
+     * @param kDt Update period for the motion profile
+     * @param loggingPath The NetworkTable to log data into.
+     */
+    public ProfiledDriveFacingNearestPosition(
+            TrapezoidProfile.Constraints constraints, double kDt, NetworkTable loggingPath) {
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
+        profile = new TrapezoidProfile(constraints);
+        this.kDt = kDt;
+
+        NetworkTable motionTable = loggingPath.getSubTable("Facing Nearest Position");
+        NetworkTable goalTable = motionTable.getSubTable("Goal");
+        this.goalPositionPub = goalTable.getDoubleTopic("Position (radians)").publish();
+        NetworkTable setpointTable = motionTable.getSubTable("Setpoint");
+        this.setpointPositionPub =
+                setpointTable.getDoubleTopic("Position (radians)").publish();
+        this.setpointVelocityPub =
+                setpointTable.getDoubleTopic("Velocity (rads/sec)").publish();
+        this.errorCorrectionVelocityPub = motionTable
+                .getDoubleTopic("Error Correction Velocity (rads/sec)")
+                .publish();
+        this.appliedVelocityPub =
+                motionTable.getDoubleTopic("Applied Velocity (rads/sec)").publish();
     }
 
     /**
@@ -154,6 +199,17 @@ public class ProfiledDriveFacingNearestPosition implements ProfiledSwerveRequest
         double toApplyOmega = setpoint.velocity + errorCorrectionOutput;
 
         this.motionIsFinished = headingController.atSetpoint() && goal.equals(setpoint);
+
+        // If one of the publishers isn't null, all of them were initialized, so log data
+        if (this.goalPositionPub != null) {
+            long timestamp = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
+
+            goalPositionPub.set(goal.position, timestamp);
+            setpointPositionPub.set(setpoint.position, timestamp);
+            setpointVelocityPub.set(setpoint.velocity, timestamp);
+            errorCorrectionVelocityPub.set(errorCorrectionOutput, timestamp);
+            appliedVelocityPub.set(toApplyOmega, timestamp);
+        }
 
         return fieldCentric
                 .withVelocityX(velocityX)

@@ -1,7 +1,6 @@
 package frc.robot.subsystems.intake;
 
-import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
-import static frc.robot.Constants.K_DT;
+import static frc.robot.Constants.*;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -19,9 +18,12 @@ import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -38,6 +40,8 @@ public class Intake extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
+
+    private final DigitalInput m_armBeamBreak = new DigitalInput(ARM_BEAM_BEAK_DIO_CHANNEL);
 
     private final SparkAbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
 
@@ -56,6 +60,8 @@ public class Intake extends SubsystemBase {
     private final NetworkTable table = inst.getTable("Intake");
     private final DoubleEntry flyheelSpeedEntry =
             table.getDoubleTopic("Flywheel Speed").getEntry(1);
+    private final BooleanPublisher beamBreakPub =
+            table.getBooleanTopic("Beam Broken").publish(PubSubOption.sendAll(true));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -69,7 +75,10 @@ public class Intake extends SubsystemBase {
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
+                .startPulseUs(ABSOLUTE_ENCODER_START_PULSE)
+                .endPulseUs(ABSOLUTE_ENCODER_END_PULSE)
+                .zeroOffset(ARM_ZERO_OFFSET);
         armConfig
                 .closedLoop
                 .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
@@ -100,6 +109,11 @@ public class Intake extends SubsystemBase {
 
         // You need to publish a value for the entry to appear in NetworkTables
         flyheelSpeedEntry.set(1);
+    }
+
+    @Override
+    public void periodic() {
+        beamBreakPub.set(!m_armBeamBreak.get());
     }
 
     private void resetProfile(IntakeArmPositions armPosition) {
@@ -139,8 +153,12 @@ public class Intake extends SubsystemBase {
         return this.run(() -> m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25));
     }
 
+    /**
+     * Runs the wheels until the beam is broken.
+     */
     public Command wheelsTestCommand() {
-        return this.run(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * 0.25));
+        return this.run(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * 0.25))
+                .until(() -> !m_armBeamBreak.get());
     }
 
     public Command wheelsBackwardsTestCommand() {

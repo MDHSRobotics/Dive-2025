@@ -5,6 +5,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.IntegerSubscriber;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -33,28 +34,33 @@ public class AimingRoutines {
     private final DoubleSupplier m_velocityYSupplier;
     private final DoubleSupplier m_deadbandSupplier;
 
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable cameraTable = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
+
+    private final NetworkTable loggingTable = inst.getTable("Swerve Requests");
+
     private final ProfiledDriveFacingAngle driveFacingAngle = new ProfiledDriveFacingAngle(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT)
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
             .withTolerance(GOAL_TOLERANCE);
 
     private final ProfiledDriveFacingPosition driveFacingPosition = new ProfiledDriveFacingPosition(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT)
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
             .withTolerance(GOAL_TOLERANCE);
 
     private final ProfiledDriveFacingNearestPosition driveFacingNearestPosition =
-            new ProfiledDriveFacingNearestPosition(ANGULAR_MOTION_CONSTRAINTS, K_DT)
+            new ProfiledDriveFacingNearestPosition(ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
                     .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
                     .withTolerance(GOAL_TOLERANCE);
 
     private final ProfiledDriveWithVisualServoing driveFacingVisionTarget = new ProfiledDriveWithVisualServoing(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT, VisionConstants.FRONT_LIMELIGHT_NAME)
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT, cameraTable, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
             .withTolerance(GOAL_TOLERANCE);
 
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
-                    LINEAR_MOTION_CONSTRAINTS, ANGULAR_MOTION_CONSTRAINTS, K_DT)
+                    LINEAR_MOTION_CONSTRAINTS, ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withTranslationalPIDGains(K_TRANSLATION_P, 0, K_TRANSLATION_D)
             .withRotationalPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D);
 
@@ -63,10 +69,8 @@ public class AimingRoutines {
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">limelight NetworkTables API</a>
      * @see {@link frc.robot.util.LimelightHelpers#getFiducialID(String) LimelightHelpers equivalent}
      */
-    private final IntegerSubscriber apriltagID = NetworkTableInstance.getDefault()
-            .getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
-            .getIntegerTopic("tid")
-            .subscribe(0);
+    private final IntegerSubscriber apriltagID =
+            cameraTable.getIntegerTopic("tid").subscribe(0);
 
     /**
      * Constructs an object that provides <a href="https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#non-static-command-factories">instanced command factories</a> for swerve drive aiming.

@@ -11,10 +11,14 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.units.measure.*;
+import frc.robot.subsystems.drive.DriveTelemetry;
+import java.util.EnumSet;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner,
@@ -31,6 +35,11 @@ import edu.wpi.first.units.measure.*;
  * <p>
  * We opted to take some code from {@link edu.wpi.first.math.controller.ProfiledPIDController ProfiledPIDController}
  * so we could use a {@link PhoenixPIDController PhoenixPIDController} instead of a normal PID controller.
+ * <p>
+ * Note: this request makes use of a
+ * <a href="https://docs.wpilib.org/en/stable/docs/software/networktables/listening-for-change.html#using-networktableinstance-to-listen-for-changes">NetworkTable listener</a>
+ * so that it can differentiate between new and old tx values,
+ * even when the values are the same.
  * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/tutorials/tutorial-aiming-with-visual-servoing">Explanation of visual servoing</a>
  * @see <a href="https://www.chiefdelphi.com/t/implementing-feedforward-with-ctre-s-fieldcentricfacingangle-request/475822/14">Original source of this code</a>
  */
@@ -47,6 +56,11 @@ public class ProfiledDriveWithVisualServoing implements ProfiledSwerveRequest {
      * so this determines how fast to travel to the left.
      */
     private double velocityY = 0;
+    /**
+     * The target direction for the swerve request.
+     * This field is not modifiable outside of this class because it is determined by tx.
+     */
+    private Rotation2d targetDirection = new Rotation2d();
     /**
      * The allowable deadband of the request, in m/s.
      */
@@ -91,23 +105,81 @@ public class ProfiledDriveWithVisualServoing implements ProfiledSwerveRequest {
     private boolean resetRequested = false;
     private boolean motionIsFinished = false;
 
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable cameraTable;
-    private final DoubleSubscriber txSub;
+    private final AtomicReference<Double> txValue = new AtomicReference<Double>(0.0);
+
+    // Optional NetworkTables logging
+    private final DoublePublisher goalPositionPub;
+    private final DoublePublisher setpointPositionPub;
+    private final DoublePublisher setpointVelocityPub;
+    private final DoublePublisher errorCorrectionVelocityPub;
+    private final DoublePublisher appliedVelocityPub;
 
     /**
      * Creates a new profiled request with the given constraints and camera.
      *
      * @param constraints Constraints for the trapezoid profile
      * @param kDt Update period for the motion profile
-     * @param cameraName The NetworkTable key for the limelight.
+     * @param cameraTable The NetworkTable for the limelight.
      */
-    public ProfiledDriveWithVisualServoing(TrapezoidProfile.Constraints constraints, double kDt, String cameraName) {
+    public ProfiledDriveWithVisualServoing(
+            TrapezoidProfile.Constraints constraints, double kDt, NetworkTable cameraTable) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
-        cameraTable = inst.getTable(cameraName);
-        txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
+
+        DoubleSubscriber txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
+
+        cameraTable
+                .getInstance()
+                .addListener(
+                        txSub,
+                        EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+                        event -> txValue.set(event.valueData.value.getDouble()));
+
+        goalPositionPub = null;
+        setpointPositionPub = null;
+        setpointVelocityPub = null;
+        errorCorrectionVelocityPub = null;
+        appliedVelocityPub = null;
+    }
+
+    /**
+     * Creates a new profiled request with the given constraints and camera,
+     * and logs motion profile data in a subtable named "Facing Angle".
+     *
+     * @param constraints Constraints for the trapezoid profile
+     * @param kDt Update period for the motion profile
+     * @param cameraTable The NetworkTable for the limelight.
+     * @param loggingPath The NetworkTable to log data into.
+     */
+    public ProfiledDriveWithVisualServoing(
+            TrapezoidProfile.Constraints constraints, double kDt, NetworkTable cameraTable, NetworkTable loggingPath) {
+        headingController.enableContinuousInput(-Math.PI, Math.PI);
+        profile = new TrapezoidProfile(constraints);
+        this.kDt = kDt;
+
+        DoubleSubscriber txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
+
+        cameraTable
+                .getInstance()
+                .addListener(
+                        txSub,
+                        EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+                        event -> txValue.set(event.valueData.value.getDouble()));
+
+        NetworkTable motionTable = loggingPath.getSubTable("Facing Angle");
+        NetworkTable goalTable = motionTable.getSubTable("Goal");
+        this.goalPositionPub = goalTable.getDoubleTopic("Position (radians)").publish();
+        NetworkTable setpointTable = motionTable.getSubTable("Setpoint");
+        this.setpointPositionPub =
+                setpointTable.getDoubleTopic("Position (radians)").publish();
+        this.setpointVelocityPub =
+                setpointTable.getDoubleTopic("Velocity (rads/sec)").publish();
+        this.errorCorrectionVelocityPub = motionTable
+                .getDoubleTopic("Error Correction Velocity (rads/sec)")
+                .publish();
+        this.appliedVelocityPub =
+                motionTable.getDoubleTopic("Applied Velocity (rads/sec)").publish();
     }
 
     /**
@@ -118,9 +190,13 @@ public class ProfiledDriveWithVisualServoing implements ProfiledSwerveRequest {
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         Rotation2d currentAngle = parameters.currentPose.getRotation();
         double currentAngularVelocity = parameters.currentChassisSpeed.omegaRadiansPerSecond;
-        double tx = txSub.getAtomic().value;
-        // You need to subtract instead of adding because the current angle is counterclockwise, but tx is clockwise.
-        Rotation2d fakeTargetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
+        Double tx = txValue.getAndSet(null);
+        // If tx has updated, update the target direction.
+        if (tx != null) {
+            // You need to subtract instead of adding because the current angle is counterclockwise, but tx is
+            // clockwise.
+            this.targetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
+        }
 
         if (resetRequested) {
             setpoint.position = currentAngle.getRadians();
@@ -134,7 +210,7 @@ public class ProfiledDriveWithVisualServoing implements ProfiledSwerveRequest {
          * The same happens with setpoint.
          */
         // Get the smallest possible distance between goal and measurement
-        double goalMinDistance = MathUtil.angleModulus(fakeTargetDirection.getRadians() - currentAngle.getRadians());
+        double goalMinDistance = MathUtil.angleModulus(this.targetDirection.getRadians() - currentAngle.getRadians());
         double setpointMinDistance = MathUtil.angleModulus(setpoint.position - currentAngle.getRadians());
 
         // Recompute the profile goal with the smallest error, thus giving the shortest path. The goal
@@ -154,6 +230,17 @@ public class ProfiledDriveWithVisualServoing implements ProfiledSwerveRequest {
         double toApplyOmega = setpoint.velocity + errorCorrectionOutput;
 
         this.motionIsFinished = (headingController.atSetpoint() && goal.equals(setpoint));
+
+        // If one of the publishers isn't null, all of them were initialized, so log data
+        if (this.goalPositionPub != null) {
+            long timestamp = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
+
+            goalPositionPub.set(goal.position, timestamp);
+            setpointPositionPub.set(setpoint.position, timestamp);
+            setpointVelocityPub.set(setpoint.velocity, timestamp);
+            errorCorrectionVelocityPub.set(errorCorrectionOutput, timestamp);
+            appliedVelocityPub.set(toApplyOmega, timestamp);
+        }
 
         return fieldCentric
                 .withVelocityX(velocityX)

@@ -44,6 +44,18 @@ public final class Constants {
      */
     public static final int ABSOLUTE_ENCODER_AVERAGE_DEPTH = 2;
 
+    /**
+     * The start pulse in REV Through Bore Encoders.
+     * @see <a href="https://docs.revrobotics.com/rev-crossover-products/sensors/tbe/specs#absolute-pulse-output-duty-cycle">The source of this number (look for Minimum Pulse)</a>
+     */
+    public static final double ABSOLUTE_ENCODER_START_PULSE = 1;
+
+    /**
+     * The end pulse in REV Through Bore Encoders.
+     * @see <a href="https://docs.revrobotics.com/rev-crossover-products/sensors/tbe/specs#absolute-pulse-output-duty-cycle">The source of this number (look for Maximum Pulse)</a>
+     */
+    public static final double ABSOLUTE_ENCODER_END_PULSE = 1024;
+
     public static class ControllerConstants {
         private ControllerConstants() {}
 

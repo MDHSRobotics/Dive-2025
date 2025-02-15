@@ -45,8 +45,10 @@ public class DriveTelemetry {
 
     /* Robot swerve drive state */
     private final NetworkTable driveStateTable = inst.getTable("DriveState");
-    private final StructPublisher<Pose2d> drivePosePub =
-            driveStateTable.getStructTopic("Pose", Pose2d.struct).publish();
+    private final StructPublisher<Pose2d> drivePosePub = driveStateTable
+            .getSubTable("Poses")
+            .getStructTopic("Pose", Pose2d.struct)
+            .publish();
     private final StructPublisher<ChassisSpeeds> driveSpeedsPub =
             driveStateTable.getStructTopic("Speeds", ChassisSpeeds.struct).publish();
     private final StructArrayPublisher<SwerveModuleState> driveModuleStatesPub = driveStateTable
@@ -130,7 +132,7 @@ public class DriveTelemetry {
      * @param stateTimestampSeconds The SwerveDriveState timestamp in seconds
      * @return The equivalent NetworkTables timestamp in microseconds
      */
-    private static long stateTimestampToNTTimestamp(double stateTimestampSeconds) {
+    public static long stateTimestampToNTTimestamp(double stateTimestampSeconds) {
         double NTTimestampSeconds = stateTimestampSeconds + (Timer.getFPGATimestamp() - Utils.getCurrentTimeSeconds());
         return (long) (NTTimestampSeconds * 1000000.0);
     }

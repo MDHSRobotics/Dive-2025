@@ -33,6 +33,12 @@ public class CatcherConstants {
             Rotations.per(Minute).of(1).div(49.5).in(RadiansPerSecond);
 
     /**
+     * The position of the absolute encoder (before any position conversion factor) that reports 0.
+     * This is currently set outside the arm's range of motion to prevent the position wrapping around from 1 to 0.
+     */
+    public static final double ARM_ZERO_OFFSET = 0;
+
+    /**
      * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
      * in volts.
      * This still needs to be tuned.
