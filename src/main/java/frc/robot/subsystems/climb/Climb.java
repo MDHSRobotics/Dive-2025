@@ -4,11 +4,12 @@
 
 package frc.robot.subsystems.climb;
 
+import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -36,8 +37,8 @@ public class Climb extends SubsystemBase {
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
 
-    private final RelativeEncoder m_backEncoder = m_backHookMotor.getEncoder();
-    private final RelativeEncoder m_frontEncoder = m_frontHookMotor.getEncoder();
+    private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
+    private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
 
     private final SysIdRoutine m_backRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backHookMotor::setVoltage, null, this));
@@ -66,15 +67,16 @@ public class Climb extends SubsystemBase {
     public Climb() {
         SparkFlexConfig config = new SparkFlexConfig();
         config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
-        config.encoder
+        config.absoluteEncoder
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
-                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR);
-        config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(K_P).d(K_D);
+                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
+        config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
-                .primaryEncoderPositionPeriodMs(10)
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(10)
-                .primaryEncoderVelocityAlwaysOn(true);
+                .absoluteEncoderPositionPeriodMs(10)
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(10)
+                .absoluteEncoderVelocityAlwaysOn(true);
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }

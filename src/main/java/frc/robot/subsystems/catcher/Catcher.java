@@ -1,10 +1,11 @@
 package frc.robot.subsystems.catcher;
 
+import static frc.robot.Constants.ABSOLUTE_ENCODER_AVERAGE_DEPTH;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
+import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -34,7 +35,7 @@ public class Catcher extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
 
-    private final RelativeEncoder m_armEncoder = m_armMotor.getEncoder();
+    private final SparkAbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
     // private final DigitalInput m_armBeamBreak = new DigitalInput(9);
 
     private final SysIdRoutine m_armRoutine =
@@ -62,20 +63,21 @@ public class Catcher extends SubsystemBase {
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
         armConfig
-                .encoder
+                .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
-                .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR);
+                .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
+                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH);
         armConfig
                 .closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
                 .p(K_P)
                 .d(K_D);
         armConfig
                 .signals
-                .primaryEncoderPositionPeriodMs(10)
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(10)
-                .primaryEncoderVelocityAlwaysOn(true);
+                .absoluteEncoderPositionPeriodMs(10)
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(10)
+                .absoluteEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkFlexConfig flywheelsConfig = new SparkFlexConfig();
