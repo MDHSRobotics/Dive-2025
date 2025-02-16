@@ -370,15 +370,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             NetworkTableValue value = event.valueData.value;
             double[] poseArray = value.getDoubleArray();
-            // If there is no data available, don't log anything
+            // If there is no data available, don't use the data.
             if (poseArray.length < 11) {
-                DriverStation.reportWarning("An empty bot pose estimate was received from the front limelight.", false);
                 frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
 
             /* Get bot pose estimate */
             Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
+            // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
+            if (botPose.equals(Translation2d.kZero)) {
+                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                return;
+            }
             Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
             Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
@@ -402,8 +406,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
-                DriverStation.reportWarning(
-                        "There are no valid tags reported by the front limelight pose estimate.", false);
                 frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
@@ -416,55 +418,5 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
             frontVisibleTagsPub.set(visibleTagPositions, timestamp);
         });
-
-        /*inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
-            NetworkTableValue value = event.valueData.value;
-            double[] poseArray = value.getDoubleArray();
-            // If there is no data available, don't log anything
-            if (poseArray.length < 11) {
-                DriverStation.reportWarning("An empty bot pose estimate was received from the back limelight.", false);
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
-
-            // Get bot pose estimate
-            Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
-            Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
-            Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
-
-            // Get timestamp
-            long timestamp = value.getTime();
-
-            // Log pose estimate to AdvantageScope
-            backPoseEstimatePub.set(botPoseEstimate, timestamp);
-
-            // Convert timestamp from microseconds to seconds and adjust for latency
-            double latency = poseArray[6];
-            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
-
-            // Add the vision measurement to the pose estimator
-            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
-
-            // Log which apriltags are currently visible
-            int tagCount = (int) poseArray[7];
-            int valsPerFiducial = 7;
-            int expectedTotalVals = 11 + valsPerFiducial * tagCount;
-
-            // If there is no more data available, stop logging
-            if (poseArray.length != expectedTotalVals || tagCount == 0) {
-                DriverStation.reportWarning(
-                        "There are no valid tags reported by the back limelight pose estimate.", false);
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
-
-            Translation3d[] visibleTagPositions = new Translation3d[tagCount];
-            for (int i = 0; i < tagCount; i++) {
-                int currentIndex = 11 + (i * valsPerFiducial);
-                int id = (int) poseArray[currentIndex];
-                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id - 1];
-            }
-            backVisibleTagsPub.set(visibleTagPositions, timestamp);
-        });*/
     }
 }

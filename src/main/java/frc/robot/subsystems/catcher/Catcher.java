@@ -59,14 +59,18 @@ public class Catcher extends SubsystemBase {
      */
     public Catcher() {
         SparkFlexConfig armConfig = new SparkFlexConfig();
-        armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
+        armConfig
+                .softLimit
+                .forwardSoftLimit(ARM_MAX_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimit(ARM_MIN_LIMIT)
+                .reverseSoftLimitEnabled(true);
         armConfig
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
                 .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
-                .startPulseUs(ABSOLUTE_ENCODER_START_PULSE)
-                .endPulseUs(ABSOLUTE_ENCODER_END_PULSE)
                 .zeroOffset(ARM_ZERO_OFFSET);
         armConfig
                 .closedLoop
@@ -130,15 +134,20 @@ public class Catcher extends SubsystemBase {
     }
 
     public Command wheelTestCommand() {
-        return this.run(() -> m_flywheelsMotor.set(flywheelSpeedEntry.get() * 0.25));
+        return this.run(() -> m_flywheelsMotor.set(0.5));
     }
 
     public Command wheelBackwardsTestCommand() {
-        return this.run(() -> m_flywheelsMotor.set(-flywheelSpeedEntry.get() * 0.5));
+        return this.run(() -> m_flywheelsMotor.set(-0.2));
     }
 
-    public Command setArmPositionCommand(CatcherArmPositions armPosition) {
+    /*public Command setArmPositionCommand(CatcherArmPositions armPosition) {
         return this.startRun(() -> this.resetProfile(armPosition), this::runProfile);
+    }*/
+
+    public Command setArmPositionCommand() {
+        return this.runOnce(() -> m_armController.setReference(TROUGH_POSITION, ControlType.kPosition))
+                .andThen(Commands.idle(this));
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

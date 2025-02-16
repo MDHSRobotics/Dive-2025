@@ -19,24 +19,24 @@ public class CatcherConstants {
      */
     public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
 
+    public static final double ARM_MIN_LIMIT = Radians.of(2.22).in(Radians);
+    public static final double ARM_MAX_LIMIT = Radians.of(5.80).in(Radians);
+
     /**
      * The conversion of motor input rotations to arm output radians.
-     * Motor input rotations will be divided by the gear ratio, and then converted to radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR =
-            Rotations.of(1).div(49.5).in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
-     * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).div(49.5).in(RadiansPerSecond);
+            Rotations.per(Minute).of(1).in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the arm's range of motion to prevent the position wrapping around from 1 to 0.
      */
-    public static final double ARM_ZERO_OFFSET = 0;
+    public static final double ARM_ZERO_OFFSET = 0.75;
 
     /**
      * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html#arm-feedforward">arm feedforward</a>
@@ -68,7 +68,7 @@ public class CatcherConstants {
      * in volts per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = Volts.per(Radian).ofNative(0).in(Volts.per(Radian));
+    public static final double K_P = Volts.per(Radian).ofNative(1.5).in(Volts.per(Radian));
     /**
      * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
      * in volts per radian per second.
@@ -97,12 +97,13 @@ public class CatcherConstants {
     // Common catcher positions
     /**
      * The position that aligns the arm with the trough in radians.
-     * This still needs to be found.
      */
-    public static final double TROUGH_POSITION = Radians.of(0).in(Radians);
+    public static final double TROUGH_POSITION = Radians.of(5.32).in(Radians);
+
+    public static final double L1_POSITION = Radians.of(4.70).in(Radians);
+    public static final double ALGAE_POSITION = Radians.of(4.91).in(Radians);
     /**
      * The position that aligns the arm with the coral station in radians.
-     * This still needs to be found.
      */
-    public static final double CORAL_STATION_POSITION = Radians.of(0).in(Radians);
+    public static final double CORAL_STATION_POSITION = Radians.of(4.022).in(Radians);
 }

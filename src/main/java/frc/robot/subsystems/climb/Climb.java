@@ -34,15 +34,15 @@ public class Climb extends SubsystemBase {
     }
 
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
-    private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
+    // private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
 
     private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
-    private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
+    // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
 
     private final SysIdRoutine m_backRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backHookMotor::setVoltage, null, this));
-    private final SysIdRoutine m_frontRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_frontHookMotor::setVoltage, null, this));
+    /*private final SysIdRoutine m_frontRoutine = new SysIdRoutine(
+    new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_frontHookMotor::setVoltage, null, this));*/
 
     private final SimpleMotorFeedforward m_hookFeedforward = new SimpleMotorFeedforward(K_S, K_V, K_A);
 
@@ -56,7 +56,7 @@ public class Climb extends SubsystemBase {
     private final TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
 
     private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
-    private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
+    // private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -70,8 +70,6 @@ public class Climb extends SubsystemBase {
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
                 .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
-                .startPulseUs(ABSOLUTE_ENCODER_START_PULSE)
-                .endPulseUs(ABSOLUTE_ENCODER_END_PULSE)
                 .zeroOffset(BACK_ZERO_OFFSET);
         config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
@@ -82,7 +80,7 @@ public class Climb extends SubsystemBase {
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         config.absoluteEncoder.zeroOffset(FRONT_ZERO_OFFSET);
-        m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        // m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
     }
 
     private void resetProfile(HookPositions hookPositions) {
@@ -95,8 +93,8 @@ public class Climb extends SubsystemBase {
         }
         m_backPreviousSetpoint.position = m_backEncoder.getPosition();
         m_backPreviousSetpoint.velocity = m_backEncoder.getVelocity();
-        m_frontPreviousSetpoint.position = m_frontEncoder.getPosition();
-        m_frontPreviousSetpoint.velocity = m_frontEncoder.getVelocity();
+        /*m_frontPreviousSetpoint.position = m_frontEncoder.getPosition();
+        m_frontPreviousSetpoint.velocity = m_frontEncoder.getVelocity();*/
     }
 
     private void runProfile() {
@@ -111,8 +109,8 @@ public class Climb extends SubsystemBase {
         // Run the PID controller along with the estimated volts
         m_backController.setReference(
                 nextBackSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, backFeedforwardVolts);
-        m_frontController.setReference(
-                nextFrontSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, frontFeedforwardVolts);
+        /*m_frontController.setReference(
+        nextFrontSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, frontFeedforwardVolts);*/
         // Update current setpoint
         m_backPreviousSetpoint = nextBackSetpoint;
         m_frontPreviousSetpoint = nextFrontSetpoint;
@@ -120,7 +118,7 @@ public class Climb extends SubsystemBase {
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
-                    m_frontHookMotor.stopMotor();
+                    // m_frontHookMotor.stopMotor();
                     m_backHookMotor.stopMotor();
                 })
                 .andThen(Commands.idle(this));
@@ -129,7 +127,7 @@ public class Climb extends SubsystemBase {
     public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
             m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.5);
-            m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
+            // m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
         });
     }
 
@@ -145,11 +143,11 @@ public class Climb extends SubsystemBase {
         return m_backRoutine.dynamic(direction);
     }
 
-    public Command rightSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    /*public Command rightSysIdQuasistatic(SysIdRoutine.Direction direction) {
         return m_frontRoutine.quasistatic(direction);
     }
 
     public Command rightSysIdDynamic(SysIdRoutine.Direction direction) {
         return m_frontRoutine.dynamic(direction);
-    }
+    }*/
 }

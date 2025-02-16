@@ -33,24 +33,24 @@ public class IntakeConstants {
      */
     public static final int WHEEL_CURRENT_LIMIT = (int) Amps.of(40).in(Amps);
 
+    public static final double ARM_MAX_LIMIT = Radians.of(5.2).in(Radians);
+    public static final double ARM_MIN_LIMIT = Radians.of(2.137).in(Radians);
+
     /**
      * The conversion of motor input rotations to arm output radians.
-     * Motor input rotations will be divided by the gear ratio, and then converted to radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR =
-            Rotations.of(1).div(78.0).in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
-     * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).div(78.0).in(RadiansPerSecond);
+            Rotations.per(Minute).of(1).in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the arm's range of motion to prevent the position wrapping around from 1 to 0.
      */
-    public static final double ARM_ZERO_OFFSET = 0;
+    public static final double ARM_ZERO_OFFSET = 0.25;
 
     /**
      * The conversion of motor input rotations to wheel output radians.
@@ -137,4 +137,6 @@ public class IntakeConstants {
      * This still needs to be found.
      */
     public static final double GROUND_PICKUP_POSITION = Radians.of(0).in(Radians);
+
+    public static final double PROCESSOR_POSITION = Radians.of(2.634).in(Radians);
 }

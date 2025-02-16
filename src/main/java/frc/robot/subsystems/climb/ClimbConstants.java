@@ -21,18 +21,21 @@ public class ClimbConstants {
      */
     public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
 
+    public static final double BACK_FORWARD_LIMIT = Radians.of(0).in(Radians);
+    public static final double BACK_BACKWARD_LIMIT = Radians.of(0).in(Radians);
+
+    public static final double FRONT_FORWARD_LIMIT = Radians.of(0).in(Radians);
+    public static final double FRONT_BACKWARD_LIMIT = Radians.of(0).in(Radians);
+
     /**
      * The conversion of motor input rotations to climb hook output radians.
-     * Motor input rotations will be divided by the gear ratio, and then converted to radians.
      */
-    public static final double POSITION_CONVERSION_FACTOR =
-            Rotations.of(1).div(80.0).in(Radians);
+    public static final double POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
     /**
      * The conversion of motor input rotations per minute to climb hook output radians per second.
-     * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
      */
     public static final double VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).div(80.0).in(RadiansPerSecond);
+            Rotations.per(Minute).of(1).in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
@@ -44,7 +47,7 @@ public class ClimbConstants {
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the motor's range of motion to prevent the position wrapping around from 1 to 0.
      */
-    public static final double FRONT_ZERO_OFFSET = 0;
+    public static final double FRONT_ZERO_OFFSET = 0.75;
 
     /**
      * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>

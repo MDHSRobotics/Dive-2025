@@ -39,22 +39,9 @@ public final class Constants {
 
     /**
      * The amount of samples to use for calculating velocity in REV Through Bore Encoders.
-     * This is currently set to the value that is used in
-     * <a href="https://github.com/Mechanical-Advantage/AdvantageKit/blob/main/template_projects/sources/spark_swerve/src/main/java/frc/robot/subsystems/drive/ModuleIOSpark.java">AdvantageKit for their swerve modules.</a>
+     * This is currently set to a value that reduces noise to a range of 0.24 radians.
      */
-    public static final int ABSOLUTE_ENCODER_AVERAGE_DEPTH = 2;
-
-    /**
-     * The start pulse in REV Through Bore Encoders.
-     * @see <a href="https://docs.revrobotics.com/rev-crossover-products/sensors/tbe/specs#absolute-pulse-output-duty-cycle">The source of this number (look for Minimum Pulse)</a>
-     */
-    public static final double ABSOLUTE_ENCODER_START_PULSE = 1;
-
-    /**
-     * The end pulse in REV Through Bore Encoders.
-     * @see <a href="https://docs.revrobotics.com/rev-crossover-products/sensors/tbe/specs#absolute-pulse-output-duty-cycle">The source of this number (look for Maximum Pulse)</a>
-     */
-    public static final double ABSOLUTE_ENCODER_END_PULSE = 1024;
+    public static final int ABSOLUTE_ENCODER_AVERAGE_DEPTH = 32;
 
     public static class ControllerConstants {
         private ControllerConstants() {}
@@ -365,8 +352,8 @@ public final class Constants {
     public static final Map<Integer, String> REV_CAN_ID_ALIASES = Map.of(
             ClimbConstants.BACK_ID,
             "Climb-Back",
-            ClimbConstants.FRONT_ID,
-            "Climb-Front",
+            /*ClimbConstants.FRONT_ID,
+            "Climb-Front",*/
             CatcherConstants.ARM_ID,
             "Catcher-Arm",
             CatcherConstants.WHEELS_ID,

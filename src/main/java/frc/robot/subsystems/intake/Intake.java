@@ -72,12 +72,16 @@ public class Intake extends SubsystemBase {
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(ARM_CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         armConfig
+                .softLimit
+                .forwardSoftLimit(ARM_MAX_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimit(ARM_MIN_LIMIT)
+                .reverseSoftLimitEnabled(true);
+        armConfig
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
                 .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
-                .startPulseUs(ABSOLUTE_ENCODER_START_PULSE)
-                .endPulseUs(ABSOLUTE_ENCODER_END_PULSE)
                 .zeroOffset(ARM_ZERO_OFFSET);
         armConfig
                 .closedLoop
@@ -157,8 +161,7 @@ public class Intake extends SubsystemBase {
      * Runs the wheels until the beam is broken.
      */
     public Command wheelsTestCommand() {
-        return this.run(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * 0.25))
-                .until(() -> !m_armBeamBreak.get());
+        return this.run(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * 0.25));
     }
 
     public Command wheelsBackwardsTestCommand() {
