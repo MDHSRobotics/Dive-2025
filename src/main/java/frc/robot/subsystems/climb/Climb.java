@@ -69,7 +69,6 @@ public class Climb extends SubsystemBase {
         config.absoluteEncoder
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
                 .zeroOffset(BACK_ZERO_OFFSET);
         config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals

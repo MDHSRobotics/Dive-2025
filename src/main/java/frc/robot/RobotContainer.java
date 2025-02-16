@@ -18,11 +18,11 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.catcher.Catcher;
+import frc.robot.subsystems.catcher.Catcher.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -200,12 +200,8 @@ public class RobotContainer {
         operatorController.x().whileTrue(m_intake.wheelsTestCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
 
-        operatorController.start().toggleOnTrue(m_catcher.setArmPositionCommand());
-
-        operatorController.povUp().whileTrue(m_catcher.sysIdQuasistatic(Direction.kForward));
-        operatorController.povDown().whileTrue(m_catcher.sysIdQuasistatic(Direction.kReverse));
-        operatorController.povLeft().whileTrue(m_catcher.sysIdDynamic(Direction.kForward));
-        operatorController.povRight().whileTrue(m_catcher.sysIdDynamic(Direction.kReverse));
+        operatorController.povDown().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
+        operatorController.povUp().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
     }
 
     /**

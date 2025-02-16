@@ -3,9 +3,6 @@ package frc.robot.subsystems.intake;
 import static frc.robot.Constants.*;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
-import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkAbsoluteEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -16,8 +13,6 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.NetworkTable;
@@ -27,7 +22,6 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import java.util.function.DoubleSupplier;
 
 public class Intake extends SubsystemBase {
@@ -42,17 +36,6 @@ public class Intake extends SubsystemBase {
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
 
     private final DigitalInput m_armBeamBreak = new DigitalInput(ARM_BEAM_BEAK_DIO_CHANNEL);
-
-    private final SparkAbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
-
-    private final SysIdRoutine m_armRoutine =
-            new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
-
-    private final SimpleMotorFeedforward m_armFeedforward = new SimpleMotorFeedforward(K_S, K_V, K_A);
-
-    private final TrapezoidProfile m_armProfile = new TrapezoidProfile(ARM_ANGULAR_MOTION_CONSTRAINTS);
-    private final TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
-    private TrapezoidProfile.State m_previousSetpoint = new TrapezoidProfile.State();
 
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
@@ -81,7 +64,6 @@ public class Intake extends SubsystemBase {
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
-                .averageDepth(ABSOLUTE_ENCODER_AVERAGE_DEPTH)
                 .zeroOffset(ARM_ZERO_OFFSET);
         armConfig
                 .closedLoop
@@ -120,31 +102,6 @@ public class Intake extends SubsystemBase {
         beamBreakPub.set(!m_armBeamBreak.get());
     }
 
-    private void resetProfile(IntakeArmPositions armPosition) {
-        if (armPosition == IntakeArmPositions.UP) {
-            m_goal.position = UP_POSITION;
-        } else if (armPosition == IntakeArmPositions.ON_CORAL_PICKUP) {
-            m_goal.position = ON_CORAL_PICKUP_POSITION;
-        } else {
-            m_goal.position = GROUND_PICKUP_POSITION;
-        }
-        m_previousSetpoint.position = m_armEncoder.getPosition();
-        m_previousSetpoint.velocity = m_armEncoder.getVelocity();
-    }
-
-    private void runProfile() {
-        // Find the next position in the motion
-        TrapezoidProfile.State nextSetpoint = m_armProfile.calculate(K_DT, m_previousSetpoint, m_goal);
-        // Estimate the volts required to reach the position
-        double feedforwardVolts =
-                m_armFeedforward.calculateWithVelocities(m_previousSetpoint.velocity, nextSetpoint.velocity);
-        // Run the PID controller along with the estimated volts
-        m_armController.setReference(
-                nextSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
-        // Update current setpoint
-        m_previousSetpoint = nextSetpoint;
-    }
-
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
@@ -166,17 +123,5 @@ public class Intake extends SubsystemBase {
 
     public Command wheelsBackwardsTestCommand() {
         return this.run(() -> m_flywheelLeftMotor.set(-flyheelSpeedEntry.get() * 0.25));
-    }
-
-    public Command setArmPositionCommand(IntakeArmPositions armPosition) {
-        return this.startRun(() -> this.resetProfile(armPosition), this::runProfile);
-    }
-
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_armRoutine.quasistatic(direction);
-    }
-
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_armRoutine.dynamic(direction);
     }
 }

@@ -142,7 +142,7 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
         SmartDashboard.putData("Y Controller", yController);
         SmartDashboard.putData("Heading Controller", headingController);
 
-        NetworkTable motionTable = loggingPath.getSubTable("Facing Angle");
+        NetworkTable motionTable = loggingPath.getSubTable("X Y Heading Alignment");
         NetworkTable goalTable = motionTable.getSubTable("Goal");
         this.goalPositionPub =
                 goalTable.getStructTopic("Position", Pose2d.struct).publish();

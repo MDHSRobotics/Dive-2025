@@ -132,19 +132,19 @@ public class ProfiledDriveFacingPosition implements ProfiledSwerveRequest {
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
 
-        NetworkTable motionTable = loggingPath.getSubTable("Facing Angle");
+        NetworkTable motionTable = loggingPath.getSubTable("Facing Position");
         NetworkTable goalTable = motionTable.getSubTable("Goal");
         this.goalPositionPub = goalTable.getDoubleTopic("Position (radians)").publish();
         NetworkTable setpointTable = motionTable.getSubTable("Setpoint");
         this.setpointPositionPub =
                 setpointTable.getDoubleTopic("Position (radians)").publish();
         this.setpointVelocityPub =
-                setpointTable.getDoubleTopic("Velocity (rads/sec)").publish();
+                setpointTable.getDoubleTopic("Velocity (rads per sec)").publish();
         this.errorCorrectionVelocityPub = motionTable
-                .getDoubleTopic("Error Correction Velocity (rads/sec)")
+                .getDoubleTopic("Error Correction Velocity (rads per sec)")
                 .publish();
         this.appliedVelocityPub =
-                motionTable.getDoubleTopic("Applied Velocity (rads/sec)").publish();
+                motionTable.getDoubleTopic("Applied Velocity (rads per sec)").publish();
     }
 
     /**

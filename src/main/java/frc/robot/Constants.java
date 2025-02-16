@@ -37,12 +37,6 @@ public final class Constants {
      */
     public static final double K_DT = Seconds.of(0.02).in(Seconds);
 
-    /**
-     * The amount of samples to use for calculating velocity in REV Through Bore Encoders.
-     * This is currently set to a value that reduces noise to a range of 0.24 radians.
-     */
-    public static final int ABSOLUTE_ENCODER_AVERAGE_DEPTH = 32;
-
     public static class ControllerConstants {
         private ControllerConstants() {}
 
@@ -54,7 +48,6 @@ public final class Constants {
         private VisionConstants() {}
 
         public static final String FRONT_LIMELIGHT_NAME = "limelight-front";
-        public static final String BACK_LIMELIGHT_NAME = "limelight-back";
 
         /**
          * Distance from the center of the robot to the front limelight lens in meters.

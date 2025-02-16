@@ -26,14 +26,6 @@ public class DriveTelemetry {
     private final DoubleArrayPublisher megatag2FrontUpdater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
             .publish();
-    /**
-     * Provides the robot orientation to the back limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
-     * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.
-     * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">NetworkTables API documentation</a>
-     */
-    private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
-            .getDoubleArrayTopic("robot_orientation_set")
-            .publish();
 
     /** Limelight requires this to be a array of size 6. */
     private double[] megatag2Orientation = new double[6];
@@ -83,7 +75,6 @@ public class DriveTelemetry {
         megatag2Orientation[0] = state.Pose.getRotation().getDegrees();
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
         megatag2FrontUpdater.set(megatag2Orientation, timestamp);
-        megatag2BackUpdater.set(megatag2Orientation, timestamp);
         inst.flush();
 
         /* Telemeterize the swerve drive state */

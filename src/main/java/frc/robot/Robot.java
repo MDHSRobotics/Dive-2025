@@ -29,13 +29,14 @@ import org.littletonrobotics.urcl.URCL;
 public class Robot extends TimedRobot {
     private Command autonomousCommand;
 
-    private final RobotContainer robotContainer;
+    private RobotContainer robotContainer;
 
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
-    public Robot() {
+    @Override
+    public void robotInit() {
         // Silence joystick warnings because they get in the way of other warnings
         DriverStation.silenceJoystickConnectionWarning(true);
 
@@ -60,10 +61,9 @@ public class Robot extends TimedRobot {
         // If there are differences, they will be reported in SmartDashboard.
         DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
 
-        // Set USB drive path for logging
         SignalLogger.setPath("/logs");
         DataLogManager.start();
-        DriverStation.startDataLog(DataLogManager.getLog());
+        DriverStation.startDataLog(DataLogManager.getLog(), true);
         URCL.start(Constants.REV_CAN_ID_ALIASES);
         SignalLogger.start();
     }
@@ -132,6 +132,12 @@ public class Robot extends TimedRobot {
     /** This function is called periodically during test mode. */
     @Override
     public void testPeriodic() {}
+
+    @Override
+    public void testExit() {
+        SignalLogger.stop();
+        DataLogManager.stop();
+    }
 
     /** This function is called once when the robot is first started up. */
     @Override

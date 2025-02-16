@@ -150,12 +150,12 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         this.setpointPositionPub =
                 setpointTable.getDoubleTopic("Position (radians)").publish();
         this.setpointVelocityPub =
-                setpointTable.getDoubleTopic("Velocity (rads/sec)").publish();
+                setpointTable.getDoubleTopic("Velocity (rads per sec)").publish();
         this.errorCorrectionVelocityPub = motionTable
-                .getDoubleTopic("Error Correction Velocity (rads/sec)")
+                .getDoubleTopic("Error Correction Velocity (rads per sec)")
                 .publish();
         this.appliedVelocityPub =
-                motionTable.getDoubleTopic("Applied Velocity (rads/sec)").publish();
+                motionTable.getDoubleTopic("Applied Velocity (rads per sec)").publish();
     }
 
     /**
