@@ -3,7 +3,9 @@
   "robotLength": 0.8128,
   "holonomicMode": true,
   "pathFolders": [
-    "Blue top"
+    "Coral Stations to Reef",
+    "Reef to Coral Stations",
+    "Starting Positions to Reef"
   ],
   "autoFolders": [],
   "defaultMaxVel": 4.73,

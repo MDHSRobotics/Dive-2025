@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.9923519736842104,
-        "y": 4.034621710526316
+        "x": 7.581907894736841,
+        "y": 6.161019736842105
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9123113457574124,
-        "y": 6.514890081717207
+        "x": 7.254566591446522,
+        "y": 5.799672934475425
       },
       "isLocked": false,
-      "linkedName": "Blue Top (1) End"
+      "linkedName": "Middle Start"
     },
     {
       "anchor": {
-        "x": 1.6453125,
-        "y": 7.315625
+        "x": 5.869243421052631,
+        "y": 4.063486842105263
       },
       "prevControl": {
-        "x": 1.8448205811135379,
-        "y": 6.929540480818709
+        "x": 6.027480685891543,
+        "y": 4.271472864786519
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Right Reef"
     }
   ],
   "rotationTargets": [],
@@ -36,19 +36,19 @@
     "maxVelocity": 4.73,
     "maxAcceleration": 8.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 1500.0,
+    "maxAngularAcceleration": 360.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 126.0
+    "rotation": 180.0
   },
   "reversed": false,
-  "folder": "Blue top",
+  "folder": "Starting Positions to Reef",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }
