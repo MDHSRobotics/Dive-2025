@@ -202,10 +202,10 @@ public final class Constants {
          * These rotations correspond to the Z-Rotation on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a>
          * plus 180 degrees.
          * <p>
-         * IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22.
-         * Basically, index into the array by subtracting one from the id.
+         * Index into the array with the id number starting from 1.
          */
         public static final Rotation2d[] APRILTAG_ROTATIONS = {
+            Rotation2d.kZero,
             new Rotation2d(Degrees.of(126).plus(Degrees.of(180))),
             new Rotation2d(Degrees.of(234).plus(Degrees.of(180))),
             new Rotation2d(Degrees.of(270).plus(Degrees.of(180))),

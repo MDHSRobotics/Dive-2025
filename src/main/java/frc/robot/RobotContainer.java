@@ -29,7 +29,7 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.intake.Intake;
-import frc.robot.util.LimelightHelpers;
+import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -93,9 +93,7 @@ public class RobotContainer {
         SmartDashboard.putData("Select your auto:", autoChooser);
 
         // Select left tree on startup
-        selectLeftTree();
-
-        // m_drivetrain.resetRotation(Rotation2d.fromDegrees(54));
+        // selectLeftTree();
     }
 
     private void setDefaultCommands() {
@@ -116,7 +114,8 @@ public class RobotContainer {
 
     /**
      * Use this method to define controller input->command mappings.
-     * please use <a href="https://www.padcrafter.com/?templates=Driver%20Controller&plat=1&leftStick=Drive&aButton=Lock%20on%20to%20reef&xButton&yButton&leftBumper=Select%20Left%20Tree&backButton=Reset%20robot%20orientation&rightBumper=Select%20Right%20Tree&bButton&leftTrigger=Slow%20Mode&rightTrigger=Fast%20Mode&dpadLeft=Point%20wheels%20with%20right%20joystick&rightStick
+     * please use <a href="
+     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+on+to+reef&xButton=&yButton=&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=&leftTrigger=Slow+Mode&rightTrigger=Fast+Mode&dpadLeft=Point+wheels+with+right+joystick&rightStick=
      * ">this controller map</a>
      * to update and view the current controls.
      */
@@ -138,9 +137,9 @@ public class RobotContainer {
         // Fast Mode
         driverController.R2().onTrue(Commands.runOnce(() -> this.m_slowMode = false));
         // Select left tree
-        driverController.L1().onTrue(Commands.runOnce(this::selectLeftTree));
+        driverController.L1().onTrue(aimingRoutines.alignWithStation(true));
         // Select right tree
-        driverController.R1().onTrue(Commands.runOnce(this::selectRightTree));
+        driverController.R1().onTrue(aimingRoutines.alignWithStation(false));
 
         // Point wheels with right joystick
         driverController
@@ -197,11 +196,13 @@ public class RobotContainer {
         operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
         operatorController.a().whileTrue(m_catcher.wheelTestCommand());
         operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
-        operatorController.x().whileTrue(m_intake.wheelsTestCommand());
+        operatorController.x().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
 
-        operatorController.povDown().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
-        operatorController.povUp().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
+        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
+        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        operatorController.povLeft().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
+        operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
     }
 
     /**
@@ -281,7 +282,7 @@ public class RobotContainer {
         return rotationalDeadband;
     }
 
-    private void selectLeftTree() {
+    /*private void selectLeftTree() {
         // Update the target for tx values
         LimelightHelpers.SetFidcuial3DOffset(
                 VisionConstants.FRONT_LIMELIGHT_NAME,
@@ -301,7 +302,7 @@ public class RobotContainer {
                 0);
         // Log the direction
         selectedDirectionIndicator.set("Right");
-    }
+    }*/
 
     public void resetFieldPosition(Pose2d position) {
         m_drivetrain.resetPose(position);

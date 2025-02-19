@@ -404,7 +404,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             for (int i = 0; i < tagCount; i++) {
                 int currentIndex = 11 + (i * valsPerFiducial);
                 int id = (int) poseArray[currentIndex];
-                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id - 1];
+                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
             }
             frontVisibleTagsPub.set(visibleTagPositions, timestamp);
         });

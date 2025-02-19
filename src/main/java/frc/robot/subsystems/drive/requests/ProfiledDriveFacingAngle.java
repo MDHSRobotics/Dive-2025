@@ -11,8 +11,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.units.measure.*;
 import frc.robot.subsystems.drive.DriveTelemetry;
 
@@ -94,6 +96,8 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
     private final FieldCentric fieldCentric = new FieldCentric();
 
     private final PhoenixPIDController headingController = new PhoenixPIDController(0, 0, 0);
+    private final DoubleEntry pGainEntry;
+    private final DoubleEntry dGainEntry;
 
     /* Profile used for the target direction */
     private final TrapezoidProfile profile;
@@ -123,6 +127,8 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
 
+        pGainEntry = null;
+        dGainEntry = null;
         goalPositionPub = null;
         setpointPositionPub = null;
         setpointVelocityPub = null;
@@ -144,6 +150,15 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         this.kDt = kDt;
 
         NetworkTable motionTable = loggingPath.getSubTable("Facing Angle");
+
+        NetworkTable pidTable = motionTable.getSubTable("PID Gains");
+        this.pGainEntry =
+                pidTable.getDoubleTopic("P").getEntry(this.headingController.getP(), PubSubOption.excludeSelf(true));
+        this.pGainEntry.set(this.headingController.getP());
+        this.dGainEntry =
+                pidTable.getDoubleTopic("D").getEntry(this.headingController.getD(), PubSubOption.excludeSelf(true));
+        this.dGainEntry.set(this.headingController.getD());
+
         NetworkTable goalTable = motionTable.getSubTable("Goal");
         this.goalPositionPub = goalTable.getDoubleTopic("Position (radians)").publish();
         NetworkTable setpointTable = motionTable.getSubTable("Setpoint");
@@ -199,6 +214,9 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         setpoint = profile.calculate(kDt, setpoint, goal);
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
+        if (pGainEntry != null && dGainEntry != null) {
+            headingController.setPID(pGainEntry.get(), 0, dGainEntry.get());
+        }
         double errorCorrectionOutput =
                 headingController.calculate(currentAngle.getRadians(), setpoint.position, parameters.timestamp);
 
@@ -428,6 +446,10 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
      */
     public ProfiledDriveFacingAngle withPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
+        if (pGainEntry != null && dGainEntry != null) {
+            pGainEntry.set(kp);
+            dGainEntry.set(kd);
+        }
         return this;
     }
 

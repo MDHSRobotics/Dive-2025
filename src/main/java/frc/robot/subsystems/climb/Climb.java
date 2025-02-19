@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems.climb;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.*;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
@@ -20,10 +22,17 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEvent;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import java.util.EnumSet;
 import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
@@ -40,7 +49,8 @@ public class Climb extends SubsystemBase {
     // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
 
     private final SysIdRoutine m_backRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_backHookMotor::setVoltage, null, this));
+            new SysIdRoutine.Config(Volts.of(0.5).per(Second), Volts.of(2), null),
+            new SysIdRoutine.Mechanism(m_backHookMotor::setVoltage, null, this));
     /*private final SysIdRoutine m_frontRoutine = new SysIdRoutine(
     new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_frontHookMotor::setVoltage, null, this));*/
 
@@ -57,6 +67,15 @@ public class Climb extends SubsystemBase {
 
     private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
     // private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
+
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable table = inst.getTable("Catcher");
+    private final DoublePublisher targetPositionPub =
+            table.getDoubleTopic("Target Position (radians)").publish();
+    private final DoubleEntry pGainEntry =
+            table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
+    private final DoubleEntry dGainEntry =
+            table.getDoubleTopic("Arm D Gain").getEntry(K_D, PubSubOption.excludeSelf(true));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -80,6 +99,21 @@ public class Climb extends SubsystemBase {
 
         config.absoluteEncoder.zeroOffset(FRONT_ZERO_OFFSET);
         // m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        pGainEntry.set(K_P);
+        dGainEntry.set(K_D);
+        inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            SparkFlexConfig tempConfig = new SparkFlexConfig();
+            tempConfig.closedLoop.p(event.valueData.value.getDouble());
+            m_backHookMotor.configureAsync(
+                    tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        });
+        inst.addListener(dGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            SparkFlexConfig tempConfig = new SparkFlexConfig();
+            tempConfig.closedLoop.d(event.valueData.value.getDouble());
+            m_backHookMotor.configureAsync(
+                    tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        });
     }
 
     private void resetProfile(HookPositions hookPositions) {
@@ -134,19 +168,11 @@ public class Climb extends SubsystemBase {
         return this.startRun(() -> this.resetProfile(hookPositions), this::runProfile);
     }
 
-    public Command leftSysIdQuasistatic(SysIdRoutine.Direction direction) {
+    public Command backSysIdQuasistatic(SysIdRoutine.Direction direction) {
         return m_backRoutine.quasistatic(direction);
     }
 
-    public Command leftSysIdDynamic(SysIdRoutine.Direction direction) {
+    public Command backSysIdDynamic(SysIdRoutine.Direction direction) {
         return m_backRoutine.dynamic(direction);
     }
-
-    /*public Command rightSysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_frontRoutine.quasistatic(direction);
-    }
-
-    public Command rightSysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_frontRoutine.dynamic(direction);
-    }*/
 }

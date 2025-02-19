@@ -93,6 +93,30 @@ public class AimingRoutines {
         m_deadbandSupplier = deadbandSupplier;
     }
 
+    public Command alignWithStation(boolean leftStation) {
+        return m_drivetrain.applyProfiledRequest(() -> {
+            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+            if (leftStation) {
+                if (alliance == Alliance.Blue) {
+                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[13]);
+                } else if (alliance == Alliance.Red) {
+                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[1]);
+                }
+            } else {
+                if (alliance == Alliance.Blue) {
+                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[12]);
+                } else if (alliance == Alliance.Red) {
+                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[2]);
+                }
+            }
+
+            return driveFacingAngle
+                    .withVelocityX(m_velocityXSupplier.getAsDouble())
+                    .withVelocityY(m_velocityYSupplier.getAsDouble())
+                    .withDeadband(m_deadbandSupplier.getAsDouble());
+        });
+    }
+
     /*
      * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
      * Once the driver presses this button, the robot will orient to face the center of the reef.
@@ -141,7 +165,7 @@ public class AimingRoutines {
                 m_drivetrain.applyProfiledRequest(() -> {
                     int id = (int) apriltagID.get();
                     if (Aiming.isReefTag(id)) {
-                        driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id - 1]);
+                        driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
                     }
                     return driveFacingAngle
                             .withVelocityX(m_velocityXSupplier.getAsDouble())

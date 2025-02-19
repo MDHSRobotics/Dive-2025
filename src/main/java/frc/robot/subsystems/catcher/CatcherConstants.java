@@ -39,13 +39,7 @@ public class CatcherConstants {
      * in duty cycle (percent out) per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = 0.6;
-    /**
-     * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
-     * in duty cycle (percent out) per radian per second.
-     * This still needs to be tuned.
-     */
-    public static final double K_D = 0;
+    public static final double K_P = 0.225;
 
     // Common catcher positions
     /**
@@ -57,6 +51,8 @@ public class CatcherConstants {
     public static final double ALGAE_POSITION = Radians.of(4.91).in(Radians);
     /**
      * The position that aligns the arm with the coral station in radians.
+     * This is the actual position minus a fudge factor that accounts for the weight of gravity.
      */
-    public static final double CORAL_STATION_POSITION = Radians.of(4.022).in(Radians);
+    public static final double CORAL_STATION_POSITION =
+            Radians.of(4.022).minus(Radians.of(0.1)).in(Radians);
 }

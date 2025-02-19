@@ -70,16 +70,16 @@ public class ClimbConstants {
 
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
-     * in volts per radian.
+     * in duty cycle (percent out) per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = Volts.per(Radian).ofNative(0).in(Volts.per(Radian));
+    public static final double K_P = 0;
     /**
      * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
-     * in volts per radian per second.
+     * in duty cycle (percent out) per radian per second.
      * This still needs to be tuned.
      */
-    public static final double K_D = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
+    public static final double K_D = 0;
 
     /**
      * Maximum allowed angular velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>

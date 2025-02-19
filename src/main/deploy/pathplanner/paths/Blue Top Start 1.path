@@ -8,20 +8,20 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.233213758231732,
-        "y": 7.064352955980349
+        "x": 7.062335526315788,
+        "y": 7.257894736842105
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.176480263157895,
-        "y": 5.179605263157893
+        "x": 2.9923519736842104,
+        "y": 4.034621710526316
       },
       "prevControl": {
-        "x": 5.2919187925769515,
-        "y": 5.403297833356523
+        "x": 2.771052631578947,
+        "y": 5.9300986842105265
       },
       "nextControl": null,
       "isLocked": false,
@@ -30,7 +30,18 @@
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [],
+  "pointTowardsZones": [
+    {
+      "fieldPosition": {
+        "x": 4.4750482,
+        "y": 4.0259
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 0.25,
+      "maxWaypointRelativePos": 0.75,
+      "name": "Point Towards Zone"
+    }
+  ],
   "eventMarkers": [
     {
       "name": "Lower Arm",
@@ -54,10 +65,10 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -119.99999999999999
+    "rotation": 0.0
   },
   "reversed": false,
-  "folder": null,
+  "folder": "Blue top",
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0

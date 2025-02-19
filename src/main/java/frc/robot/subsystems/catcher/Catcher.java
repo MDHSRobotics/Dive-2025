@@ -1,6 +1,5 @@
 package frc.robot.subsystems.catcher;
 
-import static frc.robot.Constants.*;
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -13,15 +12,20 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.networktables.DoubleEntry;
+import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import java.util.EnumSet;
 import java.util.function.DoubleSupplier;
 
 public class Catcher extends SubsystemBase {
     public enum CatcherArmPositions {
+        STOWED,
         TROUGH,
         CORAL_STATION
     }
@@ -35,6 +39,10 @@ public class Catcher extends SubsystemBase {
     private final NetworkTable table = inst.getTable("Catcher");
     private final DoubleEntry flywheelSpeedEntry =
             table.getDoubleTopic("Flywheel Speed").getEntry(1);
+    private final DoublePublisher targetPositionPub =
+            table.getDoubleTopic("Target Position (radians)").publish();
+    private final DoubleEntry pGainEntry =
+            table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -55,11 +63,7 @@ public class Catcher extends SubsystemBase {
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
                 .zeroOffset(ARM_ZERO_OFFSET);
-        armConfig
-                .closedLoop
-                .feedbackSensor(FeedbackSensor.kAbsoluteEncoder)
-                .p(K_P)
-                .d(K_D);
+        armConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P);
         armConfig
                 .signals
                 .absoluteEncoderPositionPeriodMs(10)
@@ -77,6 +81,13 @@ public class Catcher extends SubsystemBase {
 
         // You need to publish a value for the entry to appear in NetworkTables
         flywheelSpeedEntry.set(1);
+
+        pGainEntry.set(K_P);
+        inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            SparkFlexConfig tempConfig = new SparkFlexConfig();
+            tempConfig.closedLoop.p(event.valueData.value.getDouble());
+            m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        });
     }
 
     public Command disableMotorsCommand() {
@@ -104,12 +115,15 @@ public class Catcher extends SubsystemBase {
     public Command setArmPositionCommand(CatcherArmPositions armPosition) {
         return this.runOnce(() -> {
                     double position;
-                    if (armPosition == CatcherArmPositions.TROUGH) {
+                    if (armPosition == CatcherArmPositions.STOWED) {
+                        position = ARM_MIN_LIMIT;
+                    } else if (armPosition == CatcherArmPositions.TROUGH) {
                         position = TROUGH_POSITION;
                     } else {
                         position = CORAL_STATION_POSITION;
                     }
                     m_armController.setReference(position, ControlType.kPosition);
+                    targetPositionPub.set(position);
                 })
                 .andThen(Commands.idle(this));
     }
