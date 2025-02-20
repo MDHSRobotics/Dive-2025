@@ -4,15 +4,14 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.drive.DriveConstants.K_ANGULAR_P;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -51,7 +50,14 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt();
+    private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle = new SwerveRequest.FieldCentricFacingAngle()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo)
+            .withHeadingPID(K_ANGULAR_P, 0, 0);
+
+    private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
             new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
@@ -68,13 +74,14 @@ public class RobotContainer {
     /* Robot States */
     private boolean m_slowMode = false;
 
-    /* NetworkTables Logging */
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
-    private final NetworkTable driverInfoTable = inst.getTable("Driver Info");
 
-    private final StringPublisher selectedDirectionIndicator =
-            driverInfoTable.getStringTopic("Selected Tree Direction").publish();
+    /* NetworkTables Logging */
+    // private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    // private final NetworkTable driverInfoTable = inst.getTable("Driver Info");
+
+    // private final StringPublisher selectedDirectionIndicator =
+    //         driverInfoTable.getStringTopic("Selected Tree Direction").publish();
 
     /* Autonomous Sequence Selector (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> autoChooser;
@@ -157,6 +164,11 @@ public class RobotContainer {
                         m_drivetrain.getState().Pose.getRotation())));
 
         driverController.circle().toggleOnTrue(aimingRoutines.orientToFaceReefWall());
+        driverController.povRight().toggleOnTrue(m_drivetrain.applyRequest(() -> driveFacingAngle
+                .withVelocityX(getVelocityX())
+                .withVelocityY(getVelocityY())
+                .withTargetDirection(Rotation2d.kCCW_90deg)
+                .withDeadband(getDeadband())));
 
         /*
          * Run SysId routines when holding back/start and X/Y.

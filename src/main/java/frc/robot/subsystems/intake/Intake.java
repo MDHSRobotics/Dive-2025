@@ -20,14 +20,12 @@ import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.EnumSet;
 import java.util.function.DoubleSupplier;
 
 public class Intake extends SubsystemBase {
@@ -56,8 +54,8 @@ public class Intake extends SubsystemBase {
             table.getBooleanTopic("Beam Broken").publish(PubSubOption.sendAll(true));
     private final DoublePublisher targetPositionPub =
             table.getDoubleTopic("Target Position (radians)").publish();
-    private final DoubleEntry pGainEntry =
-            table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
+    // private final DoubleEntry pGainEntry =
+    //         table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -109,12 +107,13 @@ public class Intake extends SubsystemBase {
         // You need to publish a value for the entry to appear in NetworkTables
         flyheelSpeedEntry.set(1);
 
-        pGainEntry.set(K_P);
-        inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
-            SparkFlexConfig tempConfig = new SparkFlexConfig();
-            tempConfig.closedLoop.p(event.valueData.value.getDouble());
-            m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        });
+        // pGainEntry.set(K_P);
+        // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+        //     SparkFlexConfig tempConfig = new SparkFlexConfig();
+        //     tempConfig.closedLoop.p(event.valueData.value.getDouble());
+        //     m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters,
+        // PersistMode.kNoPersistParameters);
+        // });
     }
 
     @Override

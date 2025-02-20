@@ -18,8 +18,6 @@ import edu.wpi.first.units.measure.*;
 public class TunerConstants {
     private TunerConstants() {}
 
-    // Both sets of gains need to be tuned to your individual robot.
-
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
@@ -29,7 +27,7 @@ public class TunerConstants {
             .withKS(0.24962)
             .withKV(1.4791)
             .withKA(0.022206)
-            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
+            .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign);
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
@@ -56,7 +54,6 @@ public class TunerConstants {
     private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.RemoteCANcoder;
 
     // The stator current at which the wheels start to slip;
-    // This needs to be tuned to your individual robot
     private static final Current kSlipCurrent = Amps.of(51.62);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
@@ -81,7 +78,6 @@ public class TunerConstants {
     public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4.73);
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
-    // This may need to be tuned to your individual robot
     private static final double kCoupleRatio = 3.5714285714285716;
 
     public static final double kDriveGearRatio = 6.746031746031747;

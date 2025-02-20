@@ -345,8 +345,8 @@ public final class Constants {
     public static final Map<Integer, String> REV_CAN_ID_ALIASES = Map.of(
             ClimbConstants.BACK_ID,
             "Climb-Back",
-            /*ClimbConstants.FRONT_ID,
-            "Climb-Front",*/
+            ClimbConstants.FRONT_ID,
+            "Climb-Front",
             CatcherConstants.ARM_ID,
             "Catcher-Arm",
             CatcherConstants.WHEELS_ID,

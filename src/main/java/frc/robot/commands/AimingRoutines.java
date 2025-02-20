@@ -3,6 +3,8 @@ package frc.robot.commands;
 import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
@@ -42,27 +44,37 @@ public class AimingRoutines {
     private final ProfiledDriveFacingAngle driveFacingAngle = new ProfiledDriveFacingAngle(
                     ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
-            .withTolerance(GOAL_TOLERANCE);
+            .withTolerance(GOAL_TOLERANCE)
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledDriveFacingPosition driveFacingPosition = new ProfiledDriveFacingPosition(
                     ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
-            .withTolerance(GOAL_TOLERANCE);
+            .withTolerance(GOAL_TOLERANCE)
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledDriveFacingNearestPosition driveFacingNearestPosition =
             new ProfiledDriveFacingNearestPosition(ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
                     .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
-                    .withTolerance(GOAL_TOLERANCE);
+                    .withTolerance(GOAL_TOLERANCE)
+                    .withDriveRequestType(DriveRequestType.Velocity)
+                    .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledDriveWithVisualServoing driveFacingVisionTarget = new ProfiledDriveWithVisualServoing(
                     ANGULAR_MOTION_CONSTRAINTS, K_DT, cameraTable, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
-            .withTolerance(GOAL_TOLERANCE);
+            .withTolerance(GOAL_TOLERANCE)
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
                     LINEAR_MOTION_CONSTRAINTS, ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withTranslationalPIDGains(K_TRANSLATION_P, 0, K_TRANSLATION_D)
-            .withRotationalPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D);
+            .withRotationalPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     /**
      * Gets the ID of the primary in-view apriltag.

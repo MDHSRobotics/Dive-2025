@@ -100,26 +100,26 @@ public class DriveConstants {
      * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
      * used in custom swerve requests.
      * The gain is output angular velocity (radians per second) per error (radians).
-     * This still needs to be tuned.
+     * This comes from "Rotation RotationalRate Position.PNG"
      */
     public static final double K_ANGULAR_P =
-            RadiansPerSecond.per(Radian).ofNative(0).in(RadiansPerSecond.per(Radian));
+            RadiansPerSecond.per(Radian).ofNative(27.417).in(RadiansPerSecond.per(Radian));
 
     /**
      * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
      * used in custom swerve requests.
      * The gain is output angular velocity (radians per second) per the rate of change of error (radians per second).
-     * This still needs to be tuned.
+     * This comes from "Rotation RotationalRate Position.PNG"
      */
     public static final double K_ANGULAR_D =
-            RadiansPerSecond.per(RadiansPerSecond).ofNative(0).in(RadiansPerSecond.per(RadiansPerSecond));
+            RadiansPerSecond.per(RadiansPerSecond).ofNative(1.6261).in(RadiansPerSecond.per(RadiansPerSecond));
 
     /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
      * used in custom swerve requests.
      * This still needs to be tuned.
      */
-    public static final Angle GOAL_TOLERANCE = Degrees.of(0);
+    public static final Angle GOAL_TOLERANCE = Degrees.of(1);
 
     /* PathPlanner Configuration */
 
@@ -143,17 +143,18 @@ public class DriveConstants {
 
     /**
      * Angular acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveRotation a SysId routine}.
-     * This still needs to be found.
+     * This comes from the Rotation Voltage Position/Velocity PNGs in the project files.
      */
     private static final Per<VoltageUnit, AngularAccelerationUnit> K_A_ANGULAR =
-            Volts.per(RotationsPerSecondPerSecond).ofNative(0);
+            Volts.per(DegreesPerSecondPerSecond).ofNative(0.0014588);
 
     /**
      * Linear acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveTranslation a SysId routine}.
-     * This still needs to be found.
+     * This comes from "Translation Velocity.PNG" in the project files.
+     * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/closed-loop-requests.html#converting-from-meters">How we convert from rotations to meters</a>
      */
-    private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR =
-            VoltsPerMeterPerSecondSquared.ofNative(0);
+    private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR = VoltsPerMeterPerSecondSquared.ofNative(
+            0.0085645 * TunerConstants.kDriveGearRatio / (2.0 * Math.PI * DRIVEBASE_RADIUS.in(Meters)));
 
     /**
      * The robot's moment of inertia.
@@ -163,8 +164,9 @@ public class DriveConstants {
      * @see <a href="https://www.chiefdelphi.com/t/question-about-calculating-moi-with-sysid/490893">why we use drivebase radius instead of trackwidth / 2</a>
      */
     private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(ROBOT_MASS.in(Kilograms)
-            * (DRIVEBASE_RADIUS.in(Meters))
-            * (K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared) / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared)));
+            * DRIVEBASE_RADIUS.in(Meters)
+            * K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared)
+            / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared));
 
     /** Wheel coefficient of friction for <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels.</a> */
     private static final double WHEEL_COF = 1.0;
