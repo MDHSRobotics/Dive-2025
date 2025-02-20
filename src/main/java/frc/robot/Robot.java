@@ -61,7 +61,7 @@ public class Robot extends TimedRobot {
         // If there are differences, they will be reported in SmartDashboard.
         DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
 
-        SignalLogger.setPath("/logs");
+        SignalLogger.setPath("/media/sda1/logs/");
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog(), true);
         URCL.start(Constants.REV_CAN_ID_ALIASES);

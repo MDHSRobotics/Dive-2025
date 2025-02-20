@@ -78,7 +78,7 @@ public class IntakeConstants {
      * The position that aligns the arm with the algae resting on the ground.
      * This still needs to be found.
      */
-    public static final double GROUND_PICKUP_POSITION = Radians.of(0).in(Radians);
+    public static final double GROUND_PICKUP_POSITION = Radians.of(2.168).in(Radians);
 
     public static final double PROCESSOR_POSITION = Radians.of(2.634).in(Radians);
 }

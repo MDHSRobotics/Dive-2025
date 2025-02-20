@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -22,7 +24,6 @@ import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.catcher.Catcher;
-import frc.robot.subsystems.catcher.Catcher.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -46,7 +47,9 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric();
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt();
 
@@ -196,13 +199,16 @@ public class RobotContainer {
         operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
         operatorController.a().whileTrue(m_catcher.wheelTestCommand());
         operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
+        // operatorController.x().whileTrue(m_catcher.wheelTestSlowCommand());
         operatorController.x().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
 
-        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
-        operatorController.povLeft().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
-        operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
+        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
+        operatorController.povLeft().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        // operatorController.povUp().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
+        // operatorController.povDown().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_1));
+        // operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
     }
 
     /**

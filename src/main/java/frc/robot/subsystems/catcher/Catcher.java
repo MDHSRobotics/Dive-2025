@@ -27,7 +27,8 @@ public class Catcher extends SubsystemBase {
     public enum CatcherArmPositions {
         STOWED,
         TROUGH,
-        CORAL_STATION
+        CORAL_STATION,
+        L_1
     }
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
@@ -77,6 +78,7 @@ public class Catcher extends SubsystemBase {
                 .smartCurrentLimit(CURRENT_LIMIT)
                 .idleMode(IdleMode.kBrake)
                 .inverted(true);
+        flywheelsConfig.signals.primaryEncoderVelocityPeriodMs(10).primaryEncoderVelocityAlwaysOn(true);
         m_flywheelsMotor.configure(flywheelsConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // You need to publish a value for the entry to appear in NetworkTables
@@ -108,6 +110,10 @@ public class Catcher extends SubsystemBase {
         return this.run(() -> m_flywheelsMotor.set(0.5));
     }
 
+    public Command wheelTestSlowCommand() {
+        return this.run(() -> m_flywheelsMotor.set(0.25));
+    }
+
     public Command wheelBackwardsTestCommand() {
         return this.run(() -> m_flywheelsMotor.set(-0.2));
     }
@@ -119,8 +125,10 @@ public class Catcher extends SubsystemBase {
                         position = ARM_MIN_LIMIT;
                     } else if (armPosition == CatcherArmPositions.TROUGH) {
                         position = TROUGH_POSITION;
-                    } else {
+                    } else if (armPosition == CatcherArmPositions.CORAL_STATION) {
                         position = CORAL_STATION_POSITION;
+                    } else {
+                        position = L1_POSITION;
                     }
                     m_armController.setReference(position, ControlType.kPosition);
                     targetPositionPub.set(position);

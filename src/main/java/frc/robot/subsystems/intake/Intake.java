@@ -3,6 +3,7 @@ package frc.robot.subsystems.intake;
 import static frc.robot.Constants.*;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -14,6 +15,7 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
@@ -39,6 +41,8 @@ public class Intake extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
+
+    private final RelativeEncoder m_flywheelEncoder = m_flywheelLeftMotor.getEncoder();
 
     private final DigitalInput m_armBeamBreak = new DigitalInput(ARM_BEAM_BEAK_DIO_CHANNEL);
 
@@ -92,7 +96,11 @@ public class Intake extends SubsystemBase {
                 .encoder
                 .positionConversionFactor(WHEEL_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(WHEEL_VELOCITY_CONVERSION_FACTOR);
-        flywheelConfig.signals.appliedOutputPeriodMs(5);
+        flywheelConfig
+                .signals
+                .appliedOutputPeriodMs(5)
+                .primaryEncoderVelocityPeriodMs(10)
+                .primaryEncoderVelocityAlwaysOn(true);
         m_flywheelLeftMotor.configure(flywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         flywheelConfig.follow(m_flywheelLeftMotor, true);
@@ -118,6 +126,10 @@ public class Intake extends SubsystemBase {
         return !m_armBeamBreak.get();
     }
 
+    private boolean wheelsAreStopped() {
+        return MathUtil.isNear(0, m_flywheelEncoder.getVelocity(), 0.001);
+    }
+
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
@@ -140,12 +152,12 @@ public class Intake extends SubsystemBase {
 
     public Command runWheelsCommand() {
         return this.runOnce(() -> m_flywheelLeftMotor.set(0.5))
-                .andThen(Commands.waitUntil(this::beamIsBroken))
-                .andThen(Commands.waitSeconds(0.25))
-                .andThen(Commands.either(
-                        this.runOnce(m_flywheelLeftMotor::stopMotor),
-                        Commands.waitUntil(this::beamIsBroken).andThen(this.runOnce(m_flywheelLeftMotor::stopMotor)),
-                        this::beamIsBroken));
+                .andThen(Commands.waitSeconds(0.1))
+                .andThen(Commands.waitUntil(this::wheelsAreStopped))
+                .andThen(setArmPositionCommand(IntakeArmPositions.PROCESSOR))
+                .andThen(Commands.waitSeconds(0.5))
+                .andThen(this.runOnce(m_flywheelLeftMotor::stopMotor))
+                .andThen(Commands.idle(this));
     }
 
     public Command setArmPositionCommand(IntakeArmPositions armPosition) {
