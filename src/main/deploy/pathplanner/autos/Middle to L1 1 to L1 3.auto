@@ -7,19 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Top Start to Left Reef"
+            "pathName": "Middle to L1 1"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Left Reef to Top Coral Station"
+            "pathName": "L1 1 to Station"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Station to L1 3"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Middle",
   "choreoAuto": false
 }

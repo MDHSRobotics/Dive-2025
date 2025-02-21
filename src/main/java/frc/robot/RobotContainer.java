@@ -12,10 +12,15 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -38,6 +43,7 @@ import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+    private final DigitalInput m_beamSensor = new DigitalInput(0);
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
@@ -114,7 +120,8 @@ public class RobotContainer {
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
         m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
-        m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
+        m_intake.setDefaultCommand(new RunCommand(() -> m_intake.sensor(), m_intake));
+        
     }
 
     /**

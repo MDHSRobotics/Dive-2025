@@ -3,56 +3,64 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.059703947368421,
-        "y": 4.034621710526316
+        "x": 7.803207236845431,
+        "y": 4.015378289473684
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9796633194416229,
-        "y": 6.514890081717207
+        "x": 7.274864638138206,
+        "y": 4.018864021452576
       },
       "isLocked": false,
-      "linkedName": "Left Reef"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.6453125,
-        "y": 7.315625
+        "x": 5.753782894740167,
+        "y": 4.015378289473684
       },
       "prevControl": {
-        "x": 1.8448205811135379,
-        "y": 6.929540480818709
+        "x": 6.014355509334622,
+        "y": 4.012959978094259
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Top Coral Station"
+      "linkedName": "Middle L1 1"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Lower Arm",
+      "waypointRelativePos": 0.5,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Lower Arm"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.73,
     "maxAcceleration": 8.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 1500.0,
+    "maxAngularAcceleration": 105.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 126.0
+    "rotation": 180.0
   },
   "reversed": false,
-<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Left Reef to Top Coral Station.path
-  "folder": "Reef to Coral Stations",
-=======
-  "folder": "Blue Top",
->>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/Blue Top (2).path
+  "folder": "Middle",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

@@ -3,29 +3,29 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.059703947368421,
+        "x": 7.7935855263157885,
         "y": 4.034621710526316
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9796633194416229,
-        "y": 6.514890081717207
+        "x": 7.2740131578947365,
+        "y": 3.072450657894737
       },
       "isLocked": false,
-      "linkedName": "Left Reef"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.6453125,
-        "y": 7.315625
+        "x": 5.089884868421052,
+        "y": 2.9088815789473688
       },
       "prevControl": {
-        "x": 1.8448205811135379,
-        "y": 6.929540480818709
+        "x": 6.109786184210526,
+        "y": 1.311677631578948
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Top Coral Station"
+      "linkedName": "L1 6"
     }
   ],
   "rotationTargets": [],
@@ -36,23 +36,19 @@
     "maxVelocity": 4.73,
     "maxAcceleration": 8.0,
     "maxAngularVelocity": 540.0,
-    "maxAngularAcceleration": 1500.0,
+    "maxAngularAcceleration": 105.0,
     "nominalVoltage": 12.0,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 126.0
+    "rotation": 119.99999999999999
   },
   "reversed": false,
-<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Left Reef to Top Coral Station.path
-  "folder": "Reef to Coral Stations",
-=======
-  "folder": "Blue Top",
->>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/Blue Top (2).path
+  "folder": "Middle",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

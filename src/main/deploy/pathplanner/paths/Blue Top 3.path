@@ -3,35 +3,47 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.059703947368421,
-        "y": 4.034621710526316
+        "x": 7.553042763157894,
+        "y": 7.267516447368421
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.9796633194416229,
-        "y": 6.514890081717207
+        "x": 7.233213758231732,
+        "y": 7.064352955980349
       },
       "isLocked": false,
-      "linkedName": "Left Reef"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.6453125,
-        "y": 7.315625
+        "x": 5.811513157894736,
+        "y": 4.025
       },
       "prevControl": {
-        "x": 1.8448205811135379,
-        "y": 6.929540480818709
+        "x": 5.926951687313792,
+        "y": 4.248692570198626
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Top Coral Station"
+      "linkedName": "Blue Top 4"
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "Lower Arm",
+      "waypointRelativePos": 0.5,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Lower Arm"
+        }
+      }
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.73,
     "maxAcceleration": 8.0,
@@ -42,17 +54,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 126.0
+    "rotation": 180.0
   },
   "reversed": false,
-<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Left Reef to Top Coral Station.path
-  "folder": "Reef to Coral Stations",
-=======
   "folder": "Blue Top",
->>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/Blue Top (2).path
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

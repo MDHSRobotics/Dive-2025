@@ -40,6 +40,9 @@ public class Intake extends SubsystemBase {
     private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
 
+    /*Break Beam Sensor */
+    public DigitalInput m_beamSensor = new DigitalInput(0);
+
     private final RelativeEncoder m_flywheelEncoder = m_flywheelLeftMotor.getEncoder();
 
     private final DigitalInput m_armBeamBreak = new DigitalInput(ARM_BEAM_BEAK_DIO_CHANNEL);
@@ -63,6 +66,9 @@ public class Intake extends SubsystemBase {
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Intake() {
+        
+       
+        
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(ARM_CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         armConfig
@@ -175,5 +181,14 @@ public class Intake extends SubsystemBase {
                     targetPositionPub.set(position);
                 })
                 .andThen(Commands.idle(this));
+    }
+
+    public void sensor() {
+        if (m_beamSensor.get()){
+            System.out.println("yes");
+        }
+        else{
+            System.out.println("no");
+        }
     }
 }

@@ -45,7 +45,11 @@
     "rotation": 0.0
   },
   "reversed": false,
+<<<<<<< Updated upstream:src/main/deploy/pathplanner/paths/Top Start to Left Reef.path
   "folder": "Starting Positions to Reef",
+=======
+  "folder": "Blue Top",
+>>>>>>> Stashed changes:src/main/deploy/pathplanner/paths/Blue Top (1).path
   "idealStartingState": {
     "velocity": 0,
     "rotation": 180.0
