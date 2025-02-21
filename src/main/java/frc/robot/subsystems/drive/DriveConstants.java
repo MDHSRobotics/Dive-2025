@@ -154,7 +154,7 @@ public class DriveConstants {
      * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/closed-loop-requests.html#converting-from-meters">How we convert from rotations to meters</a>
      */
     private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR = VoltsPerMeterPerSecondSquared.ofNative(
-            0.0085645 * TunerConstants.kDriveGearRatio / (2.0 * Math.PI * DRIVEBASE_RADIUS.in(Meters)));
+            0.0024069 * TunerConstants.kDriveGearRatio / (2.0 * Math.PI * DRIVEBASE_RADIUS.in(Meters)));
 
     /**
      * The robot's moment of inertia.
