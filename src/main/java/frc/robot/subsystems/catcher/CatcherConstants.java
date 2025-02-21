@@ -47,7 +47,7 @@ public class CatcherConstants {
      */
     public static final double TROUGH_POSITION = Radians.of(5.32).in(Radians);
 
-    public static final double L1_POSITION = Radians.of(4.562).in(Radians);
+    public static final double L2_POSITION = Radians.of(4.562).in(Radians);
     public static final double ALGAE_POSITION = Radians.of(4.91).in(Radians);
     /**
      * The position that aligns the arm with the coral station in radians.
