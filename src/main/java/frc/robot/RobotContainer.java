@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import static frc.robot.subsystems.drive.DriveConstants.K_ANGULAR_D;
 import static frc.robot.subsystems.drive.DriveConstants.K_ANGULAR_P;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -53,7 +54,7 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle = new SwerveRequest.FieldCentricFacingAngle()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo)
-            .withHeadingPID(K_ANGULAR_P, 0, 0);
+            .withHeadingPID(K_ANGULAR_P, 0, K_ANGULAR_D);
 
     private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt()
             .withDriveRequestType(DriveRequestType.Velocity)
@@ -147,7 +148,7 @@ public class RobotContainer {
         // Fast Mode
         driverController.R2().onTrue(Commands.runOnce(() -> this.m_slowMode = false));
         // Select left tree
-        driverController.L1().onTrue(aimingRoutines.alignWithStation(true));
+        driverController.L2().onTrue(aimingRoutines.alignWithStation(true));
         // Select right tree
         driverController.R1().onTrue(aimingRoutines.alignWithStation(false));
 

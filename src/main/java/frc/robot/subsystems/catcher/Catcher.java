@@ -126,7 +126,7 @@ public class Catcher extends SubsystemBase {
                     } else if (armPosition == CatcherArmPositions.CORAL_STATION) {
                         position = CORAL_STATION_POSITION;
                     } else {
-                        position = L1_POSITION;
+                        position = L2_POSITION;
                     }
                     m_armController.setReference(position, ControlType.kPosition);
                     targetPositionPub.set(position);

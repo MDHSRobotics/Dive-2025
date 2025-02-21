@@ -146,15 +146,15 @@ public class DriveConstants {
      * This comes from the Rotation Voltage Position/Velocity PNGs in the project files.
      */
     private static final Per<VoltageUnit, AngularAccelerationUnit> K_A_ANGULAR =
-            Volts.per(DegreesPerSecondPerSecond).ofNative(0.0014588);
+            Volts.per(DegreesPerSecondPerSecond).ofNative(0.0015539);
 
     /**
      * Linear acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveTranslation a SysId routine}.
-     * This comes from "Translation Velocity.PNG" in the project files.
+     * This comes from "Translation with Drive Gearing applied.PNG" in the project files.
      * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/closed-loop-requests.html#converting-from-meters">How we convert from rotations to meters</a>
      */
-    private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR = VoltsPerMeterPerSecondSquared.ofNative(
-            0.0024069 * TunerConstants.kDriveGearRatio / (2.0 * Math.PI * DRIVEBASE_RADIUS.in(Meters)));
+    private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR =
+            VoltsPerMeterPerSecondSquared.ofNative(0.04314 / (2.0 * Math.PI * DRIVEBASE_RADIUS.in(Meters)));
 
     /**
      * The robot's moment of inertia.
@@ -165,8 +165,7 @@ public class DriveConstants {
      */
     private static final MomentOfInertia ROBOT_MOI = KilogramSquareMeters.of(ROBOT_MASS.in(Kilograms)
             * DRIVEBASE_RADIUS.in(Meters)
-            * K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared)
-            / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared));
+            * (K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared) / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared)));
 
     /** Wheel coefficient of friction for <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels.</a> */
     private static final double WHEEL_COF = 1.0;
