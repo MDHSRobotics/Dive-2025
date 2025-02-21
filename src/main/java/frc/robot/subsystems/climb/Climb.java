@@ -9,9 +9,7 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.*;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
-import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -59,7 +57,8 @@ public class Climb extends SubsystemBase {
     private final TrapezoidProfile m_frontProfile = new TrapezoidProfile(ANGULAR_MOTION_CONSTRAINTS);
     private TrapezoidProfile.State m_frontPreviousSetpoint = new TrapezoidProfile.State();
 
-    private final TrapezoidProfile.State m_goal = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State m_backGoal = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State m_frontGoal = new TrapezoidProfile.State();
 
     private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
     private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
@@ -83,6 +82,7 @@ public class Climb extends SubsystemBase {
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
                 .zeroOffset(BACK_ZERO_OFFSET);
+        config.softLimit.;
         config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
                 .absoluteEncoderPositionPeriodMs(10)

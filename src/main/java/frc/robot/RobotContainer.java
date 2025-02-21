@@ -13,15 +13,10 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -44,7 +39,6 @@ import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private final DigitalInput m_beamSensor = new DigitalInput(0);
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
@@ -121,8 +115,7 @@ public class RobotContainer {
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
         m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
-        m_intake.setDefaultCommand(new RunCommand(() -> m_intake.sensor(), m_intake));
-        
+        m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
     }
 
     /**
@@ -217,10 +210,10 @@ public class RobotContainer {
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
         operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
         operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
-        operatorController.a().whileTrue(m_catcher.wheelTestCommand());
-        operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
-        // operatorController.x().whileTrue(m_catcher.wheelTestSlowCommand());
-        operatorController.x().whileTrue(m_intake.runWheelsCommand());
+        // operatorController.a().whileTrue(m_catcher.wheelTestCommand());
+        // operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
+        operatorController.x().whileTrue(m_intake.runWheelsSlowCommand());
+        operatorController.b().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
 
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
@@ -235,7 +228,7 @@ public class RobotContainer {
      * Registers the <a href="https://pathplanner.dev/pplib-named-commands.html">Named Commands</a> used in PathPlanner.
      */
     private void registerNamedCommands() {
-        // NamedCommands.registerCommand("Lower Arm", null);
+        // NamedCommands.registerCommand("Lower Arm", m_catcher.setArmPositionCommand());
     }
 
     /**

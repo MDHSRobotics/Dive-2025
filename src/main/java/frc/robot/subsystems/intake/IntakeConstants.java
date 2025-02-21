@@ -29,7 +29,7 @@ public class IntakeConstants {
      */
     public static final int WHEEL_CURRENT_LIMIT = (int) Amps.of(40).in(Amps);
 
-    public static final double ARM_MAX_LIMIT = Radians.of(5.2).in(Radians);
+    public static final double ARM_MAX_LIMIT = Radians.of(4.535).in(Radians);
     public static final double ARM_MIN_LIMIT = Radians.of(2.137).in(Radians);
 
     /**

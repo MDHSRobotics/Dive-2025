@@ -21,11 +21,11 @@ public class ClimbConstants {
      */
     public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
 
-    public static final double BACK_FORWARD_LIMIT = Radians.of(0).in(Radians);
-    public static final double BACK_BACKWARD_LIMIT = Radians.of(0).in(Radians);
+    public static final double BACK_MAX_LIMIT = Radians.of(5.20).in(Radians);
+    public static final double BACK_MIN_LIMIT = Radians.of(2.28).in(Radians);
 
-    public static final double FRONT_FORWARD_LIMIT = Radians.of(0).in(Radians);
-    public static final double FRONT_BACKWARD_LIMIT = Radians.of(0).in(Radians);
+    public static final double FRONT_MAX_LIMIT = Radians.of(6.070).in(Radians);
+    public static final double FRONT_MIN_LIMIT = Radians.of(2.325).in(Radians);
 
     /**
      * The conversion of motor input rotations to climb hook output radians.
@@ -102,17 +102,10 @@ public class ClimbConstants {
     // Common climb positions
     /**
      * The position that keeps the claws out of the cage.
-     * This still needs to be found.
      */
-    public static final double AWAY_POSITION = Radians.of(0).in(Radians);
+    public static final double FRONT_UP_POSITION = Radians.of(3.244).in(Radians);
     /**
-     * The position that raises the claws straight up.
-     * This still needs to be found.
+     * The position that keeps the claws out of the cage.
      */
-    public static final double UP_POSITION = Radians.of(0).in(Radians);
-    /**
-     * The position that engages the hooks and keeps the robot off the ground.
-     * This still needs to be found.
-     */
-    public static final double ENGAGED_POSITION = Radians.of(0).in(Radians);
+    public static final double BACK_UP_POSITION = Radians.of(5.005).in(Radians);
 }
