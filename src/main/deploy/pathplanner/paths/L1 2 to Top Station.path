@@ -3,16 +3,16 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.128371710526316,
-        "y": 5.112253289473684
+        "x": 5.18610197368421,
+        "y": 5.218092105263159
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.426644736842103,
-        "y": 5.58371710526316
+        "x": 5.484374999999998,
+        "y": 5.6895559210526345
       },
       "isLocked": false,
-      "linkedName": "Blue Top (1) End"
+      "linkedName": "L1 2"
     },
     {
       "anchor": {
@@ -25,7 +25,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Station"
+      "linkedName": "Top Station"
     }
   ],
   "rotationTargets": [],

@@ -4,11 +4,13 @@
   "holonomicMode": true,
   "pathFolders": [
     "Middle",
+    "Bottom",
     "Station",
     "Top"
   ],
   "autoFolders": [
     "Middle",
+    "Bottom",
     "Top"
   ],
   "defaultMaxVel": 4.73,

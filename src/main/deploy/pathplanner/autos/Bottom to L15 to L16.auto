@@ -7,25 +7,25 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Middle to L1 1"
+            "pathName": "Bottom to L1 5"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "L1 1 to Top Station"
+            "pathName": "L1 5 to Bottom Station"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Top Station to L1 3"
+            "pathName": "Bottom Station to L1 6"
           }
         }
       ]
     }
   },
   "resetOdom": true,
-  "folder": "Middle",
+  "folder": "Bottom",
   "choreoAuto": false
 }

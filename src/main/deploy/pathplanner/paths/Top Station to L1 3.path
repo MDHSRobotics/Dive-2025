@@ -3,47 +3,46 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.2136513157894733,
-        "y": 4.015378289473684
-      },
-      "prevControl": null,
-      "nextControl": {
-        "x": 2.839401655331738,
-        "y": 4.947819493991521
-      },
-      "isLocked": false,
-      "linkedName": "Blue Top 6"
-    },
-    {
-      "anchor": {
         "x": 1.4240131578947368,
         "y": 7.103947368421052
       },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.271748475497366,
+        "y": 6.817265339786384
+      },
+      "isLocked": false,
+      "linkedName": "Top Station"
+    },
+    {
+      "anchor": {
+        "x": 3.7909539473684206,
+        "y": 5.218092105263159
+      },
       "prevControl": {
-        "x": 2.111957586582402,
-        "y": 5.612822917516577
+        "x": 3.142519516794419,
+        "y": 6.451407794820671
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": "Station"
+      "linkedName": null
     }
   ],
   "rotationTargets": [],
   "constraintZones": [],
-  "pointTowardsZones": [],
-  "eventMarkers": [
+  "pointTowardsZones": [
     {
-      "name": "Lower Arm",
-      "waypointRelativePos": 0.5,
-      "endWaypointRelativePos": null,
-      "command": {
-        "type": "named",
-        "data": {
-          "name": "Lower Arm"
-        }
-      }
+      "fieldPosition": {
+        "x": 4.475,
+        "y": 4.026
+      },
+      "rotationOffset": 0.0,
+      "minWaypointRelativePos": 0.42513368983957217,
+      "maxWaypointRelativePos": 0.75,
+      "name": "Point Towards Zone"
     }
   ],
+  "eventMarkers": [],
   "globalConstraints": {
     "maxVelocity": 4.73,
     "maxAcceleration": 8.0,
@@ -54,13 +53,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 126.0
+    "rotation": -59.99999999999999
   },
   "reversed": false,
   "folder": "Station",
   "idealStartingState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 126.0
   },
   "useDefaultConstraints": true
 }

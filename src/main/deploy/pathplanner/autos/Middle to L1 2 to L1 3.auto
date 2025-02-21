@@ -13,13 +13,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "L1 2 to Station"
+            "pathName": "L1 2 to Top Station"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Station to L1 3"
+            "pathName": "Top Station to L1 3"
           }
         }
       ]
