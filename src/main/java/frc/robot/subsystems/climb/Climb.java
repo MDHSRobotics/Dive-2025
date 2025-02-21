@@ -9,7 +9,9 @@ import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.Constants.*;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkAbsoluteEncoder;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -82,7 +84,11 @@ public class Climb extends SubsystemBase {
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
                 .zeroOffset(BACK_ZERO_OFFSET);
-        config.softLimit.;
+        config.softLimit
+                .forwardSoftLimit(BACK_MAX_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimit(BACK_MIN_LIMIT)
+                .reverseSoftLimitEnabled(true);
         config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
                 .absoluteEncoderPositionPeriodMs(10)
@@ -92,6 +98,7 @@ public class Climb extends SubsystemBase {
         m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         config.absoluteEncoder.zeroOffset(FRONT_ZERO_OFFSET);
+        config.softLimit.forwardSoftLimit(FRONT_MAX_LIMIT).reverseSoftLimit(FRONT_MIN_LIMIT);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // pGainEntry.set(K_P);
@@ -105,11 +112,14 @@ public class Climb extends SubsystemBase {
 
     private void resetProfile(HookPositions hookPositions) {
         if (hookPositions == HookPositions.AWAY) {
-            m_goal.position = AWAY_POSITION;
+            m_backGoal.position = BACK_MAX_LIMIT;
+            m_frontGoal.position = FRONT_MAX_LIMIT;
         } else if (hookPositions == HookPositions.UP) {
-            m_goal.position = UP_POSITION;
+            m_backGoal.position = BACK_UP_POSITION;
+            m_frontGoal.position = FRONT_UP_POSITION;
         } else {
-            m_goal.position = ENGAGED_POSITION;
+            m_backGoal.position = BACK_MIN_LIMIT;
+            m_frontGoal.position = FRONT_MIN_LIMIT;
         }
         m_backPreviousSetpoint.position = m_backEncoder.getPosition();
         m_backPreviousSetpoint.velocity = m_backEncoder.getVelocity();
@@ -119,8 +129,8 @@ public class Climb extends SubsystemBase {
 
     private void runProfile() {
         // Find the next position in the motion
-        TrapezoidProfile.State nextBackSetpoint = m_backProfile.calculate(K_DT, m_backPreviousSetpoint, m_goal);
-        TrapezoidProfile.State nextFrontSetpoint = m_frontProfile.calculate(K_DT, m_frontPreviousSetpoint, m_goal);
+        TrapezoidProfile.State nextBackSetpoint = m_backProfile.calculate(K_DT, m_backPreviousSetpoint, m_backGoal);
+        TrapezoidProfile.State nextFrontSetpoint = m_frontProfile.calculate(K_DT, m_frontPreviousSetpoint, m_frontGoal);
         // Estimate the volts required to reach the position
         double backFeedforwardVolts =
                 m_hookFeedforward.calculateWithVelocities(m_backPreviousSetpoint.velocity, nextBackSetpoint.velocity);

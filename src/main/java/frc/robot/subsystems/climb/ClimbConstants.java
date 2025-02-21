@@ -21,10 +21,14 @@ public class ClimbConstants {
      */
     public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
 
+    /** The furthest safe angle that is away from the cage in radians. */
     public static final double BACK_MAX_LIMIT = Radians.of(5.20).in(Radians);
+    /** The angle that pushes the cage down as far as possible in radians. */
     public static final double BACK_MIN_LIMIT = Radians.of(2.28).in(Radians);
 
+    /** The furthest safe angle that is away from the cage in radians. */
     public static final double FRONT_MAX_LIMIT = Radians.of(6.070).in(Radians);
+    /** The angle that pushes the cage down as far as possible in radians. */
     public static final double FRONT_MIN_LIMIT = Radians.of(2.325).in(Radians);
 
     /**
