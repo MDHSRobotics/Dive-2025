@@ -18,10 +18,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.catcher.Catcher;
+import frc.robot.subsystems.catcher.Catcher.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -146,9 +148,9 @@ public class RobotContainer {
         // Fast Mode
         driverController.R2().onTrue(Commands.runOnce(() -> this.m_slowMode = false));
         // Select left tree
-        driverController.L1().onTrue(aimingRoutines.alignWithStation(true));
+        driverController.L1().toggleOnTrue(aimingRoutines.alignWithStation(true));
         // Select right tree
-        driverController.R1().onTrue(aimingRoutines.alignWithStation(false));
+        driverController.R1().toggleOnTrue(aimingRoutines.alignWithStation(false));
 
         // Point wheels with right joystick
         driverController
@@ -174,22 +176,22 @@ public class RobotContainer {
          * Note that each routine should be run exactly once in a single log.
          * Comment out when finished.
          */
-        // driverController
-        //         .share()
-        //         .and(driverController.povUp())
-        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        // driverController
-        //         .share()
-        //         .and(driverController.povDown())
-        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        // driverController
-        //         .options()
-        //         .and(driverController.povUp())
-        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        // driverController
-        //         .options()
-        //         .and(driverController.povDown())
-        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        driverController
+                .share()
+                .and(driverController.povUp())
+                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        driverController
+                .share()
+                .and(driverController.povDown())
+                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        driverController
+                .options()
+                .and(driverController.povUp())
+                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        driverController
+                .options()
+                .and(driverController.povDown())
+                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
@@ -206,20 +208,22 @@ public class RobotContainer {
                 .leftTrigger()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
-        operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
-        operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
-        // operatorController.a().whileTrue(m_catcher.wheelTestCommand());
-        // operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
-        operatorController.x().whileTrue(m_intake.runWheelsSlowCommand());
-        operatorController.b().whileTrue(m_intake.runWheelsCommand());
+        // operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
+        // operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.a().whileTrue(m_catcher.wheelTestCommand());
+        operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
+        // operatorController.x().whileTrue(m_intake.runWheelsSlowCommand());
+        operatorController.x().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
 
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         operatorController.povLeft().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
-        // operatorController.povUp().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
-        // operatorController.povDown().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_1));
-        // operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
+        operatorController
+                .leftBumper()
+                .toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
+        operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_1));
+        operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
     }
 
     /**

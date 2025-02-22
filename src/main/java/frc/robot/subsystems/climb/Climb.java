@@ -66,7 +66,7 @@ public class Climb extends SubsystemBase {
     private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Catcher");
+    private final NetworkTable table = inst.getTable("Climb");
     private final DoublePublisher targetPositionPub =
             table.getDoubleTopic("Target Position (radians)").publish();
     // private final DoubleEntry pGainEntry =

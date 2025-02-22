@@ -73,9 +73,9 @@ public class TunerConstants {
     // All swerve devices must share the same CAN bus
     public static final CANBus kCANBus = new CANBus("Swerve Canivore");
 
-    // Actual max speed of the robot when theoretical free speed (4.73 m/s) is requested.
+    // theoretical free speed (4.73 m/s) is requested.
     // It takes a long time to reach this due to our very low drive current limit.
-    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4);
+    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4.73);
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     private static final double kCoupleRatio = 3.5714285714285716;

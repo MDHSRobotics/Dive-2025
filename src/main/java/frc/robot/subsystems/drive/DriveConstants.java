@@ -107,7 +107,7 @@ public class DriveConstants {
      * used in custom swerve requests.
      * This still needs to be tuned.
      */
-    public static final Angle GOAL_TOLERANCE = Degrees.of(1);
+    public static final Angle GOAL_TOLERANCE = Degrees.of(2);
 
     /**
      * Multiply wheel rotations by this number to convert to meters.
