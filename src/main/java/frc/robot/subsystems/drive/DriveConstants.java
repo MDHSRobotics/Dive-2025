@@ -134,9 +134,9 @@ public class DriveConstants {
 
     /**
      * Robot mass with battery.
-     * Last measured value: 105 pounds-force, coverted to kg.
+     * Last measured value: 126 pounds-force, coverted to kg.
      */
-    private static final Mass ROBOT_MASS = Kilograms.of(47.6272);
+    private static final Mass ROBOT_MASS = Kilograms.of(57.15264);
 
     /**
      * Angular acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveRotation a SysId routine}.

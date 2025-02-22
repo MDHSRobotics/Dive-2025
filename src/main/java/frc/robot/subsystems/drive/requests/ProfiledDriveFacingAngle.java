@@ -97,7 +97,6 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
 
     private final PhoenixPIDController headingController = new PhoenixPIDController(0, 0, 0);
     private final DoubleEntry pGainEntry;
-    private final DoubleEntry dGainEntry;
 
     /* Profile used for the target direction */
     private final TrapezoidProfile profile;
@@ -128,7 +127,6 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         this.kDt = kDt;
 
         pGainEntry = null;
-        dGainEntry = null;
         goalPositionPub = null;
         setpointPositionPub = null;
         setpointVelocityPub = null;
@@ -155,9 +153,6 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         this.pGainEntry =
                 pidTable.getDoubleTopic("P").getEntry(this.headingController.getP(), PubSubOption.excludeSelf(true));
         this.pGainEntry.set(this.headingController.getP());
-        this.dGainEntry =
-                pidTable.getDoubleTopic("D").getEntry(this.headingController.getD(), PubSubOption.excludeSelf(true));
-        this.dGainEntry.set(this.headingController.getD());
 
         NetworkTable goalTable = motionTable.getSubTable("Goal");
         this.goalPositionPub = goalTable.getDoubleTopic("Position (radians)").publish();
@@ -214,8 +209,8 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         setpoint = profile.calculate(kDt, setpoint, goal);
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
-        if (pGainEntry != null && dGainEntry != null) {
-            headingController.setPID(pGainEntry.get(), 0, dGainEntry.get());
+        if (pGainEntry != null) {
+            headingController.setPID(pGainEntry.get(), 0, 0);
         }
         double errorCorrectionOutput =
                 headingController.calculate(currentAngle.getRadians(), setpoint.position, parameters.timestamp);
@@ -446,9 +441,8 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
      */
     public ProfiledDriveFacingAngle withPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
-        if (pGainEntry != null && dGainEntry != null) {
+        if (pGainEntry != null) {
             pGainEntry.set(kp);
-            dGainEntry.set(kd);
         }
         return this;
     }
