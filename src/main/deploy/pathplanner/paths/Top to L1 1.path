@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.358295995073837,
-        "y": 7.343382561243506
+        "x": 6.681186868686869,
+        "y": 6.088320707070706
       },
       "isLocked": false,
       "linkedName": "Top Start"
@@ -20,8 +20,8 @@
         "y": 4.044243421052631
       },
       "prevControl": {
-        "x": 5.965438529419056,
-        "y": 4.267935991251257
+        "x": 7.98219696969697,
+        "y": 4.106313131313131
       },
       "nextControl": null,
       "isLocked": false,
@@ -29,19 +29,22 @@
     }
   ],
   "rotationTargets": [],
-  "constraintZones": [],
-  "pointTowardsZones": [
+  "constraintZones": [
     {
-      "fieldPosition": {
-        "x": 4.475,
-        "y": 4.026
-      },
-      "rotationOffset": 0.0,
-      "minWaypointRelativePos": 0.25,
-      "maxWaypointRelativePos": 0.75,
-      "name": "Point Towards Zone"
+      "name": "Constraints Zone",
+      "minWaypointRelativePos": 0.85,
+      "maxWaypointRelativePos": 1.0,
+      "constraints": {
+        "maxVelocity": 2.0,
+        "maxAcceleration": 4.0,
+        "maxAngularVelocity": 600.0,
+        "maxAngularAcceleration": 321.0,
+        "nominalVoltage": 12.0,
+        "unlimited": false
+      }
     }
   ],
+  "pointTowardsZones": [],
   "eventMarkers": [
     {
       "name": "Lower Arm",
