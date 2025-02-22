@@ -41,20 +41,23 @@ public class DriveConstants {
     public static final Distance DRIVEBASE_RADIUS = Inches.of(
             Math.hypot(TRACKWIDTH.div(2.0).in(Inches), WHEELBASE.div(2.0).in(Inches)));
 
-    /** Max linear speed of the robot in meters per second. This still needs to be tuned. */
-    public static final double MAX_LINEAR_SPEED = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    /**
+     * Max linear speed of the robot in meters per second.
+     * In reality, it takes quite some time to reach this velocity due to the low drive slip current limit.
+     */
+    public static final double MAX_LINEAR_SPEED = MetersPerSecond.of(4).in(MetersPerSecond);
 
     /**
-     * Max linear acceleration of the robot.
+     * Max linear acceleration of the robot to use in custom swerve requests.
      */
-    public static final LinearAcceleration MAX_LINEAR_ACCEL = MetersPerSecondPerSecond.of(60);
+    public static final LinearAcceleration MAX_LINEAR_ACCEL = MetersPerSecondPerSecond.of(4);
 
     /**
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
      * This still needs to be tuned.
      */
-    public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
-            MAX_LINEAR_SPEED / 2.0, MAX_LINEAR_ACCEL.in(MetersPerSecondPerSecond) / 2.0);
+    public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
+            new TrapezoidProfile.Constraints(MAX_LINEAR_SPEED / 2.0, MAX_LINEAR_ACCEL.in(MetersPerSecondPerSecond));
 
     /**
      * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
@@ -83,6 +86,7 @@ public class DriveConstants {
 
     /**
      * Max angular acceleration of the robot.
+     * This is currently set to the very highest acceleration in order to avoid limiting acceleration in custom swerve requests.
      */
     private static final AngularAcceleration MAX_ANGULAR_ACCEL = RadiansPerSecondPerSecond.of(75.215);
 

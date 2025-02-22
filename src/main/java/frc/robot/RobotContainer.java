@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -114,8 +115,8 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
-        m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
+        m_catcher.setDefaultCommand(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
+        m_intake.setDefaultCommand(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
     }
 
     /**
@@ -210,11 +211,11 @@ public class RobotContainer {
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
         // operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
         // operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
-        operatorController.a().whileTrue(m_catcher.wheelTestCommand());
-        operatorController.b().whileTrue(m_catcher.wheelBackwardsTestCommand());
+        operatorController.a().whileTrue(m_catcher.wheelCommand());
+        operatorController.b().whileTrue(m_catcher.wheelBackwardsCommand());
         // operatorController.x().whileTrue(m_intake.runWheelsSlowCommand());
         operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        operatorController.y().whileTrue(m_intake.wheelsBackwardsTestCommand());
+        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
 
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
@@ -222,7 +223,7 @@ public class RobotContainer {
         operatorController
                 .leftBumper()
                 .toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
-        operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_1));
+        operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_2));
         operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
     }
 
@@ -230,7 +231,12 @@ public class RobotContainer {
      * Registers the <a href="https://pathplanner.dev/pplib-named-commands.html">Named Commands</a> used in PathPlanner.
      */
     private void registerNamedCommands() {
-        // NamedCommands.registerCommand("Lower Arm", m_catcher.setArmPositionCommand());
+        NamedCommands.registerCommand(
+                "Lower Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
+        NamedCommands.registerCommand(
+                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(1));
+        NamedCommands.registerCommand(
+                "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
     }
 
     /**

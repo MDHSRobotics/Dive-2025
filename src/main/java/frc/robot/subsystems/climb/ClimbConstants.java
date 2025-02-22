@@ -32,16 +32,6 @@ public class ClimbConstants {
     public static final double FRONT_MIN_LIMIT = Radians.of(2.325).in(Radians);
 
     /**
-     * The conversion of motor input rotations to climb hook output radians.
-     */
-    public static final double POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
-    /**
-     * The conversion of motor input rotations per minute to climb hook output radians per second.
-     */
-    public static final double VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).in(RadiansPerSecond);
-
-    /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the motor's range of motion to prevent the position wrapping around from 1 to 0.
      */

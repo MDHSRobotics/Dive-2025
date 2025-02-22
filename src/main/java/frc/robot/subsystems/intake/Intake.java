@@ -142,15 +142,14 @@ public class Intake extends SubsystemBase {
     }
 
     public Command armTestCommand(DoubleSupplier armPowerSupplier) {
-        return this.run(() -> m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25));
+        return this.run(() -> m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25))
+                .finallyDo(m_armMotor::stopMotor);
     }
 
-    public Command wheelsTestCommand() {
-        return this.run(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * 0.25));
-    }
-
-    public Command wheelsBackwardsTestCommand() {
-        return this.run(() -> m_flywheelLeftMotor.set(-flyheelSpeedEntry.get() * 0.25));
+    public Command wheelsBackwardsCommand() {
+        return this.runOnce(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * -0.25))
+                .andThen(Commands.idle(this))
+                .finallyDo(m_flywheelLeftMotor::stopMotor);
     }
 
     public Command runWheelsCommand() {

@@ -80,10 +80,7 @@ public class Climb extends SubsystemBase {
     public Climb() {
         SparkFlexConfig config = new SparkFlexConfig();
         config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
-        config.absoluteEncoder
-                .positionConversionFactor(POSITION_CONVERSION_FACTOR)
-                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
-                .zeroOffset(BACK_ZERO_OFFSET);
+        config.absoluteEncoder.zeroOffset(BACK_ZERO_OFFSET);
         config.softLimit
                 .forwardSoftLimit(BACK_MAX_LIMIT)
                 .forwardSoftLimitEnabled(true)

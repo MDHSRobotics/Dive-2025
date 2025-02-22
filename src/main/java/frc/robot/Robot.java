@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.VisionConstants;
@@ -30,6 +31,7 @@ public class Robot extends TimedRobot {
     private Command autonomousCommand;
 
     private RobotContainer robotContainer;
+    private final Timer m_autoTimer = new Timer();
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -98,7 +100,13 @@ public class Robot extends TimedRobot {
 
         // schedule the autonomous command (example)
         if (autonomousCommand != null) {
-            autonomousCommand.schedule();
+            autonomousCommand
+                    .finallyDo(() -> {
+                        m_autoTimer.stop();
+                        System.out.println("Auto time: " + m_autoTimer.get());
+                    })
+                    .schedule();
+            m_autoTimer.start();
         }
     }
 

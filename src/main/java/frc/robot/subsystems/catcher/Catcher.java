@@ -25,7 +25,7 @@ public class Catcher extends SubsystemBase {
         STOWED,
         TROUGH,
         CORAL_STATION,
-        L_1
+        L_2
     }
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
@@ -98,22 +98,29 @@ public class Catcher extends SubsystemBase {
                 .andThen(Commands.idle(this));
     }
 
-    public Command armTestCommand(DoubleSupplier armPowerSupplier) {
+    public Command setArmPowerCommand(DoubleSupplier armPowerSupplier) {
         return this.run(() -> {
-            m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25);
-        });
+                    m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25);
+                })
+                .finallyDo(m_armMotor::stopMotor);
     }
 
-    public Command wheelTestCommand() {
-        return this.run(() -> m_flywheelsMotor.set(0.5));
+    public Command wheelCommand() {
+        return this.runOnce(() -> m_flywheelsMotor.set(0.5))
+                .andThen(Commands.idle(this))
+                .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
-    public Command wheelTestSlowCommand() {
-        return this.run(() -> m_flywheelsMotor.set(0.25));
+    public Command wheelSlowCommand() {
+        return this.runOnce(() -> m_flywheelsMotor.set(0.25))
+                .andThen(Commands.idle(this))
+                .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
-    public Command wheelBackwardsTestCommand() {
-        return this.run(() -> m_flywheelsMotor.set(-0.2));
+    public Command wheelBackwardsCommand() {
+        return this.runOnce(() -> m_flywheelsMotor.set(-0.2))
+                .andThen(Commands.idle(this))
+                .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
     public Command setArmPositionCommand(CatcherArmPositions armPosition) {
@@ -132,5 +139,22 @@ public class Catcher extends SubsystemBase {
                     targetPositionPub.set(position);
                 })
                 .andThen(Commands.idle(this));
+    }
+
+    public Command setArmPositionAndEndCommand(CatcherArmPositions armPosition) {
+        return this.runOnce(() -> {
+            double position;
+            if (armPosition == CatcherArmPositions.STOWED) {
+                position = ARM_MIN_LIMIT;
+            } else if (armPosition == CatcherArmPositions.TROUGH) {
+                position = TROUGH_POSITION;
+            } else if (armPosition == CatcherArmPositions.CORAL_STATION) {
+                position = CORAL_STATION_POSITION;
+            } else {
+                position = L2_POSITION;
+            }
+            m_armController.setReference(position, ControlType.kPosition);
+            targetPositionPub.set(position);
+        });
     }
 }

@@ -11,6 +11,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -114,6 +115,7 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
     private final DoublePublisher setpointVelocityPub;
     private final DoublePublisher errorCorrectionVelocityPub;
     private final DoublePublisher appliedVelocityPub;
+    private final BooleanPublisher motionIsFinishedPub;
 
     /**
      * Creates a new profiled request with the given constraints.
@@ -134,6 +136,7 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
         setpointVelocityPub = null;
         errorCorrectionVelocityPub = null;
         appliedVelocityPub = null;
+        motionIsFinishedPub = null;
     }
 
     /**
@@ -171,6 +174,9 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
                 .publish();
         this.appliedVelocityPub =
                 motionTable.getDoubleTopic("Applied Velocity (rads per sec)").publish();
+
+        this.motionIsFinishedPub =
+                motionTable.getBooleanTopic("Motion is Finished").publish();
     }
 
     /**
@@ -236,6 +242,7 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
             setpointVelocityPub.set(setpoint.velocity, timestamp);
             errorCorrectionVelocityPub.set(errorCorrectionOutput, timestamp);
             appliedVelocityPub.set(toApplyOmega, timestamp);
+            motionIsFinishedPub.set(motionIsFinished, timestamp);
         }
 
         return fieldCentric
