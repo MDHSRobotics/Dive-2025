@@ -55,4 +55,6 @@ public class CatcherConstants {
      */
     public static final double CORAL_STATION_POSITION =
             Radians.of(4.022).minus(Radians.of(0.1)).in(Radians);
+
+    public static final double BALANCED_CLIMBING_POSITION = Radians.of(4.948).in(Radians);
 }

@@ -4,15 +4,22 @@ import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.ctre.phoenix6.swerve.SwerveModule;
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.drive.TunerConstants;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
@@ -40,9 +47,12 @@ public class WheelRadiusCharacterization {
             RadiansPerSecondPerSecond.of(0.05).in(RadiansPerSecondPerSecond);
 
     public static Command characterizationCommand(CommandSwerveDrivetrain drivetrain) {
+        SwerveModule<TalonFX, TalonFX, CANcoder>[] modules = drivetrain.getModules();
         SlewRateLimiter limiter = new SlewRateLimiter(WHEEL_RADIUS_RAMP_RATE);
         WheelRadiusCharacterizationState state = new WheelRadiusCharacterizationState();
-        SwerveRequest.ApplyRobotSpeeds chassisSpeedsRequest = new SwerveRequest.ApplyRobotSpeeds();
+        SwerveRequest.ApplyRobotSpeeds chassisSpeedsRequest = new SwerveRequest.ApplyRobotSpeeds()
+                .withDriveRequestType(DriveRequestType.Velocity)
+                .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
         return Commands.parallel(
                 // Drive control sequence
@@ -68,18 +78,19 @@ public class WheelRadiusCharacterization {
 
                         // Record starting measurement
                         Commands.runOnce(() -> {
-                            SwerveDriveState currentState = drivetrain.getState();
                             for (int i = 0; i < 4; ++i) {
-                                state.positions[i] = currentState.ModuleStates[i].angle.getRadians();
+                                state.positions[i] = Units.rotationsToRadians(
+                                        modules[i].getDriveMotor().getPosition().getValueAsDouble()
+                                                / TunerConstants.kDriveGearRatio);
                             }
+                            SwerveDriveState currentState = drivetrain.getState();
                             state.lastAngle = currentState.RawHeading;
                             state.gyroDelta = 0.0;
                         }),
 
                         // Update gyro delta
                         Commands.run(() -> {
-                                    Rotation2d rotation =
-                                            drivetrain.getPigeon2().getRotation2d();
+                                    Rotation2d rotation = drivetrain.getState().RawHeading;
                                     state.gyroDelta += Math.abs(
                                             rotation.minus(state.lastAngle).getRadians());
                                     state.lastAngle = rotation;
@@ -87,10 +98,13 @@ public class WheelRadiusCharacterization {
 
                                 // When cancelled, calculate and print results
                                 .finallyDo(() -> {
-                                    SwerveDriveState currentState = drivetrain.getState();
                                     double[] positions = new double[4];
                                     for (int i = 0; i < 4; ++i) {
-                                        positions[i] = currentState.ModuleStates[i].angle.getRadians();
+                                        positions[i] = Units.rotationsToRadians(modules[i]
+                                                        .getDriveMotor()
+                                                        .getPosition()
+                                                        .getValueAsDouble()
+                                                / TunerConstants.kDriveGearRatio);
                                     }
                                     double wheelDelta = 0.0;
                                     for (int i = 0; i < 4; i++) {

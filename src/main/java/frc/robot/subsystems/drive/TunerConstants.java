@@ -54,7 +54,7 @@ public class TunerConstants {
     private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.RemoteCANcoder;
 
     // The stator current at which the wheels start to slip;
-    private static final Current kSlipCurrent = Amps.of(51.62);
+    public static final Current kSlipCurrent = Amps.of(51.62);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
@@ -73,16 +73,17 @@ public class TunerConstants {
     // All swerve devices must share the same CAN bus
     public static final CANBus kCANBus = new CANBus("Swerve Canivore");
 
-    // Theoretical free speed (m/s) at 12 V applied output;
-    // This needs to be tuned to your individual robot
-    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4.73);
+    // Actual max speed of the robot when theoretical free speed (4.73 m/s) is requested.
+    // It takes a long time to reach this due to our very low drive current limit.
+    public static final LinearVelocity kSpeedAt12Volts = MetersPerSecond.of(4);
 
     // Every 1 rotation of the azimuth results in kCoupleRatio drive motor turns;
     private static final double kCoupleRatio = 3.5714285714285716;
 
     public static final double kDriveGearRatio = 6.746031746031747;
     private static final double kSteerGearRatio = 12.8;
-    public static final Distance kWheelRadius = Inches.of(2);
+    /** Found from {@link frc.robot.commands.WheelRadiusCharacterization Wheel Radius Characterization} */
+    public static final Distance kWheelRadius = Inches.of(1.976);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

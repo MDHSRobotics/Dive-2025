@@ -17,6 +17,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
@@ -70,6 +71,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new SwerveRequest.SysIdSwerveRotation();
     private final SwerveRequest.SysIdSwerveTranslation m_slipCurrentCharacterization =
             new SwerveRequest.SysIdSwerveTranslation();
+    private final SwerveRequest.ApplyFieldSpeeds m_drivingPIDCharacterization = new SwerveRequest.ApplyFieldSpeeds()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     /** SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -129,8 +133,29 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new SysIdRoutine.Mechanism(
                     output -> setControl(m_slipCurrentCharacterization.withVolts(output)), null, this));
 
+    /** SysId routine for characterizing translation PID gains for x and y controllers.
+     */
+    private final SysIdRoutine m_sysIdRoutineDrivingPID = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                    /* This is in meters per second², but SysId only supports "volts per second" */
+                    Volts.of(1).per(Second),
+                    /* This is in meters per second, but SysId only supports "volts" */
+                    Volts.of(2),
+                    null, // Use default timeout (10 s)
+                    // Log state with SignalLogger class
+                    state -> SignalLogger.writeString("SysIdDrivingPID_State", state.toString())),
+            new SysIdRoutine.Mechanism(
+                    output -> {
+                        /* output is actually meters per second, but SysId only supports "volts" */
+                        setControl(m_drivingPIDCharacterization.withSpeeds(new ChassisSpeeds(output.in(Volts), 0, 0)));
+                        /* also log the requested output for SysId */
+                        SignalLogger.writeDouble("Linear_Velocity", output.in(Volts));
+                    },
+                    null,
+                    this));
+
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineRotation;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineDrivingPID;
 
     /* NetworkTables logging */
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();

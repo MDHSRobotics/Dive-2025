@@ -13,7 +13,6 @@ import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
-import edu.wpi.first.units.measure.Current;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.Mass;
@@ -47,16 +46,15 @@ public class DriveConstants {
 
     /**
      * Max linear acceleration of the robot.
-     * This still needs to be found.
      */
-    public static final LinearAcceleration MAX_LINEAR_ACCEL = MetersPerSecondPerSecond.of(0);
+    public static final LinearAcceleration MAX_LINEAR_ACCEL = MetersPerSecondPerSecond.of(60);
 
     /**
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
      * This still needs to be tuned.
      */
-    public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
-            new TrapezoidProfile.Constraints(MAX_LINEAR_SPEED, MAX_LINEAR_ACCEL.in(MetersPerSecondPerSecond));
+    public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
+            MAX_LINEAR_SPEED / 2.0, MAX_LINEAR_ACCEL.in(MetersPerSecondPerSecond) / 2.0);
 
     /**
      * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
@@ -85,16 +83,15 @@ public class DriveConstants {
 
     /**
      * Max angular acceleration of the robot.
-     * This still needs to be found.
      */
-    private static final AngularAcceleration MAX_ANGULAR_ACCEL = RadiansPerSecondPerSecond.of(0);
+    private static final AngularAcceleration MAX_ANGULAR_ACCEL = RadiansPerSecondPerSecond.of(75.215);
 
     /**
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
      * This still needs to be tuned.
      */
-    public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS =
-            new TrapezoidProfile.Constraints(MAX_ANGULAR_RATE, MAX_ANGULAR_ACCEL.in(RadiansPerSecondPerSecond));
+    public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
+            MAX_ANGULAR_RATE / 2.0, MAX_ANGULAR_ACCEL.in(RadiansPerSecondPerSecond) / 2.0);
 
     /**
      * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
@@ -103,16 +100,7 @@ public class DriveConstants {
      * This comes from "Rotation RotationalRate Position.PNG"
      */
     public static final double K_ANGULAR_P =
-            RadiansPerSecond.per(Radian).ofNative(27.417).in(RadiansPerSecond.per(Radian));
-
-    /**
-     * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-     * used in custom swerve requests.
-     * The gain is output angular velocity (radians per second) per the rate of change of error (radians per second).
-     * This comes from "Rotation RotationalRate Position.PNG"
-     */
-    public static final double K_ANGULAR_D =
-            RadiansPerSecond.per(RadiansPerSecond).ofNative(1.6261).in(RadiansPerSecond.per(RadiansPerSecond));
+            RadiansPerSecond.per(Radian).ofNative(4).in(RadiansPerSecond.per(Radian));
 
     /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
@@ -120,6 +108,15 @@ public class DriveConstants {
      * This still needs to be tuned.
      */
     public static final Angle GOAL_TOLERANCE = Degrees.of(1);
+
+    /**
+     * Multiply wheel rotations by this number to convert to meters.
+     * This accounts for the drive gear ratio.
+     * Units: meter / rotations
+     * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/closed-loop-requests.html#converting-from-meters">How we convert from rotations to meters</a>
+     */
+    private static final double WHEEL_ROTATIONS_TO_METERS_CONVERSION =
+            2.0 * Math.PI * TunerConstants.kWheelRadius.in(Meters) / TunerConstants.kDriveGearRatio;
 
     /* PathPlanner Configuration */
 
@@ -150,11 +147,11 @@ public class DriveConstants {
 
     /**
      * Linear acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveTranslation a SysId routine}.
-     * This comes from "Translation with Drive Gearing applied.PNG" in the project files.
-     * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/closed-loop-requests.html#converting-from-meters">How we convert from rotations to meters</a>
+     * This comes from "Translation Velocity.PNG" in the project files.
+     * 0.0024069 volts/rotation per second squared / 0.0473146029 meters/rotation
      */
     private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR =
-            VoltsPerMeterPerSecondSquared.ofNative(0.04314 / (2.0 * Math.PI * DRIVEBASE_RADIUS.in(Meters)));
+            VoltsPerMeterPerSecondSquared.ofNative(0.0024069 / WHEEL_ROTATIONS_TO_METERS_CONVERSION);
 
     /**
      * The robot's moment of inertia.
@@ -170,14 +167,6 @@ public class DriveConstants {
     /** Wheel coefficient of friction for <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels.</a> */
     private static final double WHEEL_COF = 1.0;
 
-    /**
-     * The supply current limit for PathPlanner movement.
-     * This is 60 amps because
-     * <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/yearly-changes/yearly-changelog.html#current-limiting-improvements">
-     * the motor will drop to 40 amps if it reaches 70 amps for 1 second.</a>
-     */
-    private static final Current DRIVE_CURRENT_LIMIT = Amps.of(60);
-
     /** The swerve module config to be used for every module. */
     private static final ModuleConfig MODULE_CONFIG = new ModuleConfig(
             TunerConstants.kWheelRadius,
@@ -185,7 +174,7 @@ public class DriveConstants {
             WHEEL_COF,
             DCMotor.getKrakenX60(1),
             TunerConstants.kDriveGearRatio,
-            DRIVE_CURRENT_LIMIT,
+            TunerConstants.kSlipCurrent,
             1);
 
     /**

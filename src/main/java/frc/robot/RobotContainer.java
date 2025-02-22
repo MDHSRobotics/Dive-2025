@@ -4,7 +4,6 @@
 
 package frc.robot;
 
-import static frc.robot.subsystems.drive.DriveConstants.K_ANGULAR_D;
 import static frc.robot.subsystems.drive.DriveConstants.K_ANGULAR_P;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -19,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -54,14 +52,14 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle = new SwerveRequest.FieldCentricFacingAngle()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo)
-            .withHeadingPID(K_ANGULAR_P, 0, K_ANGULAR_D);
+            .withHeadingPID(K_ANGULAR_P, 0, 0);
 
     private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
-            new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
+    // private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
+    //         new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
 
     /* Controllers */
     private final CommandPS4Controller driverController =
@@ -141,14 +139,14 @@ public class RobotContainer {
         //         .withDeadband(getDeadband())
         //         .withRotationalDeadband(getRotationalDeadband())));
 
-        // driverController.povRight().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
+        // driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
 
         // Slow Mode
         driverController.L2().onTrue(Commands.runOnce(() -> this.m_slowMode = true));
         // Fast Mode
         driverController.R2().onTrue(Commands.runOnce(() -> this.m_slowMode = false));
         // Select left tree
-        driverController.L2().onTrue(aimingRoutines.alignWithStation(true));
+        driverController.L1().onTrue(aimingRoutines.alignWithStation(true));
         // Select right tree
         driverController.R1().onTrue(aimingRoutines.alignWithStation(false));
 
@@ -176,22 +174,22 @@ public class RobotContainer {
          * Note that each routine should be run exactly once in a single log.
          * Comment out when finished.
          */
-        driverController
-                .share()
-                .and(driverController.povUp())
-                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        driverController
-                .share()
-                .and(driverController.povDown())
-                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        driverController
-                .options()
-                .and(driverController.povUp())
-                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        driverController
-                .options()
-                .and(driverController.povDown())
-                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // driverController
+        //         .share()
+        //         .and(driverController.povUp())
+        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // driverController
+        //         .share()
+        //         .and(driverController.povDown())
+        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // driverController
+        //         .options()
+        //         .and(driverController.povUp())
+        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // driverController
+        //         .options()
+        //         .and(driverController.povDown())
+        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**

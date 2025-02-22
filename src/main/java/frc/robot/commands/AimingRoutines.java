@@ -43,28 +43,28 @@ public class AimingRoutines {
 
     private final ProfiledDriveFacingAngle driveFacingAngle = new ProfiledDriveFacingAngle(
                     ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-            .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withPIDGains(K_ANGULAR_P, 0, 0)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledDriveFacingPosition driveFacingPosition = new ProfiledDriveFacingPosition(
                     ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-            .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withPIDGains(K_ANGULAR_P, 0, 0)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledDriveFacingNearestPosition driveFacingNearestPosition =
             new ProfiledDriveFacingNearestPosition(ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-                    .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+                    .withPIDGains(K_ANGULAR_P, 0, 0)
                     .withTolerance(GOAL_TOLERANCE)
                     .withDriveRequestType(DriveRequestType.Velocity)
                     .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledDriveWithVisualServoing driveFacingVisionTarget = new ProfiledDriveWithVisualServoing(
                     ANGULAR_MOTION_CONSTRAINTS, K_DT, cameraTable, loggingTable)
-            .withPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withPIDGains(K_ANGULAR_P, 0, 0)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
@@ -72,7 +72,7 @@ public class AimingRoutines {
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
                     LINEAR_MOTION_CONSTRAINTS, ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withTranslationalPIDGains(K_TRANSLATION_P, 0, K_TRANSLATION_D)
-            .withRotationalPIDGains(K_ANGULAR_P, 0, K_ANGULAR_D)
+            .withRotationalPIDGains(K_ANGULAR_P, 0, 0)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
