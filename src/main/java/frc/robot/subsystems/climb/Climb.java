@@ -179,8 +179,8 @@ public class Climb extends SubsystemBase {
                 backPosition = BACK_MIN_LIMIT;
                 frontPosition = FRONT_MIN_LIMIT;
             }
-            m_backController.setReference(backPosition, ControlType.kPosition);
-            m_frontController.setReference(frontPosition, ControlType.kPosition);
+            System.out.println(m_backController.setReference(backPosition, ControlType.kPosition));
+            System.out.println(m_frontController.setReference(frontPosition, ControlType.kPosition));
         });
     }
 

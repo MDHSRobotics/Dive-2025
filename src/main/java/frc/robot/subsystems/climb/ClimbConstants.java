@@ -2,10 +2,6 @@ package frc.robot.subsystems.climb;
 
 import static edu.wpi.first.units.Units.*;
 
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.units.measure.AngularAcceleration;
-import edu.wpi.first.units.measure.AngularVelocity;
-
 public class ClimbConstants {
     private ClimbConstants() {}
 
@@ -58,26 +54,26 @@ public class ClimbConstants {
      * in volts.
      * This still needs to be tuned.
      */
-    public static final double K_S = Volts.of(0).in(Volts);
+    // public static final double K_S = Volts.of(0).in(Volts);
     /**
      * Velocity gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
      * in volts per radian per second.
      * This still needs to be tuned.
      */
-    public static final double K_V = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
+    // public static final double K_V = VoltsPerRadianPerSecond.ofNative(0).in(VoltsPerRadianPerSecond);
     /**
      * Acceleration gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
      * in volts per radian per second squared.
      * This still needs to be tuned.
      */
-    public static final double K_A = VoltsPerRadianPerSecondSquared.ofNative(0).in(VoltsPerRadianPerSecondSquared);
+    // public static final double K_A = VoltsPerRadianPerSecondSquared.ofNative(0).in(VoltsPerRadianPerSecondSquared);
 
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
      * in duty cycle (percent out) per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = 0;
+    public static final double K_P = 0.05;
     /**
      * Derivative gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
      * in duty cycle (percent out) per radian per second.
@@ -89,19 +85,19 @@ public class ClimbConstants {
      * Maximum allowed angular velocity for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
      * This still needs to be tuned.
      */
-    private static final AngularVelocity MAX_VELOCITY = RadiansPerSecond.of(0);
+    // private static final AngularVelocity MAX_VELOCITY = RadiansPerSecond.of(0);
     /**
      * Maximum allowed angular acceleration for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profile</a>
      * This still needs to be tuned.
      */
-    private static final AngularAcceleration MAX_ACCELERATION = RadiansPerSecondPerSecond.of(0);
+    // private static final AngularAcceleration MAX_ACCELERATION = RadiansPerSecondPerSecond.of(0);
 
     /**
      * Maximum allowed angular velocity (in radians per second) and acceleration (in radians per second per second).
      * @see <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">explanation for motion profiles</a>
      */
-    public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
-            MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
+    // public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
+    //         MAX_VELOCITY.in(RadiansPerSecond), MAX_ACCELERATION.in(RadiansPerSecondPerSecond));
 
     // Common climb positions
     /**
