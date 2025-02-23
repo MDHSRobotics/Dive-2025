@@ -82,7 +82,7 @@ public class ProfiledDriveFacingPosition implements ProfiledSwerveRequest {
      */
     private ForwardPerspectiveValue drivingPerspective = ForwardPerspectiveValue.OperatorPerspective;
 
-    private final FieldCentric fieldCentric = new FieldCentric();
+    private final FieldCentric fieldCentric = new FieldCentric().withRotationalDeadband(0);
 
     private final PhoenixPIDController headingController = new PhoenixPIDController(0, 0, 0);
 
@@ -215,7 +215,6 @@ public class ProfiledDriveFacingPosition implements ProfiledSwerveRequest {
                 .withVelocityY(velocityY)
                 .withRotationalRate(toApplyOmega)
                 .withDeadband(deadband)
-                .withRotationalDeadband(0)
                 .withCenterOfRotation(centerOfRotation)
                 .withDriveRequestType(driveRequestType)
                 .withSteerRequestType(steerRequestType)

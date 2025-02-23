@@ -33,6 +33,10 @@ import frc.robot.subsystems.drive.DriveTelemetry;
  */
 public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
     /**
+     * The field-centric chassis speeds to apply to the drivetrain.
+     */
+    private final ChassisSpeeds toApplySpeeds = new ChassisSpeeds();
+    /**
      * The desired pose to reach.
      * This pose has the blue alliance origin.
      */
@@ -58,7 +62,8 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
      */
     private boolean desaturateWheelSpeeds = true;
 
-    private final FieldCentric fieldCentric = new FieldCentric();
+    private final ApplyFieldSpeeds applyFieldSpeeds =
+            new ApplyFieldSpeeds().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
 
     // X position profile and PID controller
     private final TrapezoidProfile xProfile;
@@ -181,11 +186,11 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
 
         xSetpoint = xProfile.calculate(kDt, xSetpoint, xGoal);
         double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
-        double toApplyX = xSetpoint.velocity + xCorrectionOutput;
+        toApplySpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
 
         ySetpoint = yProfile.calculate(kDt, ySetpoint, yGoal);
         double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
-        double toApplyY = ySetpoint.velocity + yCorrectionOutput;
+        toApplySpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
 
         /* From ProfiledPIDController#calculate(double)
          * The following code handles wrapping values (like angles) by eliminating unnecessary rotation.
@@ -211,7 +216,7 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
         double headingCorrectionOutput =
                 headingController.calculate(currentAngle.getRadians(), headingSetpoint.position, parameters.timestamp);
 
-        double toApplyOmega = headingSetpoint.velocity + headingCorrectionOutput;
+        toApplySpeeds.omegaRadiansPerSecond = headingSetpoint.velocity + headingCorrectionOutput;
 
         // If one of the publishers isn't null, all of them were initialized, so log data
         if (this.goalPositionPub != null) {
@@ -228,22 +233,15 @@ public class ProfiledXYHeadingAlignment implements ProfiledSwerveRequest {
                     new ChassisSpeeds(xSetpoint.velocity, ySetpoint.velocity, headingSetpoint.velocity), timestamp);
             errorCorrectionVelocityPub.set(
                     new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput), timestamp);
-            appliedVelocityPub.set(new ChassisSpeeds(toApplyX, toApplyY, toApplyOmega), timestamp);
+            appliedVelocityPub.set(toApplySpeeds, timestamp);
         }
 
-        return fieldCentric
-                .withVelocityX(toApplyX)
-                .withVelocityY(toApplyY)
-                .withRotationalRate(toApplyOmega)
-                .withDeadband(0)
-                .withRotationalDeadband(0)
+        return applyFieldSpeeds
+                .withSpeeds(toApplySpeeds)
                 .withCenterOfRotation(centerOfRotation)
                 .withDriveRequestType(driveRequestType)
                 .withSteerRequestType(steerRequestType)
                 .withDesaturateWheelSpeeds(desaturateWheelSpeeds)
-                .withForwardPerspective(
-                        ForwardPerspectiveValue
-                                .BlueAlliance) // Must be blue alliance so that CTRE doesn't flip our Y velocity.
                 .apply(parameters, modulesToApply);
     }
 

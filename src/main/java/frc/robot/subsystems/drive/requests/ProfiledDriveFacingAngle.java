@@ -94,7 +94,7 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
      */
     private ForwardPerspectiveValue aimingPerspective = ForwardPerspectiveValue.BlueAlliance;
 
-    private final FieldCentric fieldCentric = new FieldCentric();
+    private final FieldCentric fieldCentric = new FieldCentric().withRotationalDeadband(0);
 
     private final PhoenixPIDController headingController = new PhoenixPIDController(0, 0, 0);
     private final DoubleEntry pGainEntry;
@@ -245,7 +245,6 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
                 .withVelocityY(velocityY)
                 .withRotationalRate(toApplyOmega)
                 .withDeadband(deadband)
-                .withRotationalDeadband(0)
                 .withCenterOfRotation(centerOfRotation)
                 .withDriveRequestType(driveRequestType)
                 .withSteerRequestType(steerRequestType)
