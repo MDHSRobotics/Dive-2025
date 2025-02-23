@@ -1,0 +1,31 @@
+{
+  "version": "2025.0",
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Top to L1 3"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L1 3 to Top Station"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Top Station to L1 4"
+          }
+        }
+      ]
+    }
+  },
+  "resetOdom": true,
+  "folder": "Top",
+  "choreoAuto": false
+}
