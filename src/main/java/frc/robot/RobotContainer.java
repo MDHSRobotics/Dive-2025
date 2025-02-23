@@ -26,6 +26,7 @@ import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.catcher.Catcher;
 import frc.robot.subsystems.catcher.Catcher.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.Climb.HookPositions;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
@@ -115,7 +116,7 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_catcher.setDefaultCommand(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
+        m_catcher.setDefaultCommand(m_catcher.setArmPositionCommand(CatcherArmPositions.UP));
         m_intake.setDefaultCommand(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
     }
 
@@ -160,10 +161,10 @@ public class RobotContainer {
                         new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
 
         // Reset robot orientation
-        driverController
-                .touchpad()
-                .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
-                        m_drivetrain.getState().Pose.getRotation())));
+        // driverController
+        //         .touchpad()
+        //         .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
+        //                 m_drivetrain.getState().Pose.getRotation())));
 
         driverController.circle().toggleOnTrue(aimingRoutines.orientToFaceReefWall());
         driverController.povRight().toggleOnTrue(m_drivetrain.applyRequest(() -> driveFacingAngle
@@ -201,30 +202,37 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        operatorController
-                .rightTrigger()
-                .whileTrue(m_climb.motorTestCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
+        // operatorController
+        //         .rightTrigger()
+        //         .whileTrue(m_climb.motorTestCommand(
+        //                 () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
         operatorController
                 .leftTrigger()
                 .whileTrue(m_climb.motorTestCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
-        // operatorController.leftBumper().whileTrue(m_catcher.armTestCommand(() -> -operatorController.getLeftY()));
-        // operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.rightTrigger().toggleOnTrue(m_climb.setHookPositionCommand(HookPositions.UP));
+        // operatorController.leftBumper().whileTrue(m_catcher.setArmPowerCommand(() ->
+        // -operatorController.getLeftY()));
+        operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
+        operatorController.rightBumper().onFalse(Commands.idle(m_intake));
         operatorController.a().whileTrue(m_catcher.wheelCommand());
+        operatorController.a().onFalse(Commands.idle(m_catcher));
         operatorController.b().whileTrue(m_catcher.wheelBackwardsCommand());
-        // operatorController.x().whileTrue(m_intake.runWheelsSlowCommand());
-        operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
+        operatorController.b().onFalse(Commands.idle(m_catcher));
+        operatorController.povUp().whileTrue(m_catcher.wheelBackwardsWhileRaisingArmCommand());
 
-        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        operatorController.povLeft().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        operatorController.x().whileTrue(m_intake.runWheelsCommand());
+        operatorController.x().onFalse(Commands.idle(m_intake));
+        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
+        operatorController.y().onFalse(Commands.idle(m_intake));
+
         operatorController
                 .leftBumper()
                 .toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
+        // operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
+        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        operatorController.povLeft().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
         operatorController.povRight().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_2));
-        operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
     }
 
     /**

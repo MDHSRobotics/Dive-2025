@@ -10,6 +10,8 @@ import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
@@ -18,7 +20,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.VisionConstants;
-import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.util.Elastic;
 import frc.robot.util.LimelightHelpers;
 import org.littletonrobotics.urcl.URCL;
 
@@ -28,10 +30,12 @@ import org.littletonrobotics.urcl.URCL;
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
-    private Command autonomousCommand;
+    private Command m_autonomousCommand;
 
-    private RobotContainer robotContainer;
-    private final Timer m_autoTimer = new Timer();
+    private RobotContainer m_robotContainer;
+
+    private DoublePublisher m_autoTimePub;
+    private Timer m_autoTimer;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -44,10 +48,12 @@ public class Robot extends TimedRobot {
 
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
-        robotContainer = new RobotContainer();
+        m_robotContainer = new RobotContainer();
 
         // Create the webserver for accessing Elastic's saved layout across computers
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
+
+        Elastic.selectTab("Autonomous");
 
         // Configure limelight position
         LimelightHelpers.setCameraPose_RobotSpace(
@@ -61,7 +67,13 @@ public class Robot extends TimedRobot {
 
         // Ensure that the PathPlanner GUI displays the robot's actual config.
         // If there are differences, they will be reported in SmartDashboard.
-        DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
+        // DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
+
+        m_autoTimer = new Timer();
+        m_autoTimePub = NetworkTableInstance.getDefault()
+                .getTable("PathPlanner")
+                .getDoubleTopic("Auto Time")
+                .publish();
 
         SignalLogger.setPath("/media/sda1/logs/");
         DataLogManager.start();
@@ -96,14 +108,14 @@ public class Robot extends TimedRobot {
     /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
     @Override
     public void autonomousInit() {
-        autonomousCommand = robotContainer.getAutonomousCommand();
+        m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         // schedule the autonomous command (example)
-        if (autonomousCommand != null) {
-            autonomousCommand
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand
                     .finallyDo(() -> {
                         m_autoTimer.stop();
-                        System.out.println("Auto time: " + m_autoTimer.get());
+                        m_autoTimePub.set(m_autoTimer.get());
                     })
                     .schedule();
             m_autoTimer.start();
@@ -120,9 +132,11 @@ public class Robot extends TimedRobot {
         // teleop starts running. If you want the autonomous to
         // continue until interrupted by another command, remove
         // this line or comment it out.
-        if (autonomousCommand != null) {
-            autonomousCommand.cancel();
+        if (m_autonomousCommand != null) {
+            m_autonomousCommand.cancel();
         }
+
+        Elastic.selectTab("Teleoperated");
     }
 
     /** This function is called periodically during operator control. */
@@ -134,7 +148,7 @@ public class Robot extends TimedRobot {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
 
-        robotContainer.resetFieldPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
+        m_robotContainer.resetFieldPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during test mode. */
@@ -143,8 +157,8 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testExit() {
-        SignalLogger.stop();
-        DataLogManager.stop();
+        // SignalLogger.stop();
+        // DataLogManager.stop();
     }
 
     /** This function is called once when the robot is first started up. */

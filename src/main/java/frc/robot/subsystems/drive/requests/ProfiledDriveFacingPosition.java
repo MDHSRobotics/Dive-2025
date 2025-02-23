@@ -1,6 +1,7 @@
 package frc.robot.subsystems.drive.requests;
 
-import static edu.wpi.first.units.Units.*;
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.Radians;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
@@ -13,7 +14,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.units.measure.*;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.subsystems.drive.DriveTelemetry;
 
 /**
@@ -106,6 +108,7 @@ public class ProfiledDriveFacingPosition implements ProfiledSwerveRequest {
      *
      * @param constraints Constraints for the trapezoid profile
      * @param kDt Update period for the motion profile
+     * @param goalTolerance What angle is acceptable to stop rotating
      */
     public ProfiledDriveFacingPosition(TrapezoidProfile.Constraints constraints, double kDt) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);

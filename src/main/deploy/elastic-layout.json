@@ -5,7 +5,34 @@
     {
       "name": "Teleoperated",
       "grid_layout": {
-        "layouts": [],
+        "layouts": [
+          {
+            "title": "CameraPublisher",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1920.0,
+            "height": 896.0,
+            "type": "List Layout",
+            "properties": {
+              "label_position": "TOP"
+            },
+            "children": [
+              {
+                "title": "limelight-front",
+                "x": 0.0,
+                "y": 0.0,
+                "width": 256.0,
+                "height": 256.0,
+                "type": "Camera Stream",
+                "properties": {
+                  "topic": "/CameraPublisher/limelight-front",
+                  "period": 0.06,
+                  "rotation_turns": 0
+                }
+              }
+            ]
+          }
+        ],
         "containers": []
       }
     },

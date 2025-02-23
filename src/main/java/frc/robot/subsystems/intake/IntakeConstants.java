@@ -73,7 +73,7 @@ public class IntakeConstants {
      * The position that aligns the arm with the algae resting on a coral.
      * This still needs to be found.
      */
-    public static final double ON_CORAL_PICKUP_POSITION = Radians.of(0).in(Radians);
+    public static final double ON_CORAL_PICKUP_POSITION = Radians.of(2.867).in(Radians);
     /**
      * The position that aligns the arm with the algae resting on the ground.
      * This still needs to be found.

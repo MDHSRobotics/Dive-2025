@@ -159,7 +159,8 @@ public class Intake extends SubsystemBase {
                 .andThen(setArmPositionCommand(IntakeArmPositions.PROCESSOR))
                 .andThen(Commands.waitSeconds(0.5))
                 .andThen(this.runOnce(m_flywheelLeftMotor::stopMotor))
-                .andThen(Commands.idle(this));
+                .andThen(Commands.idle(this))
+                .finallyDo(m_flywheelLeftMotor::stopMotor);
     }
 
     public Command runWheelsSlowCommand() {

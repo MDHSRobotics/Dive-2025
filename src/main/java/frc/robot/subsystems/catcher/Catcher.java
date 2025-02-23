@@ -2,6 +2,7 @@ package frc.robot.subsystems.catcher;
 
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -11,6 +12,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -25,11 +27,14 @@ public class Catcher extends SubsystemBase {
         STOWED,
         TROUGH,
         CORAL_STATION,
+        UP,
         L_2
     }
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
+
+    private final RelativeEncoder m_flywheelsEncoder = m_flywheelsMotor.getEncoder();
 
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
@@ -90,6 +95,10 @@ public class Catcher extends SubsystemBase {
         // });
     }
 
+    private boolean wheelsAreStopped() {
+        return MathUtil.isNear(0, m_flywheelsEncoder.getVelocity(), 0.001);
+    }
+
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
                     m_armMotor.stopMotor();
@@ -106,7 +115,8 @@ public class Catcher extends SubsystemBase {
     }
 
     public Command wheelCommand() {
-        return this.runOnce(() -> m_flywheelsMotor.set(0.5))
+        return setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION)
+                .andThen(this.runOnce(() -> m_flywheelsMotor.set(0.5)))
                 .andThen(Commands.idle(this))
                 .finallyDo(m_flywheelsMotor::stopMotor);
     }
@@ -118,27 +128,30 @@ public class Catcher extends SubsystemBase {
     }
 
     public Command wheelBackwardsCommand() {
-        return this.runOnce(() -> m_flywheelsMotor.set(-0.2))
-                .andThen(Commands.idle(this))
+        return this.run(() -> {
+                    if (wheelsAreStopped()) {
+                        m_flywheelsMotor.set(-1);
+                    } else {
+                        m_flywheelsMotor.set(-0.2);
+                    }
+                })
                 .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
-    public Command setArmPositionCommand(CatcherArmPositions armPosition) {
+    public Command wheelBackwardsWhileRaisingArmCommand() {
         return this.runOnce(() -> {
-                    double position;
-                    if (armPosition == CatcherArmPositions.STOWED) {
-                        position = ARM_MIN_LIMIT;
-                    } else if (armPosition == CatcherArmPositions.TROUGH) {
-                        position = TROUGH_POSITION;
-                    } else if (armPosition == CatcherArmPositions.CORAL_STATION) {
-                        position = CORAL_STATION_POSITION;
-                    } else {
-                        position = L2_POSITION;
-                    }
-                    m_armController.setReference(position, ControlType.kPosition);
-                    targetPositionPub.set(position);
+                    m_flywheelsMotor.set(-0.2);
+                    m_armMotor.set(-0.1);
                 })
-                .andThen(Commands.idle(this));
+                .andThen(Commands.idle(this))
+                .finallyDo(() -> {
+                    m_flywheelsMotor.stopMotor();
+                    m_armMotor.stopMotor();
+                });
+    }
+
+    public Command setArmPositionCommand(CatcherArmPositions armPosition) {
+        return setArmPositionAndEndCommand(armPosition).andThen(Commands.idle(this));
     }
 
     public Command setArmPositionAndEndCommand(CatcherArmPositions armPosition) {
@@ -150,6 +163,8 @@ public class Catcher extends SubsystemBase {
                 position = TROUGH_POSITION;
             } else if (armPosition == CatcherArmPositions.CORAL_STATION) {
                 position = CORAL_STATION_POSITION;
+            } else if (armPosition == CatcherArmPositions.UP) {
+                position = UP_POSITION;
             } else {
                 position = L2_POSITION;
             }

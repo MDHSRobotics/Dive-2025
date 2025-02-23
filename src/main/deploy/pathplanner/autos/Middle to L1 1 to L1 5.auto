@@ -17,12 +17,6 @@
           }
         },
         {
-          "type": "named",
-          "data": {
-            "name": "Raise Catcher Arm"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "L1 1 to Bottom Station"

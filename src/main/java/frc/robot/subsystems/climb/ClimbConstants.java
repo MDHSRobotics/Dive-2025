@@ -44,6 +44,16 @@ public class ClimbConstants {
     public static final double FRONT_ZERO_OFFSET = 0.75;
 
     /**
+     * The conversion of motor input rotations to climb hook output radians.
+     */
+    public static final double POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
+    /**
+     * The conversion of motor input rotations per minute to climb hook output radians per second.
+     */
+    public static final double VELOCITY_CONVERSION_FACTOR =
+            Rotations.per(Minute).of(1).in(RadiansPerSecond);
+
+    /**
      * Static gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-feedforward.html">feedforward</a>
      * in volts.
      * This still needs to be tuned.

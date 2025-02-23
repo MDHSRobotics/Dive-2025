@@ -122,11 +122,9 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
      *
      * @param constraints Constraints for the trapezoid profile
      * @param kDt Update period for the motion profile
-     * @param goalTolerance What angle is acceptable to stop rotating
      */
-    public ProfiledDriveFacingAngle(TrapezoidProfile.Constraints constraints, double kDt, Angle goalTolerance) {
+    public ProfiledDriveFacingAngle(TrapezoidProfile.Constraints constraints, double kDt) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
-        headingController.setTolerance(goalTolerance.in(Radians));
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
 
@@ -146,12 +144,9 @@ public class ProfiledDriveFacingAngle implements ProfiledSwerveRequest {
      * @param constraints Constraints for the trapezoid profile
      * @param kDt Update period for the motion profile
      * @param loggingPath The NetworkTable to log data into.
-     * @param goalTolerance What angle is acceptable to stop rotating
      */
-    public ProfiledDriveFacingAngle(
-            TrapezoidProfile.Constraints constraints, double kDt, NetworkTable loggingPath, Angle goalTolerance) {
+    public ProfiledDriveFacingAngle(TrapezoidProfile.Constraints constraints, double kDt, NetworkTable loggingPath) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
-        headingController.setTolerance(goalTolerance.in(Radians));
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
 

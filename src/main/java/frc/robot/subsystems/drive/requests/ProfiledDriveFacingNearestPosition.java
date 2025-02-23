@@ -107,9 +107,12 @@ public class ProfiledDriveFacingNearestPosition implements ProfiledSwerveRequest
      *
      * @param constraints Constraints for the trapezoid profile
      * @param kDt Update period for the motion profile
+     * @param goalTolerance What angle is acceptable to stop rotating
      */
-    public ProfiledDriveFacingNearestPosition(TrapezoidProfile.Constraints constraints, double kDt) {
+    public ProfiledDriveFacingNearestPosition(
+            TrapezoidProfile.Constraints constraints, double kDt, Angle goalTolerance) {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
+        headingController.setTolerance(goalTolerance.in(Radians));
         profile = new TrapezoidProfile(constraints);
         this.kDt = kDt;
 

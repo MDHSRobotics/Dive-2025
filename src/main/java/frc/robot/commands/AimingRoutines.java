@@ -42,7 +42,7 @@ public class AimingRoutines {
     private final NetworkTable loggingTable = inst.getTable("Swerve Requests");
 
     private final ProfiledDriveFacingAngle driveFacingAngle = new ProfiledDriveFacingAngle(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable, GOAL_TOLERANCE)
+                    ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withPIDGains(K_ANGULAR_P, 0, 0)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)

@@ -54,7 +54,7 @@ public class CatcherConstants {
      * This is the actual position minus a fudge factor that accounts for the weight of gravity.
      */
     public static final double CORAL_STATION_POSITION =
-            Radians.of(4.022).minus(Radians.of(0.1)).in(Radians);
+            Radians.of(4.022).minus(Radians.of(0.1)).minus(Degrees.of(1)).in(Radians);
 
-    public static final double BALANCED_CLIMBING_POSITION = Radians.of(4.948).in(Radians);
+    public static final double UP_POSITION = Radians.of(3.385).in(Radians);
 }
