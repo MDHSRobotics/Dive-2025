@@ -11,15 +11,33 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Eject Coral"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "L1 2 to Top Station"
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Intake Coral"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Top Station to L1 3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Eject Coral"
           }
         }
       ]

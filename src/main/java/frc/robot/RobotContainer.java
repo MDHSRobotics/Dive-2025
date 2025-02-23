@@ -215,7 +215,7 @@ public class RobotContainer {
         // -operatorController.getLeftY()));
         operatorController.rightBumper().whileTrue(m_intake.armTestCommand(() -> -operatorController.getLeftY()));
         operatorController.rightBumper().onFalse(Commands.idle(m_intake));
-        operatorController.a().whileTrue(m_catcher.wheelCommand());
+        operatorController.a().whileTrue(m_catcher.raiseAndRunWheelCommand());
         operatorController.a().onFalse(Commands.idle(m_catcher));
         operatorController.b().whileTrue(m_catcher.wheelBackwardsCommand());
         operatorController.b().onFalse(Commands.idle(m_catcher));
@@ -245,6 +245,8 @@ public class RobotContainer {
                 "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(1));
         NamedCommands.registerCommand(
                 "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
+        NamedCommands.registerCommand(
+                "Intake Coral", m_catcher.runWheelCommand().withTimeout(2));
     }
 
     /**
