@@ -5,6 +5,12 @@
     "data": {
       "commands": [
         {
+          "type": "named",
+          "data": {
+            "name": "Start Auto Timer"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "Bottom to L1 6"
@@ -38,6 +44,12 @@
           "type": "named",
           "data": {
             "name": "Eject Coral"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "End Auto Timer"
           }
         }
       ]
