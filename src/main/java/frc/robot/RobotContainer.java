@@ -11,6 +11,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -30,6 +32,7 @@ import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
+import frc.robot.subsystems.AutoTimer;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -48,6 +51,8 @@ public class RobotContainer {
     private final Climb m_climb = new Climb();
     private final Catcher m_catcher = new Catcher();
     private final Intake m_intake = new Intake();
+
+    private final AutoTimer m_autoTimer = new AutoTimer();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -250,6 +255,14 @@ public class RobotContainer {
                 "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
                 "Intake Coral", m_catcher.runWheelCommand().withTimeout(2));
+        NamedCommands.registerCommand(
+            "Start Auto Timer", Commands.runOnce(() -> {
+                                            m_autoTimer.resetAndStart();
+                                        }));
+        NamedCommands.registerCommand(
+            "End Auto Timer", Commands.runOnce(() -> {
+                                            m_autoTimer.stopAndPublish();
+                                        }));
     }
 
     /**
@@ -257,7 +270,16 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
+        Command autoChooserCommand = autoChooser.getSelected();
+        //Command autoChooserCommand = new PathPlannerAuto("Middle to L1 1 to L1 2");
+
+        System.out.println("Starting auto: " + autoChooserCommand.getName());
+
+        Command autonomousCommandWithTiming = autoChooserCommand.finallyDo(() -> {
+                                                                        m_autoTimer.stop();
+                                                                        m_autoTimer.publish();
+                                                                    });        
+        return autonomousCommandWithTiming;
     }
 
     /**
