@@ -271,15 +271,10 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         Command autoChooserCommand = autoChooser.getSelected();
-        //Command autoChooserCommand = new PathPlannerAuto("Middle to L1 1 to L1 2");
 
         System.out.println("Starting auto: " + autoChooserCommand.getName());
-
-        Command autonomousCommandWithTiming = autoChooserCommand.finallyDo(() -> {
-                                                                        m_autoTimer.stop();
-                                                                        m_autoTimer.publish();
-                                                                    });        
-        return autonomousCommandWithTiming;
+     
+        return autoChooserCommand;
     }
 
     /**
