@@ -41,8 +41,6 @@ public class Intake extends SubsystemBase {
     private final SparkMax m_flywheelRightMotor = new SparkMax(WHEEL_RIGHT_ID, MotorType.kBrushless);
 
     /*Break Beam Sensor */
-    public DigitalInput m_beamSensor = new DigitalInput(0);
-
     private final RelativeEncoder m_flywheelEncoder = m_flywheelLeftMotor.getEncoder();
 
     private final DigitalInput m_armBeamBreak = new DigitalInput(ARM_BEAM_BEAK_DIO_CHANNEL);

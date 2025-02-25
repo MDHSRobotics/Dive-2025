@@ -10,13 +10,10 @@ import com.ctre.phoenix6.SignalLogger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.Constants.VisionConstants;
@@ -33,9 +30,6 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
-
-    private DoublePublisher m_autoTimePub;
-    private Timer m_autoTimer;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -68,12 +62,6 @@ public class Robot extends TimedRobot {
         // Ensure that the PathPlanner GUI displays the robot's actual config.
         // If there are differences, they will be reported in SmartDashboard.
         // DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
-
-        m_autoTimer = new Timer();
-        m_autoTimePub = NetworkTableInstance.getDefault()
-                .getTable("PathPlanner")
-                .getDoubleTopic("Auto Time")
-                .publish();
 
         SignalLogger.setPath("/media/sda1/logs/");
         DataLogManager.start();
@@ -112,13 +100,7 @@ public class Robot extends TimedRobot {
 
         // schedule the autonomous command (example)
         if (m_autonomousCommand != null) {
-            m_autonomousCommand
-                    .finallyDo(() -> {
-                        m_autoTimer.stop();
-                        m_autoTimePub.set(m_autoTimer.get());
-                    })
-                    .schedule();
-            m_autoTimer.start();
+            m_autonomousCommand.schedule();
         }
     }
 

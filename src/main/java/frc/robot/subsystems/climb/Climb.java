@@ -4,29 +4,18 @@
 
 package frc.robot.subsystems.climb;
 
-import static frc.robot.Constants.*;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
 import com.revrobotics.spark.SparkAbsoluteEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import edu.wpi.first.networktables.DoubleEntry;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableEvent;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import java.util.EnumSet;
 import java.util.function.DoubleSupplier;
 
 public class Climb extends SubsystemBase {
@@ -60,15 +49,15 @@ public class Climb extends SubsystemBase {
     // private final TrapezoidProfile.State m_backGoal = new TrapezoidProfile.State();
     // private final TrapezoidProfile.State m_frontGoal = new TrapezoidProfile.State();
 
-    private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
-    private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
+    // private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
+    // private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
 
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Climb");
-    private final DoublePublisher targetPositionPub =
-            table.getDoubleTopic("Target Position (radians)").publish();
-    private final DoubleEntry pGainEntry =
-            table.getDoubleTopic("Hook P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
+    // private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    // private final NetworkTable table = inst.getTable("Climb");
+    // private final DoublePublisher targetPositionPub =
+    //         table.getDoubleTopic("Target Position (radians)").publish();
+    // private final DoubleEntry pGainEntry =
+    //         table.getDoubleTopic("Hook P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -87,7 +76,7 @@ public class Climb extends SubsystemBase {
                 .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(BACK_MIN_LIMIT)
                 .reverseSoftLimitEnabled(true);
-        config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
+        // config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
         config.signals
                 .absoluteEncoderPositionPeriodMs(10)
                 .absoluteEncoderPositionAlwaysOn(true)
@@ -100,15 +89,15 @@ public class Climb extends SubsystemBase {
         config.softLimit.forwardSoftLimit(FRONT_MAX_LIMIT).reverseSoftLimit(FRONT_MIN_LIMIT);
         m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        pGainEntry.set(K_P);
-        inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
-            SparkFlexConfig tempConfig = new SparkFlexConfig();
-            tempConfig.closedLoop.p(event.valueData.value.getDouble());
-            m_backHookMotor.configureAsync(
-                    tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-            m_frontHookMotor.configureAsync(
-                    tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
-        });
+        // pGainEntry.set(K_P);
+        // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+        //     SparkFlexConfig tempConfig = new SparkFlexConfig();
+        //     tempConfig.closedLoop.p(event.valueData.value.getDouble());
+        //     m_backHookMotor.configureAsync(
+        //             tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        //     m_frontHookMotor.configureAsync(
+        //             tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        // });
     }
 
     // private void resetProfile(HookPositions hookPositions) {
@@ -160,29 +149,29 @@ public class Climb extends SubsystemBase {
 
     public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
-            m_backHookMotor.set(-backMotorPowerSupplier.getAsDouble() * 0.5);
-            m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
+            m_backHookMotor.set(-backMotorPowerSupplier.getAsDouble() * 0.25);
+            m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.25);
         });
     }
 
-    public Command setHookPositionCommand(HookPositions hookPositions) {
-        return this.runOnce(() -> {
-            double backPosition;
-            double frontPosition;
-            if (hookPositions == HookPositions.AWAY) {
-                backPosition = BACK_MAX_LIMIT;
-                frontPosition = FRONT_MAX_LIMIT;
-            } else if (hookPositions == HookPositions.UP) {
-                backPosition = BACK_UP_POSITION;
-                frontPosition = FRONT_UP_POSITION;
-            } else {
-                backPosition = BACK_MIN_LIMIT;
-                frontPosition = FRONT_MIN_LIMIT;
-            }
-            System.out.println(m_backController.setReference(backPosition, ControlType.kPosition));
-            System.out.println(m_frontController.setReference(frontPosition, ControlType.kPosition));
-        });
-    }
+    // public Command setHookPositionCommand(HookPositions hookPositions) {
+    //     return this.runOnce(() -> {
+    //         double backPosition;
+    //         double frontPosition;
+    //         if (hookPositions == HookPositions.AWAY) {
+    //             backPosition = BACK_MAX_LIMIT;
+    //             frontPosition = FRONT_MAX_LIMIT;
+    //         } else if (hookPositions == HookPositions.UP) {
+    //             backPosition = BACK_UP_POSITION;
+    //             frontPosition = FRONT_UP_POSITION;
+    //         } else {
+    //             backPosition = BACK_MIN_LIMIT;
+    //             frontPosition = FRONT_MIN_LIMIT;
+    //         }
+    //         System.out.println(m_backController.setReference(backPosition, ControlType.kPosition));
+    //         System.out.println(m_frontController.setReference(frontPosition, ControlType.kPosition));
+    //     });
+    // }
 
     // public Command setHookPositionCommand(HookPositions hookPositions) {
     //     return this.startRun(() -> this.resetProfile(hookPositions), this::runProfile);
