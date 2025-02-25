@@ -154,6 +154,10 @@ public class Catcher extends SubsystemBase {
                 .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
+    public Command runWheelUntilStoppedCommand() {
+        return runWheelCommand().until(this::wheelsAreStopped);
+    }
+
     public Command wheelBackwardsWhileRaisingArmCommand() {
         return this.runOnce(() -> {
                     m_flywheelsMotor.set(-0.2);

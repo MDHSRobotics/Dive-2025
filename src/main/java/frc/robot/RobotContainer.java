@@ -11,8 +11,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -20,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -32,7 +31,8 @@ import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
-import frc.robot.subsystems.AutoTimer;
+import frc.robot.util.Aiming;
+import frc.robot.util.AutoTimer;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -82,6 +82,8 @@ public class RobotContainer {
             new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
 
     /* Robot States */
+    private final Trigger m_nearCoralStationTrigger = new Trigger(
+            () -> Aiming.isNearCoralStation(m_drivetrain.getState().Pose.getTranslation()));
     private RobotSpeeds m_robotSpeed = RobotSpeeds.MAX_SPEED;
 
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
@@ -130,7 +132,10 @@ public class RobotContainer {
     /**
      * Use this method to define trigger->command mappings that don't involve controller inputs.
      */
-    private void configureTriggers() {}
+    private void configureTriggers() {
+        m_nearCoralStationTrigger.onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.QUARTER_SPEED));
+        m_nearCoralStationTrigger.onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
+    }
 
     /**
      * Use this method to define controller input->command mappings.
@@ -160,9 +165,9 @@ public class RobotContainer {
         driverController.R2().onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.QUARTER_SPEED));
         driverController.R2().onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
         // Select left station
-        driverController.L1().toggleOnTrue(aimingRoutines.alignWithStation(true));
+        driverController.L1().whileTrue(aimingRoutines.alignWithStation(true));
         // Select right station
-        driverController.R1().toggleOnTrue(aimingRoutines.alignWithStation(false));
+        driverController.R1().whileTrue(aimingRoutines.alignWithStation(false));
 
         // Point wheels with right joystick
         // driverController
@@ -176,7 +181,7 @@ public class RobotContainer {
         //         .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
         //                 m_drivetrain.getState().Pose.getRotation())));
 
-        driverController.circle().toggleOnTrue(aimingRoutines.orientToFaceReefWall());
+        driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -254,15 +259,9 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
-                "Intake Coral", m_catcher.runWheelCommand().withTimeout(2));
-        NamedCommands.registerCommand(
-            "Start Auto Timer", Commands.runOnce(() -> {
-                                            m_autoTimer.resetAndStart();
-                                        }));
-        NamedCommands.registerCommand(
-            "End Auto Timer", Commands.runOnce(() -> {
-                                            m_autoTimer.stopAndPublish();
-                                        }));
+                "Intake Coral", m_catcher.runWheelUntilStoppedCommand().withTimeout(2));
+        NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
+        NamedCommands.registerCommand("End Auto Timer", Commands.runOnce(m_autoTimer::stopAndPublish));
     }
 
     /**
@@ -270,11 +269,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        Command autoChooserCommand = autoChooser.getSelected();
-
-        System.out.println("Starting auto: " + autoChooserCommand.getName());
-     
-        return autoChooserCommand;
+        return autoChooser.getSelected();
     }
 
     /**
