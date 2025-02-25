@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Bottom to L1 6"
+            "pathName": "Middle to L1 1"
           }
         },
         {
@@ -25,7 +25,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "L1 6 to Bottom Station"
+            "pathName": "L1 1 to Bottom Station"
           }
         },
         {
@@ -59,6 +59,18 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Bottom Station to L1 4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Eject Coral"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "End Auto Timer"
@@ -68,6 +80,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Bottom",
+  "folder": "Middle",
   "choreoAuto": false
 }

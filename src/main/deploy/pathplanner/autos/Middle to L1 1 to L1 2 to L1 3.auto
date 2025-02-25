@@ -59,6 +59,18 @@
           }
         },
         {
+          "type": "path",
+          "data": {
+            "pathName": "Top Station to L1 3"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Eject Coral"
+          }
+        },
+        {
           "type": "named",
           "data": {
             "name": "End Auto Timer"

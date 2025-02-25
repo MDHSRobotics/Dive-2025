@@ -13,7 +13,31 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Bottom to L1 5"
+            "pathName": "Bottom to L1 6"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Eject Coral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "L1 6 to Bottom Station"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Intake Coral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Bottom Station to L1 5"
           }
         },
         {
@@ -37,25 +61,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Bottom Station to L1 6"
+            "pathName": "Bottom Station to L1 4"
           }
         },
         {
           "type": "named",
           "data": {
             "name": "Eject Coral"
-          }
-        },
-        {
-          "type": "path",
-          "data": {
-            "pathName": "L1 6 to Bottom Station"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Intake Coral"
           }
         },
         {

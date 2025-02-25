@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Top to L1 4"
+            "pathName": "Top to L1 2"
           }
         },
         {
@@ -25,7 +25,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "L1 4 to Top Station"
+            "pathName": "L1 2 to Top Station"
           }
         },
         {
@@ -56,6 +56,18 @@
           "type": "named",
           "data": {
             "name": "Intake Coral"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Top Station to L1 4"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "Eject Coral"
           }
         },
         {
