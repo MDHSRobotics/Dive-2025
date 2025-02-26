@@ -6,7 +6,6 @@ package frc.robot.subsystems.climb;
 
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
-import com.revrobotics.spark.SparkAbsoluteEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
@@ -28,8 +27,8 @@ public class Climb extends SubsystemBase {
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
 
-    private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
-    private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
+    // private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
+    // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
 
     // private final SysIdRoutine m_backRoutine = new SysIdRoutine(
     //         new SysIdRoutine.Config(Volts.of(0.5).per(Second), Volts.of(2), null),
@@ -65,29 +64,50 @@ public class Climb extends SubsystemBase {
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Climb() {
-        SparkFlexConfig config = new SparkFlexConfig();
-        config.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
-        config.absoluteEncoder
+        SparkFlexConfig backConfig = new SparkFlexConfig();
+        backConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        backConfig
+                .absoluteEncoder
                 .zeroOffset(BACK_ZERO_OFFSET)
                 .positionConversionFactor(POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR);
-        config.softLimit
-                .forwardSoftLimit(BACK_MAX_LIMIT)
-                .forwardSoftLimitEnabled(true)
-                .reverseSoftLimit(BACK_MIN_LIMIT)
-                .reverseSoftLimitEnabled(true);
+        // backConfig
+        //         .softLimit
+        //         .forwardSoftLimit(BACK_MAX_LIMIT)
+        //         .forwardSoftLimitEnabled(true)
+        //         .reverseSoftLimit(BACK_MIN_LIMIT)
+        //         .reverseSoftLimitEnabled(true);
         // config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
-        config.signals
+        backConfig
+                .signals
                 .absoluteEncoderPositionPeriodMs(10)
                 .absoluteEncoderPositionAlwaysOn(true)
                 .absoluteEncoderVelocityPeriodMs(10)
                 .absoluteEncoderVelocityAlwaysOn(true);
-        m_backHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_backHookMotor.configure(backConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        config.inverted(true);
-        config.absoluteEncoder.zeroOffset(FRONT_ZERO_OFFSET);
-        config.softLimit.forwardSoftLimit(FRONT_MAX_LIMIT).reverseSoftLimit(FRONT_MIN_LIMIT);
-        m_frontHookMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        SparkFlexConfig frontConfig = new SparkFlexConfig();
+        frontConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        frontConfig
+                .absoluteEncoder
+                .zeroOffset(FRONT_ZERO_OFFSET)
+                .positionConversionFactor(POSITION_CONVERSION_FACTOR)
+                .velocityConversionFactor(VELOCITY_CONVERSION_FACTOR)
+                .inverted(true);
+        // frontConfig
+        //         .softLimit
+        //         .forwardSoftLimit(FRONT_MAX_LIMIT)
+        //         .forwardSoftLimitEnabled(true)
+        //         .reverseSoftLimit(FRONT_MIN_LIMIT)
+        //         .reverseSoftLimitEnabled(true);
+        // config.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P).d(K_D);
+        frontConfig
+                .signals
+                .absoluteEncoderPositionPeriodMs(10)
+                .absoluteEncoderPositionAlwaysOn(true)
+                .absoluteEncoderVelocityPeriodMs(10)
+                .absoluteEncoderVelocityAlwaysOn(true);
+        m_frontHookMotor.configure(frontConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // pGainEntry.set(K_P);
         // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
@@ -149,7 +169,7 @@ public class Climb extends SubsystemBase {
 
     public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
-            m_backHookMotor.set(-backMotorPowerSupplier.getAsDouble() * 0.25);
+            m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.25);
             m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.25);
         });
     }

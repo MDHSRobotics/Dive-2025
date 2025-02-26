@@ -6,6 +6,7 @@ import static frc.robot.subsystems.drive.DriveConstants.*;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -120,6 +121,22 @@ public class AimingRoutines {
                 } else if (alliance == Alliance.Red) {
                     driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[2]);
                 }
+            }
+
+            return driveFacingAngle
+                    .withVelocityX(m_velocityXSupplier.getAsDouble())
+                    .withVelocityY(m_velocityYSupplier.getAsDouble())
+                    .withDeadband(m_deadbandSupplier.getAsDouble());
+        });
+    }
+
+    public Command alignWithProcessor() {
+        return m_drivetrain.applyProfiledRequest(() -> {
+            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+            if (alliance == Alliance.Blue) {
+                driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
+            } else {
+                driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
             }
 
             return driveFacingAngle

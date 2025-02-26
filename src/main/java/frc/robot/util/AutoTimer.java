@@ -1,11 +1,10 @@
 package frc.robot.util;
 
-import java.text.DecimalFormat;
-import java.time.LocalTime;
-
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Timer;
+import java.text.DecimalFormat;
+import java.time.LocalTime;
 
 public class AutoTimer {
 
@@ -35,9 +34,10 @@ public class AutoTimer {
     public void publish(Object message) {
         m_autoTimePub.set(m_autoTimer.get());
         DecimalFormat df = new DecimalFormat("#.##");
-        System.out.println("AutoTimer "  + message + " @ " + LocalTime.now()+ ": " + df.format(m_autoTimer.get()) + " s");
-    }   
-    
+        System.out.println(
+                "AutoTimer " + message + " @ " + LocalTime.now() + ": " + df.format(m_autoTimer.get()) + " s");
+    }
+
     public void stopAndPublish() {
         m_autoTimer.stop();
         publish("Completion");
