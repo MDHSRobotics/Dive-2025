@@ -254,11 +254,11 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Lower Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
         NamedCommands.registerCommand(
-                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(1));
+                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(0.5));
         NamedCommands.registerCommand(
                 "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
-                "Intake Coral", m_catcher.runWheelCommand().withTimeout(2));
+                "Intake Coral", m_catcher.runWheelCommand().withTimeout(1.5));
         NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
         NamedCommands.registerCommand("End Auto Timer", Commands.runOnce(m_autoTimer::stopAndPublish));
     }
