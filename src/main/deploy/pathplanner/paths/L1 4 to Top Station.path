@@ -12,20 +12,20 @@
         "y": 5.13184659090909
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "L1 4"
     },
     {
       "anchor": {
-        "x": 1.4240131578947368,
-        "y": 7.103947368421052
+        "x": 1.3470394736842104,
+        "y": 7.180921052631579
       },
       "prevControl": {
-        "x": 2.8618465909090913,
-        "y": 5.889687499999999
+        "x": 2.784872906698565,
+        "y": 5.966661184210526
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Top Station"
     }
   ],
   "rotationTargets": [
