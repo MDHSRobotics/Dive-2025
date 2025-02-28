@@ -10,6 +10,8 @@ public class ClimbConstants {
     /** The CAN id of the right motor. */
     public static final int FRONT_ID = 3;
 
+    public static final int CAGE_BEAM_BREAK_DIO_CHANNEL = 7;
+
     /**
      * The current limit for the climb motors in amps.
      * This is currently set to the value suggested by

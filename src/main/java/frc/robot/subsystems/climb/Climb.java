@@ -12,6 +12,10 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import edu.wpi.first.networktables.BooleanPublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -26,6 +30,8 @@ public class Climb extends SubsystemBase {
 
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
+
+    private final DigitalInput m_cageBeamBreak = new DigitalInput(CAGE_BEAM_BREAK_DIO_CHANNEL);
 
     // private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
     // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
@@ -51,8 +57,10 @@ public class Climb extends SubsystemBase {
     // private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
     // private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
 
-    // private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    // private final NetworkTable table = inst.getTable("Climb");
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable table = inst.getTable("Climb");
+    private final BooleanPublisher cageBeamBroken =
+            table.getBooleanTopic("Beam Broken").publish();
     // private final DoublePublisher targetPositionPub =
     //         table.getDoubleTopic("Target Position (radians)").publish();
     // private final DoubleEntry pGainEntry =
@@ -118,6 +126,11 @@ public class Climb extends SubsystemBase {
         //     m_frontHookMotor.configureAsync(
         //             tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         // });
+    }
+
+    @Override
+    public void periodic() {
+        cageBeamBroken.set(!m_cageBeamBreak.get());
     }
 
     // private void resetProfile(HookPositions hookPositions) {
