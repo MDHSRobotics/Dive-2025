@@ -12,7 +12,6 @@ import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.Mass;
@@ -83,19 +82,6 @@ public class DriveConstants {
      */
     public static final double MAX_ANGULAR_RATE =
             RadiansPerSecond.of(MAX_LINEAR_SPEED / DRIVEBASE_RADIUS.in(Meters)).in(RadiansPerSecond);
-
-    /**
-     * Max angular acceleration of the robot.
-     * This is currently set to the very highest acceleration in order to avoid limiting acceleration in custom swerve requests.
-     */
-    private static final AngularAcceleration MAX_ANGULAR_ACCEL = RadiansPerSecondPerSecond.of(75.215);
-
-    /**
-     * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
-     * This still needs to be tuned.
-     */
-    public static final TrapezoidProfile.Constraints ANGULAR_MOTION_CONSTRAINTS = new TrapezoidProfile.Constraints(
-            MAX_ANGULAR_RATE / 2.0, MAX_ANGULAR_ACCEL.in(RadiansPerSecondPerSecond) / 2.0);
 
     /**
      * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
