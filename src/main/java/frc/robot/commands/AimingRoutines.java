@@ -17,10 +17,10 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.drive.requests.ProfiledDriveFacingAngle;
-import frc.robot.subsystems.drive.requests.ProfiledDriveFacingNearestPosition;
-import frc.robot.subsystems.drive.requests.ProfiledDriveFacingPosition;
-import frc.robot.subsystems.drive.requests.ProfiledDriveWithVisualServoing;
+import frc.robot.subsystems.drive.requests.DriveFacingAngle;
+import frc.robot.subsystems.drive.requests.DriveFacingNearestPosition;
+import frc.robot.subsystems.drive.requests.DriveFacingPosition;
+import frc.robot.subsystems.drive.requests.DriveWithVisualServoing;
 import frc.robot.subsystems.drive.requests.ProfiledXYHeadingAlignment;
 import frc.robot.util.Aiming;
 import java.util.function.DoubleSupplier;
@@ -42,38 +42,33 @@ public class AimingRoutines {
 
     private final NetworkTable loggingTable = inst.getTable("Swerve Requests");
 
-    private final ProfiledDriveFacingAngle driveFacingAngle = new ProfiledDriveFacingAngle(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-            .withPIDGains(K_ANGULAR_P, 0, 0)
+    private final DriveFacingAngle driveFacingAngle = new DriveFacingAngle(
+                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final ProfiledDriveFacingPosition driveFacingPosition = new ProfiledDriveFacingPosition(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-            .withPIDGains(K_ANGULAR_P, 0, 0)
+    private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(
+                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final ProfiledDriveFacingNearestPosition driveFacingNearestPosition =
-            new ProfiledDriveFacingNearestPosition(ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-                    .withPIDGains(K_ANGULAR_P, 0, 0)
-                    .withTolerance(GOAL_TOLERANCE)
-                    .withDriveRequestType(DriveRequestType.Velocity)
-                    .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+    private final DriveFacingNearestPosition driveFacingNearestPosition = new DriveFacingNearestPosition(
+                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
+            .withTolerance(GOAL_TOLERANCE)
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final ProfiledDriveWithVisualServoing driveFacingVisionTarget = new ProfiledDriveWithVisualServoing(
-                    ANGULAR_MOTION_CONSTRAINTS, K_DT, cameraTable, loggingTable)
-            .withPIDGains(K_ANGULAR_P, 0, 0)
+    private final DriveWithVisualServoing driveFacingVisionTarget = new DriveWithVisualServoing(
+                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, cameraTable, loggingTable)
             .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
-                    LINEAR_MOTION_CONSTRAINTS, ANGULAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
+                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
             .withTranslationalPIDGains(K_TRANSLATION_P, 0, K_TRANSLATION_D)
-            .withRotationalPIDGains(K_ANGULAR_P, 0, 0)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
@@ -107,7 +102,7 @@ public class AimingRoutines {
     }
 
     public Command alignWithStation(boolean leftStation) {
-        return m_drivetrain.applyProfiledRequest(() -> {
+        return m_drivetrain.applyResettableRequest(() -> {
             Alliance alliance = DriverStation.getAlliance().orElseThrow();
             if (leftStation) {
                 if (alliance == Alliance.Blue) {
@@ -131,7 +126,7 @@ public class AimingRoutines {
     }
 
     public Command alignWithProcessor() {
-        return m_drivetrain.applyProfiledRequest(() -> {
+        return m_drivetrain.applyResettableRequest(() -> {
             Alliance alliance = DriverStation.getAlliance().orElseThrow();
             if (alliance == Alliance.Blue) {
                 driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
@@ -147,7 +142,7 @@ public class AimingRoutines {
     }
 
     public Command alignWithCage() {
-        return m_drivetrain.applyProfiledRequest(() -> {
+        return m_drivetrain.applyResettableRequest(() -> {
             Alliance alliance = DriverStation.getAlliance().orElseThrow();
             if (alliance == Alliance.Blue) {
                 driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
@@ -177,7 +172,7 @@ public class AimingRoutines {
     public Command orientToFaceReefWall() {
         return Commands.sequence(
                 m_drivetrain
-                        .applyProfiledRequest(() -> {
+                        .applyResettableRequest(() -> {
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
@@ -207,7 +202,7 @@ public class AimingRoutines {
                                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                                         .withDeadband(m_deadbandSupplier.getAsDouble())))
                         .until(() -> Aiming.isReefTag((int) apriltagID.get())),
-                m_drivetrain.applyProfiledRequest(() -> {
+                m_drivetrain.applyResettableRequest(() -> {
                     int id = (int) apriltagID.get();
                     if (Aiming.isReefTag(id)) {
                         driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
@@ -234,7 +229,7 @@ public class AimingRoutines {
     public Command orientToFaceTree() {
         return Commands.sequence(
                 m_drivetrain
-                        .applyProfiledRequest(() -> {
+                        .applyResettableRequest(() -> {
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
@@ -249,7 +244,7 @@ public class AimingRoutines {
                         .until(() ->
                                 driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
                 // Face the selected tree
-                m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
+                m_drivetrain.applyResettableRequest(() -> driveFacingVisionTarget
                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                         .withDeadband(m_deadbandSupplier.getAsDouble())));
@@ -270,7 +265,7 @@ public class AimingRoutines {
     public Command orientToFaceTreeWithoutLimelight() {
         return Commands.sequence(
                 m_drivetrain
-                        .applyProfiledRequest(() -> {
+                        .applyResettableRequest(() -> {
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 driveFacingNearestPosition.withTargetPositions(FieldConstants.BLUE_REEF_TREE_POSITIONS);
@@ -285,7 +280,7 @@ public class AimingRoutines {
                         .until(() ->
                                 driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
                 // Face the tag
-                m_drivetrain.applyProfiledRequest(() -> driveFacingVisionTarget
+                m_drivetrain.applyResettableRequest(() -> driveFacingVisionTarget
                         .withVelocityX(m_velocityXSupplier.getAsDouble())
                         .withVelocityY(m_velocityYSupplier.getAsDouble())
                         .withDeadband(m_deadbandSupplier.getAsDouble())));
@@ -338,6 +333,6 @@ public class AimingRoutines {
 
     /** Drives to the last known target position.  */
     public Command driveToPositionTest() {
-        return m_drivetrain.applyProfiledRequest(() -> driveToPosition);
+        return m_drivetrain.applyResettableRequest(() -> driveToPosition);
     }
 }
