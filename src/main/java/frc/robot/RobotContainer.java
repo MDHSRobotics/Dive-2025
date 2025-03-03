@@ -123,8 +123,8 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_catcher.setDefaultCommand(m_catcher.setArmPositionCommand(CatcherArmPositions.UP));
-        m_intake.setDefaultCommand(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
+        m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
     }
 
     /**
@@ -209,43 +209,41 @@ public class RobotContainer {
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Control+Climb+with+joysticks&leftTrigger=Control+both+Climb+with+left+joystick&leftBumper=Raise+catcher+to+coral+station&rightBumper=Catcher+to+trough&aButton=Raise+catcher+and+run+wheels&bButton=Spit+out+coral&xButton=Run+intake+until+algae+is+collected&yButton=Reverse+intake&dpadUp=Move+intake+to+algae+on+a+coral&dpadDown=Move+intake+to+ground&dpadLeft=&dpadRight=Intake+to+processor&startButton=Remove+algae+from+reef&backButton=Raise+catcher+to+L2+position&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control
+     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Control+Climb+with+joysticks&leftTrigger=Control+both+Climb+with+left+joystick&leftBumper=Raise+catcher+to+coral+station&rightBumper=Catcher+to+trough&aButton=Raise+catcher+and+run+wheels&bButton=Spit+out+coral&xButton=Run+intake+until+algae+is+collected&yButton=Reverse+intake&dpadUp=Move+intake+to+algae+on+a+coral&dpadDown=Move+intake+to+ground&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control
      * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
         operatorController
                 .rightTrigger()
-                .whileTrue(m_climb.motorTestCommand(
+                .whileTrue(m_climb.setPowerCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
         operatorController
                 .leftTrigger()
-                .whileTrue(m_climb.motorTestCommand(
+                .whileTrue(m_climb.setPowerCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
+
         operatorController.leftStick().toggleOnTrue(m_catcher.setArmPowerCommand(() -> -operatorController.getLeftY()));
         operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
+
         operatorController
                 .leftBumper()
                 .toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
         operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
+
         operatorController.a().whileTrue(m_catcher.raiseAndRunWheelCommand());
-        operatorController.a().onFalse(Commands.idle(m_catcher));
         operatorController.b().whileTrue(m_catcher.wheelBackwardsCommand());
-        operatorController.b().onFalse(Commands.idle(m_catcher));
 
-        operatorController.start().whileTrue(m_catcher.wheelBackwardsWhileRaisingArmCommand());
-
+        operatorController.povLeft().whileTrue(m_catcher.wheelBackwardsWhileRaisingArmCommand());
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        operatorController.povRight().onFalse(Commands.idle(m_catcher));
-        operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        operatorController.x().onFalse(Commands.idle(m_intake));
-        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
-        operatorController.y().onFalse(Commands.idle(m_intake));
 
-        operatorController.back().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.L_2));
-        operatorController.back().onFalse(Commands.idle(m_catcher));
+        operatorController.x().whileTrue(m_intake.runWheelsCommand());
+        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
+
+        operatorController.back().onTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
+        operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
     }
 
     /**

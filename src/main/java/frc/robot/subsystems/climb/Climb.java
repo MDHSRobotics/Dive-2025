@@ -181,7 +181,7 @@ public class Climb extends SubsystemBase {
                 .andThen(Commands.idle(this));
     }
 
-    public Command motorTestCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
+    public Command setPowerCommand(DoubleSupplier backMotorPowerSupplier, DoubleSupplier frontMotorPowerSupplier) {
         return this.run(() -> {
             m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.5);
             m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
