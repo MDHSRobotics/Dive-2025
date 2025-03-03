@@ -146,6 +146,22 @@ public class AimingRoutines {
         });
     }
 
+    public Command alignWithCage() {
+        return m_drivetrain.applyProfiledRequest(() -> {
+            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+            if (alliance == Alliance.Blue) {
+                driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
+            } else {
+                driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
+            }
+
+            return driveFacingAngle
+                    .withVelocityX(m_velocityXSupplier.getAsDouble())
+                    .withVelocityY(m_velocityYSupplier.getAsDouble())
+                    .withDeadband(m_deadbandSupplier.getAsDouble());
+        });
+    }
+
     /*
      * This lengthy sequence is for locking on to a reef wall. Here is the explanation:
      * Once the driver presses this button, the robot will orient to face the center of the reef.

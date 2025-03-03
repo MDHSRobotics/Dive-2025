@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -31,7 +30,6 @@ import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
-import frc.robot.util.Aiming;
 import frc.robot.util.AutoTimer;
 
 /**
@@ -82,8 +80,8 @@ public class RobotContainer {
             new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
 
     /* Robot States */
-    private final Trigger m_nearCoralStationTrigger = new Trigger(
-            () -> Aiming.isNearCoralStation(m_drivetrain.getState().Pose.getTranslation()));
+    // private final Trigger m_nearCoralStationTrigger = new Trigger(
+    // () -> Aiming.isNearCoralStation(m_drivetrain.getState().Pose.getTranslation()));
     private RobotSpeeds m_robotSpeed = RobotSpeeds.MAX_SPEED;
 
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
@@ -133,8 +131,8 @@ public class RobotContainer {
      * Use this method to define trigger->command mappings that don't involve controller inputs.
      */
     private void configureTriggers() {
-        m_nearCoralStationTrigger.onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.HALF_SPEED));
-        m_nearCoralStationTrigger.onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
+        // m_nearCoralStationTrigger.onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.HALF_SPEED));
+        // m_nearCoralStationTrigger.onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
     }
 
     /**
@@ -183,6 +181,7 @@ public class RobotContainer {
 
         driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
+        driverController.square().whileTrue(aimingRoutines.alignWithCage());
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -256,11 +255,11 @@ public class RobotContainer {
         NamedCommands.registerCommand(
                 "Lower Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
         NamedCommands.registerCommand(
-                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(1));
+                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(0.5));
         NamedCommands.registerCommand(
                 "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
-                "Intake Coral", m_catcher.runWheelUntilStoppedCommand().withTimeout(2));
+                "Intake Coral", m_catcher.runWheelCommand().withTimeout(1));
         NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
         NamedCommands.registerCommand("End Auto Timer", Commands.runOnce(m_autoTimer::stopAndPublish));
     }
