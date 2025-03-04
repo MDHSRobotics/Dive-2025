@@ -64,8 +64,7 @@ public class DriveConstants {
      * The gain is output linear velocity (meters per second) per error (meters).
      * This still needs to be tuned.
      */
-    public static final double K_TRANSLATION_P =
-            MetersPerSecond.per(Meter).ofNative(0).in(MetersPerSecond.per(Meter));
+    public static final double K_TRANSLATION_P = 0;
 
     /**
      * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
@@ -73,8 +72,7 @@ public class DriveConstants {
      * The gain is output linear velocity (meters per second) per the rate of change of error (meters per second).
      * This still needs to be tuned.
      */
-    public static final double K_TRANSLATION_D =
-            MetersPerSecond.per(MetersPerSecond).ofNative(0).in(MetersPerSecond.per(MetersPerSecond));
+    public static final double K_TRANSLATION_D = 0;
 
     /**
      * Max angular rate of the robot in radians per second.
@@ -89,8 +87,7 @@ public class DriveConstants {
      * The gain is output angular velocity (radians per second) per error (radians).
      * This comes from "Rotation RotationalRate Position.PNG"
      */
-    public static final double K_ANGULAR_P =
-            RadiansPerSecond.per(Radian).ofNative(4).in(RadiansPerSecond.per(Radian));
+    public static final double K_ANGULAR_P = 4;
 
     /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>

@@ -21,26 +21,28 @@ public class IntakeConstants {
      * This is currently set to the value suggested by
      * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
      */
-    public static final int ARM_CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
+    public static final int ARM_CURRENT_LIMIT = 80;
     /**
      * The current limit for the wheels in amps.
      * This is currently set to the value suggested by
      * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO 550.</a>
      */
-    public static final int WHEEL_CURRENT_LIMIT = (int) Amps.of(40).in(Amps);
+    public static final int WHEEL_CURRENT_LIMIT = 40;
 
-    public static final double ARM_MAX_LIMIT = Radians.of(4.424).in(Radians);
-    public static final double ARM_MIN_LIMIT = Radians.of(2.137).in(Radians);
+    /** Units: radians */
+    public static final double ARM_MAX_LIMIT = 4.424;
+    /** Units: radians */
+    public static final double ARM_MIN_LIMIT = 2.137;
 
     /**
      * The conversion of motor input rotations to arm output radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.one().in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).in(RadiansPerSecond);
+            Rotations.per(Minute).one().in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
@@ -53,13 +55,13 @@ public class IntakeConstants {
      * Motor input rotations will be divided by the gear ratio, and then converted to radians.
      */
     public static final double WHEEL_POSITION_CONVERSION_FACTOR =
-            Rotations.of(1).div(4).in(Radians);
+            Rotations.one().div(4).in(Radians);
     /**
      * The conversion of motor input rotations per minute to wheel output radians per second.
      * Motor input rotations per minute will divided by the gear ratio, and converted to radians per second.
      */
     public static final double WHEEL_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).div(4.0).in(RadiansPerSecond);
+            Rotations.per(Minute).one().div(4.0).in(RadiansPerSecond);
 
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
@@ -70,15 +72,13 @@ public class IntakeConstants {
 
     // Common intake positions
     /**
-     * The position that aligns the arm with the algae resting on a coral.
-     * This still needs to be found.
+     * The position that aligns the arm with the algae resting on a coral in radians.
      */
-    public static final double ON_CORAL_PICKUP_POSITION = Radians.of(2.867).in(Radians);
+    public static final double ON_CORAL_PICKUP_POSITION = 2.867;
     /**
-     * The position that aligns the arm with the algae resting on the ground.
-     * This still needs to be found.
+     * The position that aligns the arm with the algae resting on the ground in radians.
      */
-    public static final double GROUND_PICKUP_POSITION = Radians.of(2.168).in(Radians);
-
-    public static final double PROCESSOR_POSITION = Radians.of(2.634).in(Radians);
+    public static final double GROUND_PICKUP_POSITION = 2.168;
+    /** Units: radians */
+    public static final double PROCESSOR_POSITION = 2.634;
 }

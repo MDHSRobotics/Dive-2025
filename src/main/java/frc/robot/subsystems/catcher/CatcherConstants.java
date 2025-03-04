@@ -13,20 +13,22 @@ public class CatcherConstants {
      * This is currently set to the value suggested by
      * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
      */
-    public static final int CURRENT_LIMIT = (int) Amps.of(80).in(Amps);
+    public static final int CURRENT_LIMIT = 80;
 
-    public static final double ARM_MIN_LIMIT = Radians.of(2.22).in(Radians);
-    public static final double ARM_MAX_LIMIT = Radians.of(5.80).in(Radians);
+    /** Units: radians */
+    public static final double ARM_MIN_LIMIT = 2.22;
+    /** Units: radians */
+    public static final double ARM_MAX_LIMIT = 5.80;
 
     /**
      * The conversion of motor input rotations to arm output radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.of(1).in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.one().in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).of(1).in(RadiansPerSecond);
+            Rotations.per(Minute).one().in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
@@ -45,16 +47,17 @@ public class CatcherConstants {
     /**
      * The position that aligns the arm with the trough in radians.
      */
-    public static final double TROUGH_POSITION = Radians.of(5.32).in(Radians);
-
-    public static final double L2_POSITION = Radians.of(4.562).in(Radians);
-    public static final double ALGAE_POSITION = Radians.of(4.91).in(Radians);
+    public static final double TROUGH_POSITION = 5.32;
+    /** Units: radians */
+    public static final double L2_POSITION = 4.562;
+    /** Units: radians */
+    public static final double ALGAE_POSITION = 4.91;
     /**
      * The position that aligns the arm with the coral station in radians.
      * This is the actual position minus a fudge factor that accounts for the weight of gravity.
      */
     public static final double CORAL_STATION_POSITION =
             Radians.of(4.022).minus(Radians.of(0.1)).minus(Degrees.of(1)).in(Radians);
-
-    public static final double UP_POSITION = Radians.of(3.385).in(Radians);
+    /** Units: radians */
+    public static final double UP_POSITION = 3.385;
 }

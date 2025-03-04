@@ -1,8 +1,6 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.RadiansPerSecond;
-import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -41,10 +39,10 @@ public class WheelRadiusCharacterization {
         double gyroDelta = 0.0;
     }
 
-    private static final double WHEEL_RADIUS_MAX_VELOCITY =
-            RadiansPerSecond.of(0.25).in(RadiansPerSecond);
-    private static final double WHEEL_RADIUS_RAMP_RATE =
-            RadiansPerSecondPerSecond.of(0.05).in(RadiansPerSecondPerSecond);
+    /** Units: radians per second */
+    private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25;
+    /** Units: radians per second per second */
+    private static final double WHEEL_RADIUS_RAMP_RATE = 0.05;
 
     public static Command characterizationCommand(CommandSwerveDrivetrain drivetrain) {
         SwerveModule<TalonFX, TalonFX, CANcoder>[] modules = drivetrain.getModules();
