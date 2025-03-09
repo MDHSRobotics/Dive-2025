@@ -6,6 +6,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -43,7 +44,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
     /**
      * The desired positions to face.
      */
-    private List<Translation2d> targetPositions = List.of(new Translation2d());
+    private List<Pose2d> targetPositions = List.of(new Pose2d());
 
     /**
      * The allowable deadband of the request, in m/s.
@@ -136,7 +137,8 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Translation2d targetPosition = parameters.currentPose.getTranslation().nearest(targetPositions);
+        Translation2d targetPosition =
+                parameters.currentPose.nearest(targetPositions).getTranslation();
 
         // Find the angle of the vector that the goal would make if the robot was the origin
         double xDistance = targetPosition.getX() - parameters.currentPose.getX();
@@ -265,7 +267,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @param newTargetPositions Parameter to modify
      * @return this object
      */
-    public DriveFacingNearestPosition withTargetPositions(List<Translation2d> newTargetPositions) {
+    public DriveFacingNearestPosition withTargetPositions(List<Pose2d> newTargetPositions) {
         this.targetPositions = newTargetPositions;
         return this;
     }

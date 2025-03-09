@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import static frc.robot.Constants.K_DT;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -23,6 +22,7 @@ import frc.robot.subsystems.drive.requests.DriveFacingPosition;
 import frc.robot.subsystems.drive.requests.DriveWithVisualServoing;
 import frc.robot.subsystems.drive.requests.ProfiledXYHeadingAlignment;
 import frc.robot.util.Aiming;
+import java.util.List;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -67,8 +67,9 @@ public class AimingRoutines {
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
-                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, K_DT, loggingTable)
-            .withTranslationalPIDGains(K_TRANSLATION_P, 0, K_TRANSLATION_D)
+                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
+            .withTranslationalPIDGains(K_TRANSLATION_P, 0, 0)
+            .withTolerance(GOAL_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
@@ -286,53 +287,78 @@ public class AimingRoutines {
                         .withDeadband(m_deadbandSupplier.getAsDouble())));
     }
 
+    public Command driveToTree() {
+        return driveToNearestPositionCommand(
+                FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS, FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+    }
+
     /**
      * This command attempts to drive in front of the cage,
      * and rotate so that the robot's side opening is facing the cage.
      */
     public Command driveInFrontOfCage() {
-        return m_drivetrain.startRun(
-                () -> {
-                    driveToPosition.resetProfile();
-                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                    Pose2d currentPose = m_drivetrain.getState().Pose;
-                    if (alliance == Alliance.Blue) {
-                        driveToPosition.withTargetPose(
-                                currentPose.nearest(FieldConstants.BLUE_CAGE_STARTING_POSITIONS));
-                    } else {
-                        driveToPosition.withTargetPose(currentPose.nearest(FieldConstants.RED_CAGE_STARTING_POSITIONS));
-                    }
-                    m_drivetrain.setControl(driveToPosition);
-                },
-                () -> m_drivetrain.setControl(driveToPosition));
+        return driveToNearestPositionCommand(
+                FieldConstants.BLUE_CAGE_STARTING_POSITIONS, FieldConstants.RED_CAGE_STARTING_POSITIONS);
     }
 
     /**
      * This command attempts to automatically drive into the cage.
      */
     public Command driveIntoCage() {
+        return driveToNearestPositionCommand(FieldConstants.BLUE_CAGE_POSITIONS, FieldConstants.RED_CAGE_POSITIONS);
+    }
+
+    /**
+     * Drives to the nearest position in the list of the current alliance.
+     * @param bluePositions The list of blue positions to select from
+     * @param redPositions The list of red positions to select from
+     * @return A deferred command that will not generate the path until it is scheduled.
+     */
+    // private Command driveToNearestPositionCommand(List<Pose2d> bluePositions, List<Pose2d> redPositions) {
+    //     return m_drivetrain.defer(() -> {
+    //         Pose2d currentPose = m_drivetrain.getState().Pose;
+    //         Alliance alliance = DriverStation.getAlliance().orElseThrow();
+    //         Pose2d treePose;
+    //         if (alliance == Alliance.Blue) {
+    //             treePose = currentPose.nearest(bluePositions);
+    //         } else {
+    //             treePose = currentPose.nearest(redPositions);
+    //         }
+    //         Translation2d currentToTargetDistance = treePose.getTranslation().minus(currentPose.getTranslation());
+    //         Rotation2d currentToTargetRotation = currentToTargetDistance.getAngle();
+
+    //         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+    //                 new Pose2d(currentPose.getX(), currentPose.getY(), currentToTargetRotation),
+    //                 new Pose2d(treePose.getX(), treePose.getY(), currentToTargetRotation));
+
+    //         PathPlannerPath path = new PathPlannerPath(
+    //                 waypoints,
+    //                 DriveConstants.PATHFINDING_CONSTRAINTS,
+    //                 null,
+    //                 new GoalEndState(0, treePose.getRotation()));
+    //         path.preventFlipping = true;
+
+    //         // System.out.println("Target x: " + Units.metersToInches(treePose.getX()) + "\nTarget y: "
+    //         //         + Units.metersToInches(treePose.getY()) + "\nTarget direction: "
+    //         //         + treePose.getRotation().getDegrees());
+
+    //         return AutoBuilder.followPath(path);
+    //     });
+    // }
+    private Command driveToNearestPositionCommand(List<Pose2d> bluePositions, List<Pose2d> redPositions) {
         return m_drivetrain.startRun(
                 () -> {
                     driveToPosition.resetProfile();
-                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
                     Pose2d currentPose = m_drivetrain.getState().Pose;
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    Pose2d treePose;
                     if (alliance == Alliance.Blue) {
-                        driveToPosition.withTargetPose(currentPose.nearest(FieldConstants.BLUE_CAGE_POSITIONS));
+                        treePose = currentPose.nearest(bluePositions);
                     } else {
-                        driveToPosition.withTargetPose(currentPose.nearest(FieldConstants.RED_CAGE_POSITIONS));
+                        treePose = currentPose.nearest(redPositions);
                     }
-                    m_drivetrain.setControl(driveToPosition);
+                    m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
                 },
                 () -> m_drivetrain.setControl(driveToPosition));
-    }
-
-    /** Sets the current translation and heading as the goal for driveToPosition. */
-    public Command setTargetPoseToCurrentPose() {
-        return m_drivetrain.runOnce(() -> driveToPosition.withTargetPose(m_drivetrain.getState().Pose));
-    }
-
-    /** Drives to the last known target position.  */
-    public Command driveToPositionTest() {
-        return m_drivetrain.applyResettableRequest(() -> driveToPosition);
     }
 }

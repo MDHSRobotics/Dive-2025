@@ -6,6 +6,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -21,10 +22,11 @@ import frc.robot.subsystems.drive.DriveTelemetry;
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a
  * specified x and y position and heading angle to ensure the robot is in the right position and facing the desired direction.
- * Translational alignment is profiled using trapezoid profiles.
  * <p>
  * This swerve request is based on {@link com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle FieldCentricFacingAngle},
  * and makes some other improvements besides the motion profiles.
+ * <p>
+ * Important: You may not change the targetPose while the swerve request is in use.
  */
 public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
     /**
@@ -62,13 +64,13 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
 
     // X position profile and PID controller
     private final TrapezoidProfile xProfile;
-    private TrapezoidProfile.State xSetpoint = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State xStartingState = new TrapezoidProfile.State();
     private final TrapezoidProfile.State xGoal = new TrapezoidProfile.State();
     private final PhoenixPIDController xController = new PhoenixPIDController(0, 0, 0);
 
     // Y position profile and PID controller
     private final TrapezoidProfile yProfile;
-    private TrapezoidProfile.State ySetpoint = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State yStartingState = new TrapezoidProfile.State();
     private final TrapezoidProfile.State yGoal = new TrapezoidProfile.State();
     private final PhoenixPIDController yController = new PhoenixPIDController(0, 0, 0);
 
@@ -76,7 +78,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
     private final PhoenixPIDController headingController;
     private final double maxAngularVelocity;
 
-    private final double kDt;
+    private double startingTimestamp = 0;
 
     private boolean resetRequested = false;
 
@@ -95,22 +97,19 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
-     * @param kDt Update period for the motion profile
      */
     public ProfiledXYHeadingAlignment(
             double kp,
             double ki,
             double kd,
             double maxAngularVelocity,
-            TrapezoidProfile.Constraints linearConstraints,
-            double kDt) {
+            TrapezoidProfile.Constraints linearConstraints) {
         xProfile = new TrapezoidProfile(linearConstraints);
         yProfile = new TrapezoidProfile(linearConstraints);
 
         headingController = new PhoenixPIDController(kp, ki, kd);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
-        this.kDt = kDt;
 
         // Make PID gains tunable from NetworkTables
         SmartDashboard.putData("X Controller", xController);
@@ -133,7 +132,6 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
-     * @param kDt Update period for the motion profile
      * @param loggingPath The NetworkTable to log data into.
      */
     public ProfiledXYHeadingAlignment(
@@ -142,7 +140,6 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
             double kd,
             double maxAngularVelocity,
             TrapezoidProfile.Constraints linearConstraints,
-            double kDt,
             NetworkTable loggingPath) {
         xProfile = new TrapezoidProfile(linearConstraints);
         yProfile = new TrapezoidProfile(linearConstraints);
@@ -150,7 +147,6 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
         headingController = new PhoenixPIDController(kp, ki, kd);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
-        this.kDt = kDt;
 
         // Make PID gains tunable from NetworkTables
         SmartDashboard.putData("X Controller", xController);
@@ -185,19 +181,23 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
         Rotation2d targetDirection = targetPose.getRotation();
 
         if (resetRequested) {
-            xSetpoint.position = currentPose.getX();
-            xSetpoint.velocity = parameters.currentChassisSpeed.vxMetersPerSecond;
-            ySetpoint.position = currentPose.getY();
-            ySetpoint.velocity = parameters.currentChassisSpeed.vyMetersPerSecond;
+            xStartingState.position = currentPose.getX();
+            xStartingState.velocity = parameters.currentChassisSpeed.vxMetersPerSecond;
+            yStartingState.position = currentPose.getY();
+            yStartingState.velocity = parameters.currentChassisSpeed.vyMetersPerSecond;
+            startingTimestamp = parameters.timestamp;
+            xController.reset();
+            yController.reset();
             headingController.reset();
             this.resetRequested = false;
         }
 
-        xSetpoint = xProfile.calculate(kDt, xSetpoint, xGoal);
+        double time = parameters.timestamp - startingTimestamp;
+        TrapezoidProfile.State xSetpoint = xProfile.calculate(time, xStartingState, xGoal);
         double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
         toApplySpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
 
-        ySetpoint = yProfile.calculate(kDt, ySetpoint, yGoal);
+        TrapezoidProfile.State ySetpoint = yProfile.calculate(time, yStartingState, yGoal);
         double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
         toApplySpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
 
@@ -205,20 +205,12 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
         double headingCorrectionOutput = headingController.calculate(
                 currentAngle.getRadians(), targetDirection.getRadians(), parameters.timestamp);
 
-        toApplySpeeds.omegaRadiansPerSecond = headingController.calculate(
-                currentAngle.getRadians(), targetDirection.getRadians(), parameters.timestamp);
-
-        if (maxAngularVelocity > 0.0) {
-            if (toApplySpeeds.omegaRadiansPerSecond > maxAngularVelocity) {
-                toApplySpeeds.omegaRadiansPerSecond = maxAngularVelocity;
-            } else if (toApplySpeeds.omegaRadiansPerSecond < -maxAngularVelocity) {
-                toApplySpeeds.omegaRadiansPerSecond = -maxAngularVelocity;
-            }
-        }
-
         if (headingController.atSetpoint()) {
-            toApplySpeeds.omegaRadiansPerSecond = 0;
+            headingCorrectionOutput = 0;
         }
+
+        toApplySpeeds.omegaRadiansPerSecond =
+                MathUtil.clamp(headingCorrectionOutput, -maxAngularVelocity, maxAngularVelocity);
 
         // If one of the publishers isn't null, all of them were initialized, so log data
         if (this.goalPositionPub != null) {
@@ -344,6 +336,17 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      */
     public ProfiledXYHeadingAlignment withRotationalPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
+        return this;
+    }
+
+    /**
+     * Modifies the setpoint tolerance for the heading controller and returns itself.
+     *
+     * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
+     * @return this object
+     */
+    public ProfiledXYHeadingAlignment withTolerance(Angle toleranceAmount) {
+        this.headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
 }

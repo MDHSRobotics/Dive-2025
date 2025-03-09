@@ -7,7 +7,6 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -16,7 +15,9 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.catcher.CatcherConstants;
 import frc.robot.subsystems.climb.ClimbConstants;
+import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.intake.IntakeConstants;
+import frc.robot.util.Aiming;
 import java.util.List;
 import java.util.Map;
 
@@ -30,12 +31,6 @@ import java.util.Map;
  */
 public final class Constants {
     private Constants() {}
-
-    /**
-     * The amount of time between runs of the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a>
-     * used in every subsystem.
-     */
-    public static final double K_DT = Seconds.of(0.02).in(Seconds);
 
     public static class ControllerConstants {
         private ControllerConstants() {}
@@ -91,66 +86,158 @@ public final class Constants {
         public static final Translation2d BLUE_REEF_CENTER = new Translation2d(Inches.of(176.183), Inches.of(158.500));
         public static final Translation2d RED_REEF_CENTER = new Translation2d(Inches.of(513.568), Inches.of(158.500));
 
-        /**
-         * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
-         */
-        public static final List<Translation2d> BLUE_REEF_TREE_POSITIONS = List.of(
-                // A
-                new Translation2d(Inches.of(145.490), Inches.of(164.968)),
-                // B
-                new Translation2d(Inches.of(145.445), Inches.of(152.030)),
-                // C
-                new Translation2d(Inches.of(155.234), Inches.of(135.152)),
-                // D
-                new Translation2d(Inches.of(166.416), Inches.of(128.645)),
-                // E
-                new Translation2d(Inches.of(185.927), Inches.of(128.684)),
-                // F
-                new Translation2d(Inches.of(197.154), Inches.of(135.113)),
-                // G
-                new Translation2d(Inches.of(206.876), Inches.of(152.030)),
-                // H
-                new Translation2d(Inches.of(206.921), Inches.of(164.968)),
-                // I
-                new Translation2d(Inches.of(197.132), Inches.of(181.846)),
-                // J
-                new Translation2d(Inches.of(185.950), Inches.of(188.354)),
-                // K
-                new Translation2d(Inches.of(166.439), Inches.of(188.315)),
-                // L
-                new Translation2d(Inches.of(155.212), Inches.of(181.885)));
+        private static final Rotation2d k60deg = Rotation2d.fromDegrees(60);
+        private static final Rotation2d k120deg = Rotation2d.fromDegrees(120);
+        private static final Rotation2d k240deg = Rotation2d.fromDegrees(240);
+        private static final Rotation2d k300deg = Rotation2d.fromDegrees(300);
 
         /**
          * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
+         * The rotation represents which way the robot needs to face to be aligned with the tree's wall.
          */
-        public static final List<Translation2d> RED_REEF_TREE_POSITIONS = List.of(
+        public static final List<Pose2d> BLUE_REEF_TREE_POSITIONS = List.of(
                 // A
-                new Translation2d(Inches.of(544.261), Inches.of(152.030)),
+                new Pose2d(Inches.of(145.490), Inches.of(164.968), Rotation2d.kZero),
                 // B
-                new Translation2d(Inches.of(544.306), Inches.of(164.968)),
+                new Pose2d(Inches.of(145.445), Inches.of(152.030), Rotation2d.kZero),
                 // C
-                new Translation2d(Inches.of(534.517), Inches.of(181.846)),
+                new Pose2d(Inches.of(155.234), Inches.of(135.152), k60deg),
                 // D
-                new Translation2d(Inches.of(523.335), Inches.of(188.354)),
+                new Pose2d(Inches.of(166.416), Inches.of(128.645), k60deg),
                 // E
-                new Translation2d(Inches.of(503.823), Inches.of(188.315)),
+                new Pose2d(Inches.of(185.927), Inches.of(128.684), k120deg),
                 // F
-                new Translation2d(Inches.of(492.597), Inches.of(181.885)),
+                new Pose2d(Inches.of(197.154), Inches.of(135.113), k120deg),
                 // G
-                new Translation2d(Inches.of(482.875), Inches.of(164.968)),
+                new Pose2d(Inches.of(206.876), Inches.of(152.030), Rotation2d.k180deg),
                 // H
-                new Translation2d(Inches.of(482.830), Inches.of(152.030)),
+                new Pose2d(Inches.of(206.921), Inches.of(164.968), Rotation2d.k180deg),
                 // I
-                new Translation2d(Inches.of(492.619), Inches.of(135.152)),
+                new Pose2d(Inches.of(197.132), Inches.of(181.846), k240deg),
                 // J
-                new Translation2d(Inches.of(503.801), Inches.of(128.645)),
+                new Pose2d(Inches.of(185.950), Inches.of(188.354), k240deg),
                 // K
-                new Translation2d(Inches.of(523.312), Inches.of(128.684)),
+                new Pose2d(Inches.of(166.439), Inches.of(188.315), k300deg),
                 // L
-                new Translation2d(Inches.of(534.539), Inches.of(135.113)));
+                new Pose2d(Inches.of(155.212), Inches.of(181.885), k300deg));
 
-        public static final Pose2d PATHFINDING_TEST_POSE =
-                new Pose2d(Meters.of(3.098), Meters.of(4.2), Rotation2d.k180deg);
+        /**
+         * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
+         * The rotation represents which way the robot needs to face to be aligned with the tree's wall.
+         */
+        public static final List<Pose2d> RED_REEF_TREE_POSITIONS = List.of(
+                // A
+                new Pose2d(Inches.of(544.261), Inches.of(152.030), Rotation2d.k180deg),
+                // B
+                new Pose2d(Inches.of(544.306), Inches.of(164.968), Rotation2d.k180deg),
+                // C
+                new Pose2d(Inches.of(534.517), Inches.of(181.846), k240deg),
+                // D
+                new Pose2d(Inches.of(523.335), Inches.of(188.354), k240deg),
+                // E
+                new Pose2d(Inches.of(503.823), Inches.of(188.315), k300deg),
+                // F
+                new Pose2d(Inches.of(492.597), Inches.of(181.885), k300deg),
+                // G
+                new Pose2d(Inches.of(482.875), Inches.of(164.968), Rotation2d.kZero),
+                // H
+                new Pose2d(Inches.of(482.830), Inches.of(152.030), Rotation2d.kZero),
+                // I
+                new Pose2d(Inches.of(492.619), Inches.of(135.152), k60deg),
+                // J
+                new Pose2d(Inches.of(503.801), Inches.of(128.645), k60deg),
+                // K
+                new Pose2d(Inches.of(523.312), Inches.of(128.684), k120deg),
+                // L
+                new Pose2d(Inches.of(534.539), Inches.of(135.113), k120deg));
+
+        /** Distance from tree to reef wall */
+        private static final Distance TREE_TO_REEF_WALL_DISTANCE = Inches.of(2);
+
+        /** Distance from tree to center of robot in meters */
+        private static final double TREE_TO_ROBOT_DISTANCE = TREE_TO_REEF_WALL_DISTANCE
+                .plus(DriveConstants.CENTER_TO_BUMPER_LENGTH)
+                .in(Meters);
+
+        /**
+         * This is a list of positions for the robot to drive to so that it is right in front of the tree, and facing the tree's wall.
+         */
+        public static final List<Pose2d> BLUE_REEF_TREE_AIMING_POSITIONS = List.of(
+                // A
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(0), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                // B
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(1), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                // C
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(2), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                // D
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(3), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                // E
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(4), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)),
+                // F
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(5), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)),
+                // G
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(6), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                // H
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(7), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                // I
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(8), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                // J
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(9), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                // K
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(10), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)),
+                // L
+                Aiming.translatePose(
+                        BLUE_REEF_TREE_POSITIONS.get(11), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)));
+
+        /**
+         * This is a list of positions for the robot to drive to so that it is right in front of the tree, and facing the tree's wall.
+         */
+        public static final List<Pose2d> RED_REEF_TREE_AIMING_POSITIONS = List.of(
+                // A
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(0), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                // B
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(1), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                // C
+                Aiming.translatePose(RED_REEF_TREE_POSITIONS.get(2), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                // D
+                Aiming.translatePose(RED_REEF_TREE_POSITIONS.get(3), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                // E
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(4), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)),
+                // F
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(5), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)),
+                // G
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(6), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                // H
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(7), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                // I
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(8), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                // J
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(9), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                // K
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(10), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)),
+                // L
+                Aiming.translatePose(
+                        RED_REEF_TREE_POSITIONS.get(11), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)));
 
         /**
          * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
@@ -192,13 +279,8 @@ public final class Constants {
          * These rotations correspond to the Z-Rotation of the reef wall tags on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a>
          * plus 180 degrees.
          */
-        public static final List<Rotation2d> REEF_WALL_ROTATIONS = List.of(
-                new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-                new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
-                new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
-                new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-                new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
-                new Rotation2d(Degrees.of(120).plus(Degrees.of(180))));
+        public static final List<Rotation2d> REEF_WALL_ROTATIONS =
+                List.of(Rotation2d.kZero, k60deg, k120deg, Rotation2d.k180deg, k240deg, k300deg);
 
         /**
          * Rotations of the Apriltags for aligning perpendicular to them.

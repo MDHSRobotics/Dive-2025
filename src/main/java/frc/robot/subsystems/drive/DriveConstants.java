@@ -5,17 +5,14 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.VoltageUnit;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearAcceleration;
 import edu.wpi.first.units.measure.Mass;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Per;
@@ -27,6 +24,11 @@ import edu.wpi.first.units.measure.Per;
  */
 public class DriveConstants {
     private DriveConstants() {}
+
+    /**
+     * Distance between center to front bumper in meters
+     */
+    public static final Distance CENTER_TO_BUMPER_LENGTH = Inches.of(16);
 
     /**
      * Distance between front left module (cancoder) and front right module (cancoder)
@@ -49,16 +51,11 @@ public class DriveConstants {
     public static final double MAX_LINEAR_SPEED = MetersPerSecond.of(4).in(MetersPerSecond);
 
     /**
-     * Max linear acceleration of the robot to use in custom swerve requests.
-     */
-    public static final LinearAcceleration MAX_LINEAR_ACCEL = MetersPerSecondPerSecond.of(4);
-
-    /**
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
      * This still needs to be tuned.
      */
     public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
-            new TrapezoidProfile.Constraints(MAX_LINEAR_SPEED / 2.0, MAX_LINEAR_ACCEL.in(MetersPerSecondPerSecond));
+            new TrapezoidProfile.Constraints(4.0, 4.0);
 
     /**
      * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
@@ -66,15 +63,7 @@ public class DriveConstants {
      * The gain is output linear velocity (meters per second) per error (meters).
      * This still needs to be tuned.
      */
-    public static final double K_TRANSLATION_P = 0;
-
-    /**
-     * Derivative gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
-     * used in custom swerve requests.
-     * The gain is output linear velocity (meters per second) per the rate of change of error (meters per second).
-     * This still needs to be tuned.
-     */
-    public static final double K_TRANSLATION_D = 0;
+    public static final double K_TRANSLATION_P = 2.5;
 
     /**
      * Max angular rate of the robot in radians per second.
@@ -180,6 +169,6 @@ public class DriveConstants {
     public static final RobotConfig PATHPLANNER_CONFIG =
             new RobotConfig(ROBOT_MASS, ROBOT_MOI, MODULE_CONFIG, MODULE_OFFSETS);
 
-    public static final PathConstraints PATHFINDING_CONSTRAINTS =
-            new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(321), 12);
+    // public static final PathConstraints PATHFINDING_CONSTRAINTS =
+    //         new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
 }

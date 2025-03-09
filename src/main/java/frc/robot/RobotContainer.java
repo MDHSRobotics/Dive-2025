@@ -110,6 +110,7 @@ public class RobotContainer {
         autoChooser.addOption(
                 "Drive Wheel Radius Characterization",
                 WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
+        autoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
         SmartDashboard.putData("Select your auto:", autoChooser);
 
         // Select left tree on startup
@@ -182,11 +183,7 @@ public class RobotContainer {
         driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
         driverController.square().whileTrue(aimingRoutines.alignWithCage());
-
-        driverController
-                .povUp()
-                .toggleOnTrue(AutoBuilder.pathfindToPoseFlipped(
-                        FieldConstants.PATHFINDING_TEST_POSE, DriveConstants.PATHFINDING_CONSTRAINTS));
+        driverController.cross().whileTrue(aimingRoutines.driveToTree());
 
         /*
          * Run SysId routines when holding back/start and X/Y.
