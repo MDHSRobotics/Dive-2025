@@ -5,9 +5,11 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.VoltageUnit;
@@ -177,4 +179,7 @@ public class DriveConstants {
 
     public static final RobotConfig PATHPLANNER_CONFIG =
             new RobotConfig(ROBOT_MASS, ROBOT_MOI, MODULE_CONFIG, MODULE_OFFSETS);
+
+    public static final PathConstraints PATHFINDING_CONSTRAINTS =
+            new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(321), 12);
 }

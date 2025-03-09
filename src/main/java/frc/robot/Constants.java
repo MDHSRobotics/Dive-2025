@@ -47,8 +47,7 @@ public final class Constants {
     public static class VisionConstants {
         private VisionConstants() {}
 
-        public static final String FRONT_LIMELIGHT_NAME = "limelight-front";
-
+        public static final String FRONT_LIMELIGHT_NAME = "limelight";
         /**
          * Distance from the center of the robot to the front limelight lens in meters.
          */
@@ -58,6 +57,8 @@ public final class Constants {
          * Distance from the floor to the front limelight lens in meters.
          */
         public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(8.5).in(Meters);
+
+        public static final String BACK_LIMELIGHT_NAME = "limelight-top";
 
         /*
          * Used for setting the limelight's fiducial 3D offset.
@@ -147,6 +148,9 @@ public final class Constants {
                 new Translation2d(Inches.of(523.312), Inches.of(128.684)),
                 // L
                 new Translation2d(Inches.of(534.539), Inches.of(135.113)));
+
+        public static final Pose2d PATHFINDING_TEST_POSE =
+                new Pose2d(Meters.of(3.098), Meters.of(4.2), Rotation2d.k180deg);
 
         /**
          * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.

@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Meters;
 
 import com.ctre.phoenix6.SignalLogger;
+import com.pathplanner.lib.commands.PathfindingCommand;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
@@ -68,6 +69,8 @@ public class Robot extends TimedRobot {
         DriverStation.startDataLog(DataLogManager.getLog(), true);
         URCL.start(Constants.REV_CAN_ID_ALIASES);
         SignalLogger.start();
+
+        PathfindingCommand.warmupCommand().schedule();
     }
 
     /**
