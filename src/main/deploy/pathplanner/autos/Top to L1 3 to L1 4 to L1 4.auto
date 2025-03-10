@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "named",
-          "data": {
-            "name": "Start Auto Timer"
-          }
-        },
-        {
           "type": "path",
           "data": {
             "pathName": "Top to L1 3"
