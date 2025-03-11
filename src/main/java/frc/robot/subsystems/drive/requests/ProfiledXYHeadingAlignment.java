@@ -195,10 +195,16 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
         double time = parameters.timestamp - startingTimestamp;
         TrapezoidProfile.State xSetpoint = xProfile.calculate(time, xStartingState, xGoal);
         double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
+        if (xController.atSetpoint()) {
+            xCorrectionOutput = 0;
+        }
         toApplySpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
 
         TrapezoidProfile.State ySetpoint = yProfile.calculate(time, yStartingState, yGoal);
         double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
+        if (yController.atSetpoint()) {
+            yCorrectionOutput = 0;
+        }
         toApplySpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
@@ -345,8 +351,20 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withTolerance(Angle toleranceAmount) {
+    public ProfiledXYHeadingAlignment withHeadingTolerance(Angle toleranceAmount) {
         this.headingController.setTolerance(toleranceAmount.in(Radians));
+        return this;
+    }
+
+    /**
+     * Modifies the setpoint tolerance for the x and y controllers and returns itself.
+     *
+     * @param toleranceAmount The maximum amount of distance the robot can be from its goal when calling atSetpoint().
+     * @return this object
+     */
+    public ProfiledXYHeadingAlignment withLinearTolerance(Distance toleranceAmount) {
+        this.xController.setTolerance(toleranceAmount.in(Meters));
+        this.yController.setTolerance(toleranceAmount.in(Meters));
         return this;
     }
 }

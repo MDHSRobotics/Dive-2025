@@ -5,9 +5,11 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.AngularAccelerationUnit;
 import edu.wpi.first.units.LinearAccelerationUnit;
 import edu.wpi.first.units.VoltageUnit;
@@ -83,9 +85,14 @@ public class DriveConstants {
     /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
      * used in custom swerve requests.
-     * This still needs to be tuned.
      */
-    public static final Angle GOAL_TOLERANCE = Degrees.of(2);
+    public static final Angle HEADING_TOLERANCE = Degrees.of(2);
+
+    /**
+     * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
+     * used in custom swerve requests.
+     */
+    public static final Distance LINEAR_TOLERANCE = Inches.of(1);
 
     /**
      * Multiply wheel rotations by this number to convert to meters.
@@ -169,6 +176,6 @@ public class DriveConstants {
     public static final RobotConfig PATHPLANNER_CONFIG =
             new RobotConfig(ROBOT_MASS, ROBOT_MOI, MODULE_CONFIG, MODULE_OFFSETS);
 
-    // public static final PathConstraints PATHFINDING_CONSTRAINTS =
-    //         new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
+    public static final PathConstraints PATHFINDING_CONSTRAINTS =
+            new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
 }
