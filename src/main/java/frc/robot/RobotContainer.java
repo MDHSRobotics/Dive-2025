@@ -101,6 +101,7 @@ public class RobotContainer {
                 WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
         autoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
         autoChooser.addOption("Drive to front of nearest cage", aimingRoutines.driveInFrontOfCage());
+        autoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
         SmartDashboard.putData("Select your auto:", autoChooser);
 
         // Select left tree on startup
