@@ -84,12 +84,9 @@ public class AimingRoutines {
     /**
      * Constructs an object that provides <a href="https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#non-static-command-factories">instanced command factories</a> for swerve drive aiming.
      * @param drivetrain The drivetrain to drive and aim with.
-     * @param backupDrive A backup driving request to use in case the custom requests cannot be used.
      * @param velocityXSupplier A method reference or lambda that returns X velocity.
      * @param velocityYSupplierA method reference or lambda that returns Y velocity.
-     * @param rotationalRateSupplier A method reference or lambda that returns rotational rate. Only used in backup driving.
      * @param deadbandSupplier A method reference or lambda that returns deadband.
-     * @param rotationalDeadbandSupplier A method reference or lambda that returns rotational deadband. Only used in backup driving.
      */
     public AimingRoutines(
             CommandSwerveDrivetrain drivetrain,

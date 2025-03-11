@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static frc.robot.subsystems.drive.DriveConstants.K_ANGULAR_P;
-
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -58,15 +56,6 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final SwerveRequest.FieldCentricFacingAngle driveFacingAngle = new SwerveRequest.FieldCentricFacingAngle()
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withSteerRequestType(SteerRequestType.MotionMagicExpo)
-            .withHeadingPID(K_ANGULAR_P, 0, 0);
-
-    private final SwerveRequest.PointWheelsAt pointWheelsAt = new SwerveRequest.PointWheelsAt()
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-
     // private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
     //         new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
 
@@ -111,6 +100,7 @@ public class RobotContainer {
                 "Drive Wheel Radius Characterization",
                 WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
         autoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
+        autoChooser.addOption("Drive to front of nearest cage", aimingRoutines.driveInFrontOfCage());
         SmartDashboard.putData("Select your auto:", autoChooser);
 
         // Select left tree on startup

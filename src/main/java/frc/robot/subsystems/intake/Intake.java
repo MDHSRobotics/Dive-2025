@@ -1,6 +1,5 @@
 package frc.robot.subsystems.intake;
 
-import static frc.robot.Constants.*;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
 import com.revrobotics.RelativeEncoder;
@@ -16,13 +15,10 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.networktables.BooleanPublisher;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -43,16 +39,12 @@ public class Intake extends SubsystemBase {
     /*Break Beam Sensor */
     private final RelativeEncoder m_flywheelEncoder = m_flywheelLeftMotor.getEncoder();
 
-    private final DigitalInput m_armBeamBreak = new DigitalInput(ARM_BEAM_BEAK_DIO_CHANNEL);
-
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable table = inst.getTable("Intake");
     private final DoubleEntry flyheelSpeedEntry =
             table.getDoubleTopic("Flywheel Speed").getEntry(1);
-    private final BooleanPublisher beamBreakPub =
-            table.getBooleanTopic("Beam Broken").publish(PubSubOption.sendAll(true));
     private final DoublePublisher targetPositionPub =
             table.getDoubleTopic("Target Position (radians)").publish();
     // private final DoubleEntry pGainEntry =
@@ -116,15 +108,6 @@ public class Intake extends SubsystemBase {
         //     m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters,
         // PersistMode.kNoPersistParameters);
         // });
-    }
-
-    @Override
-    public void periodic() {
-        beamBreakPub.set(!m_armBeamBreak.get());
-    }
-
-    private boolean beamIsBroken() {
-        return !m_armBeamBreak.get();
     }
 
     private boolean wheelsAreStopped() {
