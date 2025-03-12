@@ -1,4 +1,4 @@
-package frc.robot.subsystems.catcher;
+package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.*;
 
@@ -7,6 +7,7 @@ import edu.wpi.first.units.measure.Distance;
 public class ElevatorConstants {
     private ElevatorConstants() {}
 
+    public static final int ELEVATOR_ID = 15;
     public static final int ARM_ID = 4;
     public static final int WHEELS_ID = 5;
 
