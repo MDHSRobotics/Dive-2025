@@ -53,7 +53,16 @@ public final class Constants {
          */
         public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(8.5).in(Meters);
 
-        public static final String BACK_LIMELIGHT_NAME = "limelight-top";
+        public static final String BACK_LIMELIGHT_NAME = "limelight-back";
+        /**
+         * Distance from the center of the robot to the front limelight lens in meters.
+         */
+        public static final double BACK_LIMELIGHT_FORWARD_OFFSET =
+                Inches.of(-7.25).in(Meters);
+        /**
+         * Distance from the floor to the front limelight lens in meters.
+         */
+        public static final double BACK_LIMELIGHT_UP_OFFSET = Inches.of(-100).in(Meters);
 
         /*
          * Used for setting the limelight's fiducial 3D offset.

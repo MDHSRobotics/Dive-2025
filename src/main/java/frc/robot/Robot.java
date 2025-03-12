@@ -59,6 +59,14 @@ public class Robot extends TimedRobot {
                 0,
                 0,
                 0);
+        LimelightHelpers.setCameraPose_RobotSpace(
+                VisionConstants.BACK_LIMELIGHT_NAME,
+                VisionConstants.BACK_LIMELIGHT_FORWARD_OFFSET,
+                0,
+                VisionConstants.BACK_LIMELIGHT_UP_OFFSET,
+                0,
+                0,
+                0);
 
         // Ensure that the PathPlanner GUI displays the robot's actual config.
         // If there are differences, they will be reported in SmartDashboard.
