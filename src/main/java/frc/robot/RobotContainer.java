@@ -20,13 +20,13 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
-import frc.robot.subsystems.catcher.Elevator;
-import frc.robot.subsystems.catcher.Elevator.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.Elevator.CatcherArmPositions;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
 import frc.robot.util.AutoTimer;
@@ -253,8 +253,8 @@ public class RobotContainer {
 
         // operatorController.x().whileTrue(m_intake.runWheelsCommand());
         // operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
-        operatorController.x().onTrue(m_elevator.raiseElevatorTestCommand());
-        operatorController.y().onTrue(m_elevator.lowerElevatorCommand());
+        operatorController.x().whileTrue(m_elevator.raiseElevatorTestCommand());
+        operatorController.y().whileTrue(m_elevator.lowerElevatorCommand());
 
         operatorController.back().onTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.STOWED));
         operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));

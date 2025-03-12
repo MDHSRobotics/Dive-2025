@@ -1,6 +1,6 @@
-package frc.robot.subsystems.catcher;
+package frc.robot.subsystems.elevator;
 
-import static frc.robot.subsystems.catcher.ElevatorConstants.*;
+import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -25,6 +25,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.drive.TunerConstants;
 import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
@@ -36,7 +37,7 @@ public class Elevator extends SubsystemBase {
         L_2
     }
 
-    private final TalonFX m_elevatorMotor = new TalonFX(15);
+    private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
@@ -114,6 +115,7 @@ public class Elevator extends SubsystemBase {
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
+                    m_elevatorMotor.stopMotor();
                     m_armMotor.stopMotor();
                     m_flywheelsMotor.stopMotor();
                 })
@@ -188,14 +190,16 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command raiseElevatorTestCommand() {
-        return this.run(() -> {
-            m_elevatorMotor.set(0.5);
-        });
+        return this.runOnce(() -> {
+                    m_elevatorMotor.set(0.5);
+                })
+                .andThen(Commands.idle(this));
     }
 
     public Command lowerElevatorCommand() {
         return this.runOnce(() -> {
-            m_elevatorMotor.set(-0.5);
-        });
+                    m_elevatorMotor.set(-0.5);
+                })
+                .andThen(Commands.idle(this));
     }
 }
