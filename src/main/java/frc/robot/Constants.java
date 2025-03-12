@@ -16,7 +16,7 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.subsystems.catcher.CatcherConstants;
+import frc.robot.subsystems.catcher.ElevatorConstants;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.intake.IntakeConstants;
@@ -394,9 +394,9 @@ public final class Constants {
             "Climb-Back",
             ClimbConstants.FRONT_ID,
             "Climb-Front",
-            CatcherConstants.ARM_ID,
+            ElevatorConstants.ARM_ID,
             "Catcher-Arm",
-            CatcherConstants.WHEELS_ID,
+            ElevatorConstants.WHEELS_ID,
             "Catcher-Wheels",
             IntakeConstants.ARM_ID,
             "Intake-Arm",

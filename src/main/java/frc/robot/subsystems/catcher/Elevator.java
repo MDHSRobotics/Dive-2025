@@ -1,7 +1,12 @@
 package frc.robot.subsystems.catcher;
 
-import static frc.robot.subsystems.catcher.CatcherConstants.*;
+import static frc.robot.subsystems.catcher.ElevatorConstants.*;
 
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -22,7 +27,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 
-public class Catcher extends SubsystemBase {
+public class Elevator extends SubsystemBase {
     public enum CatcherArmPositions {
         STOWED,
         TROUGH,
@@ -30,6 +35,8 @@ public class Catcher extends SubsystemBase {
         UP,
         L_2
     }
+
+    private final TalonFX m_elevatorMotor = new TalonFX(15);
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
@@ -52,7 +59,13 @@ public class Catcher extends SubsystemBase {
      * so that we can see the motor configs without having to connect to the robot.
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
-    public Catcher() {
+    public Elevator() {
+        TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
+        elevatorConfig
+                .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+                .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
+        m_elevatorMotor.getConfigurator().apply(elevatorConfig);
+
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         armConfig
@@ -172,5 +185,17 @@ public class Catcher extends SubsystemBase {
 
     public Command setArmPositionCommand(CatcherArmPositions armPosition) {
         return setArmPositionAndEndCommand(armPosition).andThen(Commands.idle(this));
+    }
+
+    public Command raiseElevatorTestCommand() {
+        return this.run(() -> {
+            m_elevatorMotor.set(0.5);
+        });
+    }
+
+    public Command lowerElevatorCommand() {
+        return this.runOnce(() -> {
+            m_elevatorMotor.set(-0.5);
+        });
     }
 }
