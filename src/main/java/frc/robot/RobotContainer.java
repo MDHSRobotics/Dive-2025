@@ -42,6 +42,13 @@ public class RobotContainer {
         HALF_SPEED,
         QUARTER_SPEED
     }
+
+    public enum CageLocation {
+        LEFT,
+        MIDDLE,
+        RIGHT
+    }
+
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
@@ -65,9 +72,6 @@ public class RobotContainer {
     private final CommandXboxController operatorController =
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
-    private final AimingRoutines aimingRoutines =
-            new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
-
     /* Robot States */
     // private final Trigger m_nearCoralStationTrigger = new Trigger(
     // () -> Aiming.isNearCoralStation(m_drivetrain.getState().Pose.getTranslation()));
@@ -82,8 +86,12 @@ public class RobotContainer {
     // private final StringPublisher selectedDirectionIndicator =
     //         driverInfoTable.getStringTopic("Selected Tree Direction").publish();
 
-    /* Autonomous Sequence Selector (open up in a dashboard like Elastic) */
+    /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> autoChooser;
+    private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
+
+    private final AimingRoutines aimingRoutines = new AimingRoutines(
+            m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -100,9 +108,13 @@ public class RobotContainer {
                 "Drive Wheel Radius Characterization",
                 WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
         autoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
-        autoChooser.addOption("Drive to front of nearest cage", aimingRoutines.driveInFrontOfCage());
         autoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
         SmartDashboard.putData("Select your auto:", autoChooser);
+
+        cageChooser.addOption("Left", CageLocation.LEFT);
+        cageChooser.addOption("Middle", CageLocation.MIDDLE);
+        cageChooser.addOption("Right", CageLocation.RIGHT);
+        SmartDashboard.putData("Select your cage:", cageChooser);
 
         // Select left tree on startup
         // selectLeftTree();
@@ -155,9 +167,9 @@ public class RobotContainer {
         driverController.R2().onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.QUARTER_SPEED));
         driverController.R2().onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
         // Select left station
-        driverController.L1().whileTrue(aimingRoutines.alignWithStation(true));
+        driverController.L1().whileTrue(aimingRoutines.alignWithCoralStation(true));
         // Select right station
-        driverController.R1().whileTrue(aimingRoutines.alignWithStation(false));
+        driverController.R1().whileTrue(aimingRoutines.alignWithCoralStation(false));
 
         // Point wheels with right joystick
         // driverController
@@ -173,7 +185,6 @@ public class RobotContainer {
 
         driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
-        driverController.square().whileTrue(aimingRoutines.alignWithCage());
         driverController.cross().whileTrue(aimingRoutines.driveToTree());
 
         /*
