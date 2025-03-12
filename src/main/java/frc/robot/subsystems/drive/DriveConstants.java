@@ -178,4 +178,6 @@ public class DriveConstants {
 
     public static final PathConstraints PATHFINDING_CONSTRAINTS =
             new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
+    public static final PathConstraints CAGE_CONSTRAINTS =
+            new PathConstraints(1, 1, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
 }

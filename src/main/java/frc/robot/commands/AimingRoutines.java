@@ -1,13 +1,16 @@
 package frc.robot.commands;
 
+import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -20,8 +23,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
+import frc.robot.RobotContainer.CageLocation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
-import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.requests.DriveFacingAngle;
 import frc.robot.subsystems.drive.requests.DriveFacingNearestPosition;
 import frc.robot.subsystems.drive.requests.DriveFacingPosition;
@@ -30,6 +33,7 @@ import frc.robot.subsystems.drive.requests.ProfiledXYHeadingAlignment;
 import frc.robot.util.Aiming;
 import java.util.List;
 import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 /**
  * This class provides instanced command factories for swerve drive aiming.
@@ -42,6 +46,8 @@ public class AimingRoutines {
     private final DoubleSupplier m_velocityXSupplier;
     private final DoubleSupplier m_velocityYSupplier;
     private final DoubleSupplier m_deadbandSupplier;
+
+    private final Supplier<CageLocation> m_cageSupplier;
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable cameraTable = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
@@ -99,14 +105,16 @@ public class AimingRoutines {
             CommandSwerveDrivetrain drivetrain,
             DoubleSupplier velocityXSupplier,
             DoubleSupplier velocityYSupplier,
-            DoubleSupplier deadbandSupplier) {
+            DoubleSupplier deadbandSupplier,
+            Supplier<CageLocation> cageSupplier) {
         m_drivetrain = drivetrain;
         m_velocityXSupplier = velocityXSupplier;
         m_velocityYSupplier = velocityYSupplier;
         m_deadbandSupplier = deadbandSupplier;
+        m_cageSupplier = cageSupplier;
     }
 
-    public Command alignWithStation(boolean leftStation) {
+    public Command alignWithCoralStation(boolean leftStation) {
         return m_drivetrain.applyResettableRequest(() -> {
             Alliance alliance = DriverStation.getAlliance().orElseThrow();
             if (leftStation) {
@@ -137,22 +145,6 @@ public class AimingRoutines {
                 driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
             } else {
                 driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
-            }
-
-            return driveFacingAngle
-                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                    .withDeadband(m_deadbandSupplier.getAsDouble());
-        });
-    }
-
-    public Command alignWithCage() {
-        return m_drivetrain.applyResettableRequest(() -> {
-            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-            if (alliance == Alliance.Blue) {
-                driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
-            } else {
-                driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
             }
 
             return driveFacingAngle
@@ -256,122 +248,168 @@ public class AimingRoutines {
     }
 
     /**
-     * This is a backup sequence for locking onto the tree without needing to see apriltags.
-     * Once the driver presses this button, the robot will rotate to face the nearest tree.
-     * If a reef tag is in view or enters view when the movement is finished, the robot will return to limelight aiming.
-     * It will start aiming at an offset from the tag using tx.
-     * The offset is to the left if the operator has selected the left tree,
-     * or to the right if the operator has selected the right tree.
-     * (They can change their selection any time.)
-     * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
-     * and then stop rotating unless a tag returns in view.
-     * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
+     * This command will generate a path to the nearest tree and follow it.
+     * Once it finishes following the path, it will attempt to correct any inaccuracies in its position until interrupted.
      */
-    public Command orientToFaceTreeWithoutLimelight() {
-        return Commands.sequence(
-                m_drivetrain
-                        .applyResettableRequest(() -> {
-                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            if (alliance == Alliance.Blue) {
-                                driveFacingNearestPosition.withTargetPositions(FieldConstants.BLUE_REEF_TREE_POSITIONS);
-                            } else if (alliance == Alliance.Red) {
-                                driveFacingNearestPosition.withTargetPositions(FieldConstants.RED_REEF_TREE_POSITIONS);
-                            }
-                            return driveFacingNearestPosition
-                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble());
-                        })
-                        .until(() ->
-                                driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
-                // Face the tag
-                m_drivetrain.applyResettableRequest(() -> driveFacingVisionTarget
-                        .withVelocityX(m_velocityXSupplier.getAsDouble())
-                        .withVelocityY(m_velocityYSupplier.getAsDouble())
-                        .withDeadband(m_deadbandSupplier.getAsDouble())));
-    }
-
     public Command driveToTree() {
-        return driveToNearestPositionWithPathPlannerCommand(
-                        FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS, FieldConstants.RED_REEF_TREE_AIMING_POSITIONS)
-                .andThen(driveToNearestPositionCommand(
-                        FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS, FieldConstants.RED_REEF_TREE_AIMING_POSITIONS));
-    }
-
-    /**
-     * This command attempts to drive in front of the cage,
-     * and rotate so that the robot's side opening is facing the cage.
-     */
-    public Command driveInFrontOfCage() {
-        return driveToNearestPositionWithPathPlannerCommand(
-                        FieldConstants.BLUE_CAGE_STARTING_POSITIONS, FieldConstants.RED_CAGE_STARTING_POSITIONS)
-                .andThen(driveToNearestPositionCommand(
-                        FieldConstants.BLUE_CAGE_STARTING_POSITIONS, FieldConstants.RED_CAGE_STARTING_POSITIONS));
-    }
-
-    /**
-     * This command attempts to automatically drive into the cage.
-     */
-    public Command driveIntoCage() {
-        return driveToNearestPositionWithPathPlannerCommand(
-                        FieldConstants.BLUE_CAGE_POSITIONS, FieldConstants.RED_CAGE_POSITIONS)
-                .andThen(driveToNearestPositionCommand(
-                        FieldConstants.BLUE_CAGE_POSITIONS, FieldConstants.RED_CAGE_POSITIONS));
-    }
-
-    /**
-     * Drives to the nearest position in the list of the current alliance.
-     * @param bluePositions The list of blue positions to select from
-     * @param redPositions The list of red positions to select from
-     * @return A deferred command that will not generate the path until it is scheduled.
-     */
-    private Command driveToNearestPositionCommand(List<Pose2d> bluePositions, List<Pose2d> redPositions) {
-        return m_drivetrain.startRun(
-                () -> {
-                    driveToPosition.resetProfile();
+        return Commands.sequence(
+                m_drivetrain.defer(() -> {
                     Pose2d currentPose = m_drivetrain.getState().Pose;
                     Alliance alliance = DriverStation.getAlliance().orElseThrow();
                     Pose2d treePose;
                     if (alliance == Alliance.Blue) {
-                        treePose = currentPose.nearest(bluePositions);
+                        treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
                     } else {
-                        treePose = currentPose.nearest(redPositions);
+                        treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                     }
-                    m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
-                },
-                () -> m_drivetrain.setControl(driveToPosition));
+                    return generatePath(currentPose, treePose, PATHFINDING_CONSTRAINTS, true);
+                }),
+                m_drivetrain.startRun(
+                        () -> {
+                            driveToPosition.resetProfile();
+                            Pose2d currentPose = m_drivetrain.getState().Pose;
+                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                            Pose2d treePose;
+                            if (alliance == Alliance.Blue) {
+                                treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
+                            } else {
+                                treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+                            }
+                            m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
+                        },
+                        () -> m_drivetrain.setControl(driveToPosition)));
     }
 
-    private Command driveToNearestPositionWithPathPlannerCommand(
-            List<Pose2d> bluePositions, List<Pose2d> redPositions) {
+    /**
+     * If the robot is on it's alliance's side, it will drive in front of the cage, then forwards/behind the cage, then to the cage's center.
+     * If the robot is on the opposing alliance's side, it will drive behind the cage, then forwards/in front of the cage, then to the cage's center.
+     */
+    public Command driveIntoCage() {
+        return Commands.either(
+                Commands.sequence(
+                        driveNearCageCommand(true, true, false),
+                        driveNearCageCommand(false, false, false),
+                        driveIntoCageCommand(false)),
+                Commands.sequence(
+                        driveNearCageCommand(true, false, true),
+                        driveNearCageCommand(false, true, true),
+                        driveIntoCageCommand(true)),
+                () -> {
+                    Translation2d robotPosition = m_drivetrain.getState().Pose.getTranslation();
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    return (alliance == Alliance.Blue
+                                    && robotPosition.getX() < FieldConstants.BARGE_CENTER_X_DISTANCE.in(Meters))
+                            || (alliance == Alliance.Red
+                                    && robotPosition.getX() > FieldConstants.BARGE_CENTER_X_DISTANCE.in(Meters));
+                });
+    }
+
+    /**
+     * Creates a command that drives up to the cage with PathPlanner.
+     * @param driveFast True if you want to drive at full speed, false if you want to be slow (like when catching the cage)
+     * @param inFront True if you want to drive before the cage, false if you want to drive past it (according to driver station perspective).
+     * @param facingLeft True if you want the robot to face left, false if you want it to face right (according to driver station perspective).
+     * @return A deferred command that is not created until it is executed.
+     */
+    private Command driveNearCageCommand(boolean driveFast, boolean inFront, boolean facingLeft) {
         return m_drivetrain.defer(() -> {
-            Pose2d currentPose = m_drivetrain.getState().Pose;
-            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-            Pose2d treePose;
-            if (alliance == Alliance.Blue) {
-                treePose = currentPose.nearest(bluePositions);
+            CageLocation cage = m_cageSupplier.get();
+
+            Translation2d cagePosition;
+            Translation2d targetPosition;
+            Rotation2d targetRotation;
+
+            if (cage == CageLocation.LEFT) {
+                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(2);
+            } else if (cage == CageLocation.MIDDLE) {
+                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(1);
             } else {
-                treePose = currentPose.nearest(redPositions);
+                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(0);
             }
-            Translation2d currentToTargetDistance = treePose.getTranslation().minus(currentPose.getTranslation());
-            Rotation2d currentToTargetRotation = currentToTargetDistance.getAngle();
+            if (inFront) {
+                targetPosition = cagePosition.minus(FieldConstants.BARGE_TAPE_DISTANCE);
+            } else {
+                targetPosition = cagePosition.plus(FieldConstants.BARGE_TAPE_DISTANCE);
+            }
+            if (facingLeft) {
+                targetRotation = Rotation2d.kCCW_90deg;
+            } else {
+                targetRotation = Rotation2d.kCW_90deg;
+            }
 
-            List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-                    new Pose2d(currentPose.getX(), currentPose.getY(), currentToTargetRotation),
-                    new Pose2d(treePose.getX(), treePose.getY(), currentToTargetRotation));
+            PathConstraints pathConstraints;
+            if (driveFast == true) {
+                pathConstraints = PATHFINDING_CONSTRAINTS;
+            } else {
+                pathConstraints = CAGE_CONSTRAINTS;
+            }
 
-            PathPlannerPath path = new PathPlannerPath(
-                    waypoints,
-                    DriveConstants.PATHFINDING_CONSTRAINTS,
-                    null,
-                    new GoalEndState(0, treePose.getRotation()));
-            path.preventFlipping = true;
-
-            // System.out.println("Target x: " + Units.metersToInches(treePose.getX()) + "\nTarget y: "
-            //         + Units.metersToInches(treePose.getY()) + "\nTarget direction: "
-            //         + treePose.getRotation().getDegrees());
-
-            return AutoBuilder.followPath(path);
+            return generatePath(
+                    m_drivetrain.getState().Pose, new Pose2d(targetPosition, targetRotation), pathConstraints, false);
         });
+    }
+
+    /**
+     * Creates a command that drives into the cage with PathPlanner.
+     * @param facingLeft True if you want the robot to face left, false if you want it to face right (according to driver station perspective).
+     * @return A deferred command that is not created until it is executed.
+     */
+    private Command driveIntoCageCommand(boolean facingLeft) {
+        return m_drivetrain.defer(() -> {
+            CageLocation cage = m_cageSupplier.get();
+
+            Translation2d cagePosition;
+            Rotation2d targetRotation;
+
+            if (cage == CageLocation.LEFT) {
+                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(2);
+            } else if (cage == CageLocation.MIDDLE) {
+                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(1);
+            } else {
+                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(0);
+            }
+            if (facingLeft) {
+                targetRotation = Rotation2d.kCCW_90deg;
+            } else {
+                targetRotation = Rotation2d.kCW_90deg;
+            }
+
+            return generatePath(
+                    m_drivetrain.getState().Pose, new Pose2d(cagePosition, targetRotation), CAGE_CONSTRAINTS, false);
+        });
+    }
+
+    /**
+     * Generates a path following command using the given current pose and target pose.
+     */
+    private Command generatePath(
+            Pose2d currentPose, Pose2d targetPose, PathConstraints pathConstraints, boolean preventFlipping) {
+        Translation2d currentPosition = currentPose.getTranslation();
+        Translation2d targetPosition = targetPose.getTranslation();
+        Rotation2d targetRotation = targetPose.getRotation();
+        // Flipping the target is handled here because it would take a lot more code to account for both red and blue
+        // alliances in
+        // the rest of the codebase.
+        if (!preventFlipping && DriverStation.getAlliance().orElseThrow().equals(Alliance.Red)) {
+            targetPosition = FlippingUtil.flipFieldPosition(targetPosition);
+            targetRotation = FlippingUtil.flipFieldRotation(targetRotation);
+        }
+
+        Translation2d currentToTargetDistance = targetPosition.minus(currentPosition);
+        Rotation2d currentToTargetDirection = currentToTargetDistance.getAngle();
+
+        List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
+                new Pose2d(currentPosition.getX(), currentPose.getY(), currentToTargetDirection),
+                new Pose2d(targetPosition.getX(), targetPosition.getY(), currentToTargetDirection));
+
+        PathPlannerPath path =
+                new PathPlannerPath(waypoints, pathConstraints, null, new GoalEndState(0, targetRotation));
+        path.preventFlipping = true;
+
+        // System.out.println("Target x: " + Units.metersToInches(treePose.getX()) + "\nTarget y: "
+        //         + Units.metersToInches(treePose.getY()) + "\nTarget direction: "
+        //         + treePose.getRotation().getDegrees());
+
+        return AutoBuilder.followPath(path);
     }
 }
