@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -246,18 +247,35 @@ public class RobotContainer {
         operatorController.a().whileTrue(m_elevator.raiseAndRunWheelCommand());
         operatorController.b().whileTrue(m_elevator.wheelBackwardsCommand());
 
-        operatorController.povLeft().whileTrue(m_elevator.wheelBackwardsWhileRaisingArmCommand());
-        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
+        operatorController.povLeft().whileTrue(m_elevator.wheelBackwardsWhileRaisingArmCommand());
+        // operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        // operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
 
         // operatorController.x().whileTrue(m_intake.runWheelsCommand());
         // operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
         operatorController.x().whileTrue(m_elevator.raiseElevatorTestCommand());
         operatorController.y().whileTrue(m_elevator.lowerElevatorCommand());
 
-        operatorController.back().onTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.STOWED));
-        operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        // operatorController.back().onTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.STOWED));
+        // operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+
+        operatorController
+                .back()
+                .and(operatorController.povUp())
+                .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        operatorController
+                .back()
+                .and(operatorController.povDown())
+                .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        operatorController
+                .start()
+                .and(operatorController.povUp())
+                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        operatorController
+                .start()
+                .and(operatorController.povDown())
+                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
