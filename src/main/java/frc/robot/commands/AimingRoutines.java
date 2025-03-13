@@ -262,7 +262,7 @@ public class AimingRoutines {
                     } else {
                         treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                     }
-                    return generatePath(currentPose, treePose, PATHFINDING_CONSTRAINTS, true);
+                    return generatePath(currentPose, treePose, PATHFINDING_CONSTRAINTS, false);
                 }),
                 m_drivetrain.startRun(
                         () -> {
@@ -345,7 +345,7 @@ public class AimingRoutines {
             }
 
             return generatePath(
-                    m_drivetrain.getState().Pose, new Pose2d(targetPosition, targetRotation), pathConstraints, false);
+                    m_drivetrain.getState().Pose, new Pose2d(targetPosition, targetRotation), pathConstraints, true);
         });
     }
 
@@ -375,22 +375,27 @@ public class AimingRoutines {
             }
 
             return generatePath(
-                    m_drivetrain.getState().Pose, new Pose2d(cagePosition, targetRotation), CAGE_CONSTRAINTS, false);
+                    m_drivetrain.getState().Pose, new Pose2d(cagePosition, targetRotation), CAGE_CONSTRAINTS, true);
         });
     }
 
     /**
-     * Generates a path following command using the given current pose and target pose.
+     * Generates a path-following command that drives the robot to a target position and rotation.
+     * @param currentPose The current position and rotation of the robot
+     * @param targetPose The target position and rotation of the robot
+     * @param pathConstraints The constraints to use while driving
+     * @param allowTargetFlipping Whether to flip targets when the alliance is red
+     * @return The path following command
      */
-    private Command generatePath(
-            Pose2d currentPose, Pose2d targetPose, PathConstraints pathConstraints, boolean preventFlipping) {
+    private static Command generatePath(
+            Pose2d currentPose, Pose2d targetPose, PathConstraints pathConstraints, boolean allowTargetFlipping) {
         Translation2d currentPosition = currentPose.getTranslation();
         Translation2d targetPosition = targetPose.getTranslation();
         Rotation2d targetRotation = targetPose.getRotation();
         // Flipping the target is handled here because it would take a lot more code to account for both red and blue
         // alliances in
         // the rest of the codebase.
-        if (!preventFlipping && DriverStation.getAlliance().orElseThrow().equals(Alliance.Red)) {
+        if (allowTargetFlipping && DriverStation.getAlliance().orElseThrow().equals(Alliance.Red)) {
             targetPosition = FlippingUtil.flipFieldPosition(targetPosition);
             targetRotation = FlippingUtil.flipFieldRotation(targetRotation);
         }
