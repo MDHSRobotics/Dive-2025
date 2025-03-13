@@ -1,10 +1,6 @@
 package frc.robot.subsystems.catcher;
 
-<<<<<<<< HEAD:src/main/java/frc/robot/subsystems/catcher/Catcher.java
 import static frc.robot.subsystems.catcher.CatcherConstants.*;
-========
-import static frc.robot.subsystems.catcher.ElevatorConstants.*;
->>>>>>>> parent of 549f9b7 (Added more constants and fixed some commands):src/main/java/frc/robot/subsystems/catcher/Elevator.java
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -35,11 +31,6 @@ public class Catcher extends SubsystemBase {
         L_2
     }
 
-<<<<<<<< HEAD:src/main/java/frc/robot/subsystems/catcher/Catcher.java
-========
-    private final TalonFX m_elevatorMotor = new TalonFX(15);
-
->>>>>>>> parent of 549f9b7 (Added more constants and fixed some commands):src/main/java/frc/robot/subsystems/catcher/Elevator.java
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
 
@@ -182,19 +173,4 @@ public class Catcher extends SubsystemBase {
     public Command setArmPositionCommand(CatcherArmPositions armPosition) {
         return setArmPositionAndEndCommand(armPosition).andThen(Commands.idle(this));
     }
-<<<<<<<< HEAD:src/main/java/frc/robot/subsystems/catcher/Catcher.java
-========
-
-    public Command raiseElevatorTestCommand() {
-        return this.run(() -> {
-            m_elevatorMotor.set(0.5);
-        });
-    }
-
-    public Command lowerElevatorCommand() {
-        return this.runOnce(() -> {
-            m_elevatorMotor.set(-0.5);
-        });
-    }
->>>>>>>> parent of 549f9b7 (Added more constants and fixed some commands):src/main/java/frc/robot/subsystems/catcher/Elevator.java
 }

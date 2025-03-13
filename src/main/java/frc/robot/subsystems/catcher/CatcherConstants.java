@@ -5,12 +5,6 @@ import static edu.wpi.first.units.Units.*;
 public class CatcherConstants {
     private CatcherConstants() {}
 
-<<<<<<<< HEAD:src/main/java/frc/robot/subsystems/catcher/CatcherConstants.java
-========
-public class ElevatorConstants {
-    private ElevatorConstants() {}
-
->>>>>>>> parent of 549f9b7 (Added more constants and fixed some commands):src/main/java/frc/robot/subsystems/catcher/ElevatorConstants.java
     public static final int ARM_ID = 4;
     public static final int WHEELS_ID = 5;
 
