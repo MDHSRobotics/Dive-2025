@@ -164,7 +164,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * This NetworkTable is used to display driving information to AdvantageScope.
      * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
      */
-    private final NetworkTable stateTable = inst.getTable("DriveState");
+    private final NetworkTable stateTable = inst.getTable("Drive State");
 
     private final NetworkTable poseTable = stateTable.getSubTable("Poses");
     /** Logs the front bot pose estimate to AdvantageScope. */
@@ -183,9 +183,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final StructArrayPublisher<Translation3d> backVisibleTagsPub = tagsTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
-    /** Logs the distances from currently visible tags to the camera lens in meters. */
-    private final DoubleArrayPublisher distancesToTagsPub =
-            tagsTable.getDoubleArrayTopic("Distances to Tags").publish();
+    /** Logs the distances from currently visible tags to the front camera lens in meters. */
+    private final DoubleArrayPublisher tagDistanceToFrontPub =
+            tagsTable.getDoubleArrayTopic("Tag Distances to Front Camera").publish();
+    /** Logs the distances from currently visible tags to the back camera lens in meters. */
+    private final DoubleArrayPublisher tagDistanceToBackPub =
+            tagsTable.getDoubleArrayTopic("Tag Distances to Back Camera").publish();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -399,7 +402,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         inst.addListener(
                 frontPoseEstimateSub,
                 EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-                event -> this.acceptPoseEstimate(event, frontVisibleTagsPub, frontPoseEstimatePub));
+                event -> this.acceptPoseEstimate(
+                        event, frontPoseEstimatePub, frontVisibleTagsPub, tagDistanceToFrontPub));
 
         DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
@@ -408,26 +412,28 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         inst.addListener(
                 backPoseEstimateSub,
                 EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-                event -> this.acceptPoseEstimate(event, backVisibleTagsPub, backPoseEstimatePub));
+                event -> this.acceptPoseEstimate(event, backPoseEstimatePub, backVisibleTagsPub, tagDistanceToBackPub));
     }
 
     /**
      * Accepts a pose estimate from a limelight.
      * @param event The NetworkTableEvent that contains the pose estimate
-     * @param visibleTabsPublisher A NetworkTables publisher for publishing the visible tags
      * @param poseEstimatePublisher A NetworkTables publisher for publishing the estimate as a Pose2d struct.
+     * @param visibleTabsPublisher A NetworkTables publisher for publishing the visible tags
+     * @param tagDistancesToCamPublisher A NetworkTables publisher for publishing the distances from the tags to the camera in meters
      * @see frc.robot.util.LimelightHelpers#getBotPoseEstimate(String, String, boolean) the reference code for processing the input from the limelight
      */
     private void acceptPoseEstimate(
             NetworkTableEvent event,
+            StructPublisher<Pose2d> poseEstimatePublisher,
             StructArrayPublisher<Translation3d> visibleTabsPublisher,
-            StructPublisher<Pose2d> poseEstimatePublisher) {
+            DoubleArrayPublisher tagDistancesToCamPublisher) {
         NetworkTableValue value = event.valueData.value;
         double[] poseArray = value.getDoubleArray();
         // If there is no data available, don't use the data.
         if (poseArray.length < 11) {
             visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
-            this.distancesToTagsPub.set(FieldConstants.NO_TAG_DISTANCES);
+            tagDistancesToCamPublisher.set(FieldConstants.NO_TAG_DISTANCES);
             return;
         }
 
@@ -436,7 +442,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
         if (botPose.equals(Translation2d.kZero)) {
             visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
-            this.distancesToTagsPub.set(FieldConstants.NO_TAG_DISTANCES);
+            tagDistancesToCamPublisher.set(FieldConstants.NO_TAG_DISTANCES);
             return;
         }
         Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
@@ -463,7 +469,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // If there is no more data available, stop logging
         if (poseArray.length != expectedTotalVals || tagCount == 0) {
             visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
-            this.distancesToTagsPub.set(FieldConstants.NO_TAG_DISTANCES);
+            tagDistancesToCamPublisher.set(FieldConstants.NO_TAG_DISTANCES);
             return;
         }
 
@@ -477,6 +483,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             distancesToTags[i] = distance;
         }
         visibleTabsPublisher.set(visibleTagPositions, timestamp);
-        this.distancesToTagsPub.set(distancesToTags, timestamp);
+        tagDistancesToCamPublisher.set(distancesToTags, timestamp);
     }
 }
