@@ -1,16 +1,7 @@
 package frc.robot.subsystems.elevator;
 
-import static edu.wpi.first.units.Units.Second;
-import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
-import com.ctre.phoenix6.SignalLogger;
-import com.ctre.phoenix6.configs.FeedbackConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.VoltageOut;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -29,8 +20,6 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.subsystems.drive.TunerConstants;
 import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
@@ -42,17 +31,15 @@ public class Elevator extends SubsystemBase {
         L_2
     }
 
-    private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
-    private final VoltageOut m_elevatorVoltage = new VoltageOut(0);
-
-    private final SysIdRoutine m_sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    Volts.of(0.1).per(Second),
-                    Volts.of(4),
-                    null,
-                    (state) -> SignalLogger.writeString("state", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    (volts) -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(volts)), null, this));
+    private final SparkFlex m_elevatorMotor = new SparkFlex(9, MotorType.kBrushless);
+    // private final SysIdRoutine m_sysIdRoutine = new SysIdRoutine(
+    //         new SysIdRoutine.Config(
+    //                 Volts.of(0.1).per(Second),
+    //                 Volts.of(4),
+    //                 null,
+    //                 (state) -> SignalLogger.writeString("state", state.toString())),
+    //         new SysIdRoutine.Mechanism(
+    //                 (volts) -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(volts)), null, this));
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
@@ -76,11 +63,21 @@ public class Elevator extends SubsystemBase {
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Elevator() {
-        TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
+        // TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
+        // elevatorConfig
+        //         .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+        //         .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
+        // m_elevatorMotor.getConfigurator().apply(elevatorConfig);
+
+        SparkFlexConfig elevatorConfig = new SparkFlexConfig();
+        elevatorConfig.smartCurrentLimit(80).idleMode(IdleMode.kBrake);
         elevatorConfig
-                .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
-                .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
-        m_elevatorMotor.getConfigurator().apply(elevatorConfig);
+                .signals
+                .primaryEncoderPositionPeriodMs(10)
+                .primaryEncoderPositionAlwaysOn(true)
+                .primaryEncoderVelocityPeriodMs(10)
+                .primaryEncoderVelocityAlwaysOn(true);
+        m_elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
@@ -204,25 +201,18 @@ public class Elevator extends SubsystemBase {
         return setArmPositionAndEndCommand(armPosition).andThen(Commands.idle(this));
     }
 
-    public Command raiseElevatorTestCommand() {
-        return this.runOnce(() -> {
-                    m_elevatorMotor.set(0.5);
+    public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {
+        return this.run(() -> {
+                    m_elevatorMotor.set(powerSupplier.getAsDouble() * 0.25);
                 })
-                .andThen(Commands.idle(this));
+                .finallyDo(m_elevatorMotor::stopMotor);
     }
 
-    public Command lowerElevatorCommand() {
-        return this.runOnce(() -> {
-                    m_elevatorMotor.set(-0.5);
-                })
-                .andThen(Commands.idle(this));
-    }
+    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+    //     return m_sysIdRoutine.quasistatic(direction);
+    // }
 
-    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutine.quasistatic(direction);
-    }
-
-    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_sysIdRoutine.dynamic(direction);
-    }
+    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+    //     return m_sysIdRoutine.dynamic(direction);
+    // }
 }
