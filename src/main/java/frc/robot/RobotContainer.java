@@ -186,6 +186,7 @@ public class RobotContainer {
         driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
         driverController.cross().whileTrue(aimingRoutines.driveToTree());
+        driverController.square().whileTrue(aimingRoutines.driveIntoCage());
 
         /*
          * Run SysId routines when holding back/start and X/Y.
