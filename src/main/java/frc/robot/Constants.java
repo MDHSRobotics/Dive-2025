@@ -62,7 +62,7 @@ public final class Constants {
         /**
          * Distance from the floor to the front limelight lens in meters.
          */
-        public static final double BACK_LIMELIGHT_UP_OFFSET = Inches.of(-100).in(Meters);
+        public static final double BACK_LIMELIGHT_UP_OFFSET = Inches.of(20).in(Meters);
 
         /*
          * Used for setting the limelight's fiducial 3D offset.
