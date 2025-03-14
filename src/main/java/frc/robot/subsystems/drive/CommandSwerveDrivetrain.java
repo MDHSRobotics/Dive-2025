@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEvent;
@@ -178,10 +179,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = tagsTable
             .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
             .publish();
-
+    /** Logs the tags that are currently visible from the back to AdvantageScope. */
     private final StructArrayPublisher<Translation3d> backVisibleTagsPub = tagsTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
+    /** Logs the distances from currently visible tags to the camera lens in meters. */
+    private final DoubleArrayPublisher distancesToTagsPub =
+            tagsTable.getDoubleArrayTopic("Distances to Tags").publish();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -384,7 +388,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /**
      * Registers the limelight pose listeners,
      * so the poses can be used as soon as they are recieved from the limelights.
-     * @see frc.robot.util.LimelightHelpers#getBotPoseEstimate(String, String, boolean) the reference code for processing the input from this NetworkTable entry
      * @see <a href="https://docs.wpilib.org/en/stable/docs/software/networktables/listening-for-change.html">the explanation for listeners</a>
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">the limelight NetworkTables API</a> (look for botpose_orb_wpiblue)
      */
@@ -393,112 +396,87 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
                 .subscribe(null);
 
-        inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
-            NetworkTableValue value = event.valueData.value;
-            double[] poseArray = value.getDoubleArray();
-            // If there is no data available, don't use the data.
-            if (poseArray.length < 11) {
-                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
-
-            /* Get bot pose estimate */
-            Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
-            // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
-            if (botPose.equals(Translation2d.kZero)) {
-                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
-            Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
-            Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
-
-            /* Get timestamp */
-            long timestamp = value.getTime();
-
-            /* Log pose estimate to AdvantageScope */
-            frontPoseEstimatePub.set(botPoseEstimate, timestamp);
-
-            // Convert timestamp from microseconds to seconds and adjust for latency
-            double latency = poseArray[6];
-            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
-
-            /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
-
-            /* Log which apriltags are currently visible */
-            int tagCount = (int) poseArray[7];
-            int valsPerFiducial = 7;
-            int expectedTotalVals = 11 + valsPerFiducial * tagCount;
-
-            // If there is no more data available, stop logging
-            if (poseArray.length != expectedTotalVals || tagCount == 0) {
-                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
-
-            Translation3d[] visibleTagPositions = new Translation3d[tagCount];
-            for (int i = 0; i < tagCount; i++) {
-                int currentIndex = 11 + (i * valsPerFiducial);
-                int id = (int) poseArray[currentIndex];
-                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
-            }
-            frontVisibleTagsPub.set(visibleTagPositions, timestamp);
-        });
+        inst.addListener(
+                frontPoseEstimateSub,
+                EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+                event -> this.acceptPoseEstimate(event, frontVisibleTagsPub, frontPoseEstimatePub));
 
         DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
                 .subscribe(null);
 
-        inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
-            NetworkTableValue value = event.valueData.value;
-            double[] poseArray = value.getDoubleArray();
-            // If there is no data available, don't use the data.
-            if (poseArray.length < 11) {
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
+        inst.addListener(
+                backPoseEstimateSub,
+                EnumSet.of(NetworkTableEvent.Kind.kValueAll),
+                event -> this.acceptPoseEstimate(event, backVisibleTagsPub, backPoseEstimatePub));
+    }
 
-            /* Get bot pose estimate */
-            Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
-            // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
-            if (botPose.equals(Translation2d.kZero)) {
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
-            Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
-            Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
+    /**
+     * Accepts a pose estimate from a limelight.
+     * @param event The NetworkTableEvent that contains the pose estimate
+     * @param visibleTabsPublisher A NetworkTables publisher for publishing the visible tags
+     * @param poseEstimatePublisher A NetworkTables publisher for publishing the estimate as a Pose2d struct.
+     * @see frc.robot.util.LimelightHelpers#getBotPoseEstimate(String, String, boolean) the reference code for processing the input from the limelight
+     */
+    private void acceptPoseEstimate(
+            NetworkTableEvent event,
+            StructArrayPublisher<Translation3d> visibleTabsPublisher,
+            StructPublisher<Pose2d> poseEstimatePublisher) {
+        NetworkTableValue value = event.valueData.value;
+        double[] poseArray = value.getDoubleArray();
+        // If there is no data available, don't use the data.
+        if (poseArray.length < 11) {
+            visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
+            this.distancesToTagsPub.set(FieldConstants.NO_TAG_DISTANCES);
+            return;
+        }
 
-            /* Get timestamp */
-            long timestamp = value.getTime();
+        /* Get bot pose estimate */
+        Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
+        // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
+        if (botPose.equals(Translation2d.kZero)) {
+            visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
+            this.distancesToTagsPub.set(FieldConstants.NO_TAG_DISTANCES);
+            return;
+        }
+        Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
+        Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
-            /* Log pose estimate to AdvantageScope */
-            backPoseEstimatePub.set(botPoseEstimate, timestamp);
+        /* Get timestamp */
+        long timestamp = value.getTime();
 
-            // Convert timestamp from microseconds to seconds and adjust for latency
-            double latency = poseArray[6];
-            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+        /* Log pose estimate to AdvantageScope */
+        poseEstimatePublisher.set(botPoseEstimate, timestamp);
 
-            /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
+        // Convert timestamp from microseconds to seconds and adjust for latency
+        double latency = poseArray[6];
+        double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
-            /* Log which apriltags are currently visible */
-            int tagCount = (int) poseArray[7];
-            int valsPerFiducial = 7;
-            int expectedTotalVals = 11 + valsPerFiducial * tagCount;
+        /* Add the vision measurement to the pose estimator */
+        this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
 
-            // If there is no more data available, stop logging
-            if (poseArray.length != expectedTotalVals || tagCount == 0) {
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                return;
-            }
+        /* Log which apriltags are currently visible */
+        int tagCount = (int) poseArray[7];
+        int valsPerFiducial = 7;
+        int expectedTotalVals = 11 + valsPerFiducial * tagCount;
 
-            Translation3d[] visibleTagPositions = new Translation3d[tagCount];
-            for (int i = 0; i < tagCount; i++) {
-                int currentIndex = 11 + (i * valsPerFiducial);
-                int id = (int) poseArray[currentIndex];
-                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
-            }
-            backVisibleTagsPub.set(visibleTagPositions, timestamp);
-        });
+        // If there is no more data available, stop logging
+        if (poseArray.length != expectedTotalVals || tagCount == 0) {
+            visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
+            this.distancesToTagsPub.set(FieldConstants.NO_TAG_DISTANCES);
+            return;
+        }
+
+        Translation3d[] visibleTagPositions = new Translation3d[tagCount];
+        double[] distancesToTags = new double[tagCount];
+        for (int i = 0; i < tagCount; i++) {
+            int currentIndex = 11 + (i * valsPerFiducial);
+            int id = (int) poseArray[currentIndex];
+            double distance = poseArray[currentIndex + 4];
+            visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+            distancesToTags[i] = distance;
+        }
+        visibleTabsPublisher.set(visibleTagPositions, timestamp);
+        this.distancesToTagsPub.set(distancesToTags, timestamp);
     }
 }
