@@ -285,6 +285,8 @@ public final class Constants {
 
         /** Log this array to AdvantageScope when there are no tags reported by the limelight. */
         public static final Translation3d[] NO_VISIBLE_TAGS = new Translation3d[0];
+        /** Log this array to AdvantageScope when there are no tags reported by the limelight. */
+        public static final double[] NO_TAG_DISTANCES = new double[0];
 
         /**
          * Rotations of the reef walls for for aligning perpendicular to them. The rotations are in no particular order.
