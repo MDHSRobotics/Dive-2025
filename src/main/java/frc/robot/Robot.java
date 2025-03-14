@@ -66,7 +66,7 @@ public class Robot extends TimedRobot {
                 VisionConstants.BACK_LIMELIGHT_UP_OFFSET,
                 0,
                 0,
-                0);
+                VisionConstants.BACK_LIMELIGHT_YAW);
 
         // Ensure that the PathPlanner GUI displays the robot's actual config.
         // If there are differences, they will be reported in SmartDashboard.

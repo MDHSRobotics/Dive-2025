@@ -27,6 +27,10 @@ public class DriveTelemetry {
             .getDoubleArrayTopic("robot_orientation_set")
             .publish();
 
+    private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
+            .getDoubleArrayTopic("robot_orientation_set")
+            .publish();
+
     /** Limelight requires this to be a array of size 6. */
     private double[] megatag2Orientation = new double[6];
 
@@ -75,6 +79,7 @@ public class DriveTelemetry {
         megatag2Orientation[0] = state.Pose.getRotation().getDegrees();
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
         megatag2FrontUpdater.set(megatag2Orientation, timestamp);
+        megatag2BackUpdater.set(megatag2Orientation, timestamp);
         inst.flush();
 
         /* Telemeterize the swerve drive state */
