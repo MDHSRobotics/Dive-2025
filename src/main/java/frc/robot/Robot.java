@@ -103,23 +103,7 @@ public class Robot extends TimedRobot {
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {
-        /* You need to update the robot rotation before PathPlanner does
-        because time between updating the rotation and the limelight receiving it
-        causes the limelight to send incorrect pose estimates for a split second at the start of the match.
-        */
-        if (!m_hasAppliedRobotRotation) {
-            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-            Rotation2d startingRotation;
-            if (alliance == Alliance.Blue) {
-                startingRotation = Rotation2d.k180deg;
-            } else {
-                startingRotation = Rotation2d.kZero;
-            }
-            m_robotContainer.resetRobotRotation(startingRotation);
-            m_hasAppliedRobotRotation = true;
-        }
-    }
+    public void disabledInit() {}
 
     @Override
     public void disabledPeriodic() {

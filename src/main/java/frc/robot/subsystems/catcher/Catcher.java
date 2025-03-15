@@ -1,6 +1,6 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.catcher;
 
-import static frc.robot.subsystems.elevator.ElevatorConstants.*;
+import static frc.robot.subsystems.catcher.CatcherConstants.*;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -22,7 +22,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import java.util.function.DoubleSupplier;
 
-public class Elevator extends SubsystemBase {
+public class Catcher extends SubsystemBase {
     public enum CatcherArmPositions {
         STOWED,
         TROUGH,
@@ -30,16 +30,6 @@ public class Elevator extends SubsystemBase {
         UP,
         L_2
     }
-
-    private final SparkFlex m_elevatorMotor = new SparkFlex(9, MotorType.kBrushless);
-    // private final SysIdRoutine m_sysIdRoutine = new SysIdRoutine(
-    //         new SysIdRoutine.Config(
-    //                 Volts.of(0.1).per(Second),
-    //                 Volts.of(4),
-    //                 null,
-    //                 (state) -> SignalLogger.writeString("state", state.toString())),
-    //         new SysIdRoutine.Mechanism(
-    //                 (volts) -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(volts)), null, this));
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
@@ -62,23 +52,7 @@ public class Elevator extends SubsystemBase {
      * so that we can see the motor configs without having to connect to the robot.
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
-    public Elevator() {
-        // TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
-        // elevatorConfig
-        //         .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
-        //         .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
-        // m_elevatorMotor.getConfigurator().apply(elevatorConfig);
-
-        SparkFlexConfig elevatorConfig = new SparkFlexConfig();
-        elevatorConfig.smartCurrentLimit(80).idleMode(IdleMode.kBrake);
-        elevatorConfig
-                .signals
-                .primaryEncoderPositionPeriodMs(10)
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(10)
-                .primaryEncoderVelocityAlwaysOn(true);
-        m_elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-
+    public Catcher() {
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
         armConfig
@@ -127,7 +101,6 @@ public class Elevator extends SubsystemBase {
 
     public Command disableMotorsCommand() {
         return this.runOnce(() -> {
-                    m_elevatorMotor.stopMotor();
                     m_armMotor.stopMotor();
                     m_flywheelsMotor.stopMotor();
                 })
@@ -200,19 +173,4 @@ public class Elevator extends SubsystemBase {
     public Command setArmPositionCommand(CatcherArmPositions armPosition) {
         return setArmPositionAndEndCommand(armPosition).andThen(Commands.idle(this));
     }
-
-    public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {
-        return this.run(() -> {
-                    m_elevatorMotor.set(powerSupplier.getAsDouble() * 0.25);
-                })
-                .finallyDo(m_elevatorMotor::stopMotor);
-    }
-
-    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    //     return m_sysIdRoutine.quasistatic(direction);
-    // }
-
-    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    //     return m_sysIdRoutine.dynamic(direction);
-    // }
 }

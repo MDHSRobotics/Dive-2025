@@ -20,13 +20,13 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
+import frc.robot.subsystems.catcher.Catcher;
+import frc.robot.subsystems.catcher.Catcher.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
-import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.Elevator.CatcherArmPositions;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
 import frc.robot.util.AutoTimer;
@@ -53,7 +53,7 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
-    private final Elevator m_elevator = new Elevator();
+    private final Catcher m_catcher = new Catcher();
     private final Intake m_intake = new Intake();
 
     private final AutoTimer m_autoTimer = new AutoTimer();
@@ -131,7 +131,7 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_elevator.setDefaultCommand(m_elevator.disableMotorsCommand());
+        m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
     }
 
@@ -233,49 +233,27 @@ public class RobotContainer {
                 .whileTrue(m_climb.setPowerCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
 
-        // operatorController
-        //         .leftStick()
-        //         .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getLeftY()));
-        operatorController
-                .leftStick()
-                .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
+        operatorController.leftStick().toggleOnTrue(m_catcher.setArmPowerCommand(() -> -operatorController.getLeftY()));
         operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
 
         operatorController
                 .leftBumper()
-                .toggleOnTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
-        operatorController.rightBumper().toggleOnTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.TROUGH));
+                .toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
+        operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
 
-        operatorController.a().whileTrue(m_elevator.raiseAndRunWheelCommand());
-        operatorController.b().whileTrue(m_elevator.wheelBackwardsCommand());
+        operatorController.a().whileTrue(m_catcher.raiseAndRunWheelCommand());
+        operatorController.b().whileTrue(m_catcher.wheelBackwardsCommand());
 
+        operatorController.povLeft().whileTrue(m_catcher.wheelBackwardsWhileRaisingArmCommand());
+        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        operatorController.povLeft().whileTrue(m_elevator.wheelBackwardsWhileRaisingArmCommand());
-        // operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        // operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
 
-        // operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        // operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
+        operatorController.x().whileTrue(m_intake.runWheelsCommand());
+        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
 
-        // operatorController.back().onTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.STOWED));
-        // operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
-
-        // operatorController
-        //         .back()
-        //         .and(operatorController.povUp())
-        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        // operatorController
-        //         .back()
-        //         .and(operatorController.povDown())
-        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-        // operatorController
-        //         .start()
-        //         .and(operatorController.povUp())
-        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        // operatorController
-        //         .start()
-        //         .and(operatorController.povDown())
-        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        operatorController.back().onTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
+        operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
     }
 
     /**
@@ -283,13 +261,13 @@ public class RobotContainer {
      */
     private void registerNamedCommands() {
         NamedCommands.registerCommand(
-                "Lower Catcher Arm", m_elevator.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
+                "Lower Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
         NamedCommands.registerCommand(
-                "Eject Coral", m_elevator.wheelBackwardsCommand().withTimeout(0.5));
+                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(0.5));
         NamedCommands.registerCommand(
-                "Raise Catcher Arm", m_elevator.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
+                "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
-                "Intake Coral", m_elevator.runWheelCommand().withTimeout(1));
+                "Intake Coral", m_catcher.runWheelCommand().withTimeout(1));
         NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
         NamedCommands.registerCommand("End Auto Timer", Commands.runOnce(m_autoTimer::stopAndPublish));
     }

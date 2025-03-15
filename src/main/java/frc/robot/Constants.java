@@ -16,9 +16,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Distance;
+import frc.robot.subsystems.catcher.CatcherConstants;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.drive.DriveConstants;
-import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.Aiming;
 import java.util.List;
@@ -304,8 +304,6 @@ public final class Constants {
         /** Log this array to AdvantageScope when there are no tags reported by the limelight. */
         public static final double[] NO_TAG_DISTANCES = new double[0];
 
-        public static final double[] NO_TAG_DISTANCES = new double[0];
-
         /**
          * Rotations of the reef walls for for aligning perpendicular to them. The rotations are in no particular order.
          * <p>
@@ -396,9 +394,9 @@ public final class Constants {
             "Climb-Back",
             ClimbConstants.FRONT_ID,
             "Climb-Front",
-            ElevatorConstants.ARM_ID,
+            CatcherConstants.ARM_ID,
             "Catcher-Arm",
-            ElevatorConstants.WHEELS_ID,
+            CatcherConstants.WHEELS_ID,
             "Catcher-Wheels",
             IntakeConstants.ARM_ID,
             "Intake-Arm",
