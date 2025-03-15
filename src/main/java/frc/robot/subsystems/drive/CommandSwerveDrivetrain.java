@@ -163,7 +163,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * This NetworkTable is used to display driving information to AdvantageScope.
      * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
      */
-    private final NetworkTable stateTable = inst.getTable("Drive State");
+    private final NetworkTable stateTable = inst.getTable("DriveState");
 
     private final NetworkTable poseTable = stateTable.getSubTable("Poses");
     /** Logs the front bot pose estimate to AdvantageScope. */
@@ -374,6 +374,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     /**
      * Registers the limelight pose listeners,
      * so the poses can be used as soon as they are recieved from the limelights.
+     * @see frc.robot.util.LimelightHelpers#getBotPoseEstimate(String, String, boolean) the reference code for processing the input from this NetworkTable entry
      * @see <a href="https://docs.wpilib.org/en/stable/docs/software/networktables/listening-for-change.html">the explanation for listeners</a>
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">the limelight NetworkTables API</a> (look for botpose_orb_wpiblue)
      */
@@ -466,29 +467,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
             Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
-        /* Get bot pose estimate */
-        Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
-        // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
-        if (botPose.equals(Translation2d.kZero)) {
-            visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
-            tagDistancesToCamPublisher.set(FieldConstants.NO_TAG_DISTANCES);
-            return;
-        }
-        Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
-        Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
+            /* Get timestamp */
+            long timestamp = value.getTime();
 
-        /* Get timestamp */
-        long timestamp = value.getTime();
+            /* Log pose estimate to AdvantageScope */
+            backPoseEstimatePub.set(botPoseEstimate, timestamp);
 
-        /* Log pose estimate to AdvantageScope */
-        poseEstimatePublisher.set(botPoseEstimate, timestamp);
+            // Convert timestamp from microseconds to seconds and adjust for latency
+            double latency = poseArray[6];
+            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
             /* Add the vision measurement to the pose estimator */
             this.addVisionMeasurement(
                     botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.BACK_STD_DEVS);
 
-        /* Add the vision measurement to the pose estimator */
-        this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
+            /* Log which apriltags are currently visible */
+            int tagCount = (int) poseArray[7];
+            int valsPerFiducial = 7;
+            int expectedTotalVals = 11 + valsPerFiducial * tagCount;
 
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
