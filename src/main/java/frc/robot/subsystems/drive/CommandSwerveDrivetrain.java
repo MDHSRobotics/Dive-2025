@@ -12,7 +12,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -179,16 +178,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = tagsTable
             .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
             .publish();
-    /** Logs the tags that are currently visible from the back to AdvantageScope. */
+
+    private final DoubleArrayPublisher frontToTagDistancePub =
+            tagsTable.getDoubleArrayTopic("Tag Distance to Front Camera").publish();
+
     private final StructArrayPublisher<Translation3d> backVisibleTagsPub = tagsTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
-    /** Logs the distances from currently visible tags to the front camera lens in meters. */
-    private final DoubleArrayPublisher tagDistanceToFrontPub =
-            tagsTable.getDoubleArrayTopic("Tag Distances to Front Camera").publish();
-    /** Logs the distances from currently visible tags to the back camera lens in meters. */
-    private final DoubleArrayPublisher tagDistanceToBackPub =
-            tagsTable.getDoubleArrayTopic("Tag Distances to Back Camera").publish();
+    private final DoubleArrayPublisher backtoTagDistancePub =
+            tagsTable.getDoubleArrayTopic("Tag Distance to Back Camera").publish();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -207,11 +205,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        /*
-         * Set the vision measurement std devs.
-         * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
-         */
-        setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
         registerPoseEstimateListeners();
     }
 
@@ -237,11 +230,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        /*
-         * Set the vision measurement std devs.
-         * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
-         */
-        setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
         registerPoseEstimateListeners();
     }
 
@@ -280,11 +268,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        /*
-         * Set the vision measurement std devs.
-         * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
-         */
-        setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
         registerPoseEstimateListeners();
     }
 
@@ -399,43 +382,89 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
                 .subscribe(null);
 
-        inst.addListener(
-                frontPoseEstimateSub,
-                EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-                event -> this.acceptPoseEstimate(
-                        event, frontPoseEstimatePub, frontVisibleTagsPub, tagDistanceToFrontPub));
+        inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            NetworkTableValue value = event.valueData.value;
+            double[] poseArray = value.getDoubleArray();
+            // If there is no data available, don't use the data.
+            if (poseArray.length < 11) {
+                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                return;
+            }
+
+            /* Get bot pose estimate */
+            Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
+            // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
+            if (botPose.equals(Translation2d.kZero)) {
+                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                return;
+            }
+            Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
+            Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
+
+            /* Get timestamp */
+            long timestamp = value.getTime();
+
+            /* Log pose estimate to AdvantageScope */
+            frontPoseEstimatePub.set(botPoseEstimate, timestamp);
+
+            // Convert timestamp from microseconds to seconds and adjust for latency
+            double latency = poseArray[6];
+            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+
+            /* Add the vision measurement to the pose estimator */
+            this.addVisionMeasurement(
+                    botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.FRONT_STD_DEVS);
+
+            /* Log which apriltags are currently visible */
+            int tagCount = (int) poseArray[7];
+            int valsPerFiducial = 7;
+            int expectedTotalVals = 11 + valsPerFiducial * tagCount;
+
+            // If there is no more data available, stop logging
+            if (poseArray.length != expectedTotalVals || tagCount == 0) {
+                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                return;
+            }
+
+            Translation3d[] visibleTagPositions = new Translation3d[tagCount];
+            double[] distancesToTags = new double[tagCount];
+            for (int i = 0; i < tagCount; i++) {
+                int currentIndex = 11 + (i * valsPerFiducial);
+                int id = (int) poseArray[currentIndex];
+                double distance = poseArray[currentIndex + 4];
+                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+                distancesToTags[i] = distance;
+            }
+            frontVisibleTagsPub.set(visibleTagPositions, timestamp);
+            frontToTagDistancePub.set(distancesToTags, timestamp);
+        });
 
         DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
                 .subscribe(null);
 
-        inst.addListener(
-                backPoseEstimateSub,
-                EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-                event -> this.acceptPoseEstimate(event, backPoseEstimatePub, backVisibleTagsPub, tagDistanceToBackPub));
-    }
+        inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            NetworkTableValue value = event.valueData.value;
+            double[] poseArray = value.getDoubleArray();
+            // If there is no data available, don't use the data.
+            if (poseArray.length < 11) {
+                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                return;
+            }
 
-    /**
-     * Accepts a pose estimate from a limelight.
-     * @param event The NetworkTableEvent that contains the pose estimate
-     * @param poseEstimatePublisher A NetworkTables publisher for publishing the estimate as a Pose2d struct.
-     * @param visibleTabsPublisher A NetworkTables publisher for publishing the visible tags
-     * @param tagDistancesToCamPublisher A NetworkTables publisher for publishing the distances from the tags to the camera in meters
-     * @see frc.robot.util.LimelightHelpers#getBotPoseEstimate(String, String, boolean) the reference code for processing the input from the limelight
-     */
-    private void acceptPoseEstimate(
-            NetworkTableEvent event,
-            StructPublisher<Pose2d> poseEstimatePublisher,
-            StructArrayPublisher<Translation3d> visibleTabsPublisher,
-            DoubleArrayPublisher tagDistancesToCamPublisher) {
-        NetworkTableValue value = event.valueData.value;
-        double[] poseArray = value.getDoubleArray();
-        // If there is no data available, don't use the data.
-        if (poseArray.length < 11) {
-            visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
-            tagDistancesToCamPublisher.set(FieldConstants.NO_TAG_DISTANCES);
-            return;
-        }
+            /* Get bot pose estimate */
+            Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
+            // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
+            if (botPose.equals(Translation2d.kZero)) {
+                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                return;
+            }
+            Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
+            Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
         /* Get bot pose estimate */
         Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
@@ -454,35 +483,31 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         /* Log pose estimate to AdvantageScope */
         poseEstimatePublisher.set(botPoseEstimate, timestamp);
 
-        // Convert timestamp from microseconds to seconds and adjust for latency
-        double latency = poseArray[6];
-        double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+            /* Add the vision measurement to the pose estimator */
+            this.addVisionMeasurement(
+                    botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.BACK_STD_DEVS);
 
         /* Add the vision measurement to the pose estimator */
         this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
 
-        /* Log which apriltags are currently visible */
-        int tagCount = (int) poseArray[7];
-        int valsPerFiducial = 7;
-        int expectedTotalVals = 11 + valsPerFiducial * tagCount;
+            // If there is no more data available, stop logging
+            if (poseArray.length != expectedTotalVals || tagCount == 0) {
+                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                return;
+            }
 
-        // If there is no more data available, stop logging
-        if (poseArray.length != expectedTotalVals || tagCount == 0) {
-            visibleTabsPublisher.set(FieldConstants.NO_VISIBLE_TAGS);
-            tagDistancesToCamPublisher.set(FieldConstants.NO_TAG_DISTANCES);
-            return;
-        }
-
-        Translation3d[] visibleTagPositions = new Translation3d[tagCount];
-        double[] distancesToTags = new double[tagCount];
-        for (int i = 0; i < tagCount; i++) {
-            int currentIndex = 11 + (i * valsPerFiducial);
-            int id = (int) poseArray[currentIndex];
-            double distance = poseArray[currentIndex + 4];
-            visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
-            distancesToTags[i] = distance;
-        }
-        visibleTabsPublisher.set(visibleTagPositions, timestamp);
-        tagDistancesToCamPublisher.set(distancesToTags, timestamp);
+            Translation3d[] visibleTagPositions = new Translation3d[tagCount];
+            double[] distancesToTags = new double[tagCount];
+            for (int i = 0; i < tagCount; i++) {
+                int currentIndex = 11 + (i * valsPerFiducial);
+                int id = (int) poseArray[currentIndex];
+                double distance = poseArray[currentIndex + 4];
+                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+                distancesToTags[i] = distance;
+            }
+            backVisibleTagsPub.set(visibleTagPositions, timestamp);
+            backtoTagDistancePub.set(distancesToTags, timestamp);
+        });
     }
 }

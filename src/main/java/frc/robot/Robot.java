@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -31,6 +32,7 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
 
     private RobotContainer m_robotContainer;
+    private boolean m_hasAppliedRobotRotation;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -44,6 +46,8 @@ public class Robot extends TimedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         m_robotContainer = new RobotContainer();
+
+        m_hasAppliedRobotRotation = false;
 
         // Create the webserver for accessing Elastic's saved layout across computers
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
@@ -99,7 +103,23 @@ public class Robot extends TimedRobot {
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        /* You need to update the robot rotation before PathPlanner does
+        because time between updating the rotation and the limelight receiving it
+        causes the limelight to send incorrect pose estimates for a split second at the start of the match.
+        */
+        if (!m_hasAppliedRobotRotation) {
+            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+            Rotation2d startingRotation;
+            if (alliance == Alliance.Blue) {
+                startingRotation = Rotation2d.k180deg;
+            } else {
+                startingRotation = Rotation2d.kZero;
+            }
+            m_robotContainer.resetRobotRotation(startingRotation);
+            m_hasAppliedRobotRotation = true;
+        }
+    }
 
     @Override
     public void disabledPeriodic() {}
@@ -142,7 +162,7 @@ public class Robot extends TimedRobot {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
 
-        m_robotContainer.resetFieldPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
+        m_robotContainer.resetRobotPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
     }
 
     /** This function is called periodically during test mode. */
