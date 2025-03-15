@@ -62,6 +62,9 @@ public class RobotContainer {
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
+    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake()
+            .withDriveRequestType(DriveRequestType.Velocity)
+            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     // private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
     //         new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
@@ -183,7 +186,8 @@ public class RobotContainer {
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
-        driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
+        // driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
+        driverController.circle().whileTrue(m_drivetrain.applyRequest(() -> brake));
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
         driverController.cross().whileTrue(aimingRoutines.driveToTree());
         driverController.square().whileTrue(aimingRoutines.driveIntoCage());
