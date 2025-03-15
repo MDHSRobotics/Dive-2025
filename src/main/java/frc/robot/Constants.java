@@ -8,10 +8,13 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.subsystems.catcher.CatcherConstants;
 import frc.robot.subsystems.climb.ClimbConstants;
@@ -84,12 +87,18 @@ public final class Constants {
         public static final double TAG_TO_RIGHT_TREE_RIGHT_OFFSET =
                 Inches.of(6.468).in(Meters);
 
-        public static final double[] FRONT_TAG_DISTANCE_TABLE = new double[] {0.495, 1.028, 1.503, 2.2};
-        public static final double[] FRONT_X_STDDEV_TABLE = new double[] {0.00006, 0.00045, 0.00075, 0.0028};
-        public static final double[] FRONT_Y_STDDEV_TABLE = new double[] {0.00015, 0.0002, 0.0003, 0.001};
-        public static final double[] BACK_TAG_DISTANCE_TABLE = new double[] {};
-        public static final double[] BACK_X_STDDEV_TABLE = new double[] {};
-        public static final double[] BACK_Y_STDDEV_TABLE = new double[] {};
+        public static final double FRONT_X_STD_DEV = 0.04;
+        public static final double FRONT_Y_STD_DEV = 0.0017;
+        public static final double BACK_X_STD_DEV = 0.7;
+        public static final double BACK_Y_STD_DEV = 0.7;
+        public static Vector<N3> FRONT_STD_DEVS = VecBuilder.fill(FRONT_X_STD_DEV, FRONT_Y_STD_DEV, Double.MAX_VALUE);
+        public static Vector<N3> BACK_STD_DEVS = VecBuilder.fill(BACK_X_STD_DEV, BACK_Y_STD_DEV, Double.MAX_VALUE);
+        // public static final double[] FRONT_TAG_DISTANCE_TABLE = new double[] {0.495, 1.028, 1.503, 2.2, 5.2};
+        // public static final double[] FRONT_X_STDDEV_TABLE = new double[] {0.00006, 0.00045, 0.00075, 0.0028, 0.04};
+        // public static final double[] FRONT_Y_STDDEV_TABLE = new double[] {0.00015, 0.0002, 0.0003, 0.001, 0.0017};
+        // public static final double[] BACK_TAG_DISTANCE_TABLE = new double[] {6.0};
+        // public static final double[] BACK_X_STDDEV_TABLE = new double[] {0.07};
+        // public static final double[] BACK_Y_STDDEV_TABLE = new double[] {0.0025};
     }
 
     /**

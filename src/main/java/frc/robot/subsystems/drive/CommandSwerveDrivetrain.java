@@ -12,7 +12,6 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -206,11 +205,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        /*
-         * Set the vision measurement std devs.
-         * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
-         */
-        setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
         registerPoseEstimateListeners();
     }
 
@@ -236,11 +230,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        /*
-         * Set the vision measurement std devs.
-         * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
-         */
-        setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
         registerPoseEstimateListeners();
     }
 
@@ -279,11 +268,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             startSimThread();
         }
         configureAutoBuilder();
-        /*
-         * Set the vision measurement std devs.
-         * These are defaults from https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2#using-wpilibs-pose-estimator
-         */
-        setVisionMeasurementStdDevs(VecBuilder.fill(.7, .7, 9999999));
         registerPoseEstimateListeners();
     }
 
@@ -430,7 +414,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
             /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
+            this.addVisionMeasurement(
+                    botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.FRONT_STD_DEVS);
 
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];
@@ -493,7 +478,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
             /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp));
+            this.addVisionMeasurement(
+                    botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.BACK_STD_DEVS);
 
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];
