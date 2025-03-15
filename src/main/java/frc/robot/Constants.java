@@ -83,6 +83,13 @@ public final class Constants {
                 Inches.of(-2.007).in(Meters);
         public static final double TAG_TO_RIGHT_TREE_RIGHT_OFFSET =
                 Inches.of(6.468).in(Meters);
+
+        public static final double[] FRONT_TAG_DISTANCE_TABLE = new double[] {0.495, 1.028, 1.503, 2.2};
+        public static final double[] FRONT_X_STDDEV_TABLE = new double[] {0.00006, 0.00045, 0.00075, 0.0028};
+        public static final double[] FRONT_Y_STDDEV_TABLE = new double[] {0.00015, 0.0002, 0.0003, 0.001};
+        public static final double[] BACK_TAG_DISTANCE_TABLE = new double[] {};
+        public static final double[] BACK_X_STDDEV_TABLE = new double[] {};
+        public static final double[] BACK_Y_STDDEV_TABLE = new double[] {};
     }
 
     /**
@@ -285,6 +292,8 @@ public final class Constants {
 
         /** Log this array to AdvantageScope when there are no tags reported by the limelight. */
         public static final Translation3d[] NO_VISIBLE_TAGS = new Translation3d[0];
+
+        public static final double[] NO_TAG_DISTANCES = new double[0];
 
         /**
          * Rotations of the reef walls for for aligning perpendicular to them. The rotations are in no particular order.

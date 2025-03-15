@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEvent;
@@ -179,9 +180,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
             .publish();
 
+    private final DoubleArrayPublisher frontToTagDistancePub =
+            tagsTable.getDoubleArrayTopic("Tag Distance to Front Camera").publish();
+
     private final StructArrayPublisher<Translation3d> backVisibleTagsPub = tagsTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
+    private final DoubleArrayPublisher backtoTagDistancePub =
+            tagsTable.getDoubleArrayTopic("Tag Distance to Back Camera").publish();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -399,6 +405,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If there is no data available, don't use the data.
             if (poseArray.length < 11) {
                 frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
@@ -433,16 +440,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
                 frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
             Translation3d[] visibleTagPositions = new Translation3d[tagCount];
+            double[] distancesToTags = new double[tagCount];
             for (int i = 0; i < tagCount; i++) {
                 int currentIndex = 11 + (i * valsPerFiducial);
                 int id = (int) poseArray[currentIndex];
+                double distance = poseArray[currentIndex + 4];
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+                distancesToTags[i] = distance;
             }
             frontVisibleTagsPub.set(visibleTagPositions, timestamp);
+            frontToTagDistancePub.set(distancesToTags, timestamp);
         });
 
         DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
@@ -455,6 +467,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If there is no data available, don't use the data.
             if (poseArray.length < 11) {
                 backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
@@ -463,6 +476,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
             if (botPose.equals(Translation2d.kZero)) {
                 backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
             Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
@@ -489,16 +503,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
                 backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
             Translation3d[] visibleTagPositions = new Translation3d[tagCount];
+            double[] distancesToTags = new double[tagCount];
             for (int i = 0; i < tagCount; i++) {
                 int currentIndex = 11 + (i * valsPerFiducial);
                 int id = (int) poseArray[currentIndex];
+                double distance = poseArray[currentIndex + 4];
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+                distancesToTags[i] = distance;
             }
             backVisibleTagsPub.set(visibleTagPositions, timestamp);
+            backtoTagDistancePub.set(distancesToTags, timestamp);
         });
     }
 }
