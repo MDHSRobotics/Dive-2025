@@ -2,6 +2,11 @@ package frc.robot.subsystems.elevator;
 
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
+import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -20,6 +25,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.drive.TunerConstants;
 import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
@@ -31,7 +37,7 @@ public class Elevator extends SubsystemBase {
         L_2
     }
 
-    private final SparkFlex m_elevatorMotor = new SparkFlex(9, MotorType.kBrushless);
+    private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
     // private final SysIdRoutine m_sysIdRoutine = new SysIdRoutine(
     //         new SysIdRoutine.Config(
     //                 Volts.of(0.1).per(Second),
@@ -63,21 +69,21 @@ public class Elevator extends SubsystemBase {
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Elevator() {
-        // TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
-        // elevatorConfig
-        //         .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
-        //         .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
-        // m_elevatorMotor.getConfigurator().apply(elevatorConfig);
-
-        SparkFlexConfig elevatorConfig = new SparkFlexConfig();
-        elevatorConfig.smartCurrentLimit(80).idleMode(IdleMode.kBrake);
+        TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
         elevatorConfig
-                .signals
-                .primaryEncoderPositionPeriodMs(10)
-                .primaryEncoderPositionAlwaysOn(true)
-                .primaryEncoderVelocityPeriodMs(10)
-                .primaryEncoderVelocityAlwaysOn(true);
-        m_elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+                .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+                .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
+        m_elevatorMotor.getConfigurator().apply(elevatorConfig);
+
+        // SparkFlexConfig elevatorConfig = new SparkFlexConfig();
+        // elevatorConfig.smartCurrentLimit(80).idleMode(IdleMode.kBrake);
+        // elevatorConfig
+        //         .signals
+        //         .primaryEncoderPositionPeriodMs(10)
+        //         .primaryEncoderPositionAlwaysOn(true)
+        //         .primaryEncoderVelocityPeriodMs(10)
+        //         .primaryEncoderVelocityAlwaysOn(true);
+        // m_elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
