@@ -30,9 +30,9 @@ public class IntakeConstants {
     public static final int WHEEL_CURRENT_LIMIT = 40;
 
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 4.424;
+    public static final double ARM_MAX_LIMIT = 5.411;
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 2.137;
+    public static final double ARM_MIN_LIMIT = 3.124;
 
     /**
      * The conversion of motor input rotations to arm output radians.
@@ -68,17 +68,17 @@ public class IntakeConstants {
      * in duty cycle (percent out) per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = 0.3;
+    public static final double K_P = 0.2;
 
     // Common intake positions
     /**
      * The position that aligns the arm with the algae resting on a coral in radians.
      */
-    public static final double ON_CORAL_PICKUP_POSITION = 2.867;
+    public static final double ON_CORAL_PICKUP_POSITION = 3.854;
     /**
      * The position that aligns the arm with the algae resting on the ground in radians.
      */
-    public static final double GROUND_PICKUP_POSITION = 2.168;
+    public static final double GROUND_PICKUP_POSITION = 3.155;
     /** Units: radians */
-    public static final double PROCESSOR_POSITION = 2.634;
+    public static final double PROCESSOR_POSITION = 3.621;
 }
