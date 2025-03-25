@@ -29,6 +29,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
+import frc.robot.util.AutoCreator;
 import frc.robot.util.AutoTimer;
 
 /**
@@ -84,6 +85,7 @@ public class RobotContainer {
     /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> testAutoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
+    private final AutoCreator autoCreator = new AutoCreator(m_elevator);
 
     private final AimingRoutines aimingRoutines = new AimingRoutines(
             m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
@@ -110,6 +112,8 @@ public class RobotContainer {
         cageChooser.addOption("Middle", CageLocation.MIDDLE);
         cageChooser.addOption("Right", CageLocation.RIGHT);
         SmartDashboard.putData("Select your cage:", cageChooser);
+
+        autoCreator.sendAutoChoosers();
     }
 
     private void setDefaultCommands() {
@@ -277,7 +281,8 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return testAutoChooser.getSelected();
+        // return testAutoChooser.getSelected();
+        return autoCreator.getAutonomousCommand();
     }
 
     /**

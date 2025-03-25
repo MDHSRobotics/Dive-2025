@@ -1,5 +1,8 @@
 package frc.robot.util;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathPlannerPath;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -7,17 +10,17 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPositions;
 
+/**
+ * This util class is specific to our PathPlanner path naming scheme for this year.
+ */
 public class AutoCreator {
     private final SendableChooser<String> m_startPositionChooser = new SendableChooser<String>();
-    private final SendableChooser<String> m_reefSideChooser = new SendableChooser<String>();
     private final SendableChooser<String> m_treeChooser = new SendableChooser<String>();
     private final SendableChooser<ElevatorPositions> m_levelChooser = new SendableChooser<ElevatorPositions>();
     private final SendableChooser<String> m_coralStationChooser = new SendableChooser<String>();
-    private final SendableChooser<String> m_reefSideChooser2 = new SendableChooser<String>();
     private final SendableChooser<String> m_treeChooser2 = new SendableChooser<String>();
     private final SendableChooser<ElevatorPositions> m_levelChooser2 = new SendableChooser<ElevatorPositions>();
     private final SendableChooser<String> m_coralStationChooser2 = new SendableChooser<String>();
-    private final SendableChooser<String> m_reefSideChooser3 = new SendableChooser<String>();
     private final SendableChooser<String> m_treeChooser3 = new SendableChooser<String>();
     private final SendableChooser<ElevatorPositions> m_levelChooser3 = new SendableChooser<ElevatorPositions>();
 
@@ -31,22 +34,24 @@ public class AutoCreator {
     public void sendAutoChoosers() {
         // Starting position
         m_startPositionChooser.addOption("Top", "Top to ");
-        m_startPositionChooser.addOption("Middle", "Middle to");
-        m_startPositionChooser.addOption("Bottom", "Bottom to");
+        m_startPositionChooser.addOption("Middle", "Middle to ");
+        m_startPositionChooser.addOption("Bottom", "Bottom to ");
         SmartDashboard.putData("Starting position:", m_startPositionChooser);
 
         // Options for first coral
-        m_reefSideChooser.addOption("1", "1");
-        m_reefSideChooser.addOption("2", "2");
-        m_reefSideChooser.addOption("3", "3");
-        m_reefSideChooser.addOption("4", "4");
-        m_reefSideChooser.addOption("5", "5");
-        m_reefSideChooser.addOption("6", "6");
-        SmartDashboard.putData("Reef side #1:", m_reefSideChooser);
-
-        m_treeChooser.addOption("Left", "(Left Tree)");
-        m_treeChooser.addOption("Right", "(Right Tree)");
-        SmartDashboard.putData("Tree side #1:", m_treeChooser);
+        m_treeChooser.addOption("A", "A");
+        m_treeChooser.addOption("B", "B");
+        m_treeChooser.addOption("C", "C");
+        m_treeChooser.addOption("D", "D");
+        m_treeChooser.addOption("E", "E");
+        m_treeChooser.addOption("F", "F");
+        m_treeChooser.addOption("G", "G");
+        m_treeChooser.addOption("H", "H");
+        m_treeChooser.addOption("I", "I");
+        m_treeChooser.addOption("J", "J");
+        m_treeChooser.addOption("K", "K");
+        m_treeChooser.addOption("L", "L");
+        SmartDashboard.putData("Tree #1:", m_treeChooser);
 
         m_levelChooser.addOption("L1", ElevatorPositions.L1);
         m_levelChooser.addOption("L2", ElevatorPositions.L2);
@@ -55,23 +60,25 @@ public class AutoCreator {
         SmartDashboard.putData("Level #1:", m_levelChooser);
 
         // Options for second coral
-        m_coralStationChooser.addOption("End Auto Here", null);
+        m_coralStationChooser.addOption("End Auto", null);
         m_coralStationChooser.addOption("Top", "Top");
         m_coralStationChooser.addOption("Bottom", "Bottom");
         m_coralStationChooser.onChange(this::createOneCoralAuto);
         SmartDashboard.putData("Coral station #1:", m_coralStationChooser);
 
-        m_reefSideChooser2.addOption("1", "1");
-        m_reefSideChooser2.addOption("2", "2");
-        m_reefSideChooser2.addOption("3", "3");
-        m_reefSideChooser2.addOption("4", "4");
-        m_reefSideChooser2.addOption("5", "5");
-        m_reefSideChooser2.addOption("6", "6");
-        SmartDashboard.putData("Reef side #2:", m_reefSideChooser2);
-
-        m_treeChooser2.addOption("Left", "(Left Tree)");
-        m_treeChooser2.addOption("Right", "(Right Tree)");
-        SmartDashboard.putData("Tree side #2:", m_treeChooser2);
+        m_treeChooser2.addOption("A", "A");
+        m_treeChooser2.addOption("B", "B");
+        m_treeChooser2.addOption("C", "C");
+        m_treeChooser2.addOption("D", "D");
+        m_treeChooser2.addOption("E", "E");
+        m_treeChooser2.addOption("F", "F");
+        m_treeChooser2.addOption("G", "G");
+        m_treeChooser2.addOption("H", "H");
+        m_treeChooser2.addOption("I", "I");
+        m_treeChooser2.addOption("J", "J");
+        m_treeChooser2.addOption("K", "K");
+        m_treeChooser2.addOption("L", "L");
+        SmartDashboard.putData("Tree #2:", m_treeChooser2);
 
         m_levelChooser2.addOption("L1", ElevatorPositions.L1);
         m_levelChooser2.addOption("L2", ElevatorPositions.L2);
@@ -80,23 +87,25 @@ public class AutoCreator {
         SmartDashboard.putData("Level #2:", m_levelChooser2);
 
         // Options for third coral
-        m_coralStationChooser2.addOption("End Auto Here", null);
+        m_coralStationChooser2.addOption("End Auto", null);
         m_coralStationChooser2.addOption("Top", "Top");
         m_coralStationChooser2.addOption("Bottom", "Bottom");
         m_coralStationChooser2.onChange(this::createTwoCoralAuto);
         SmartDashboard.putData("Coral station #2:", m_coralStationChooser2);
 
-        m_reefSideChooser3.addOption("1", "1");
-        m_reefSideChooser3.addOption("2", "2");
-        m_reefSideChooser3.addOption("3", "3");
-        m_reefSideChooser3.addOption("4", "4");
-        m_reefSideChooser3.addOption("5", "5");
-        m_reefSideChooser3.addOption("6", "6");
-        SmartDashboard.putData("Reef side #3:", m_reefSideChooser3);
-
-        m_treeChooser3.addOption("Left", "(Left Tree)");
-        m_treeChooser3.addOption("Right", "(Right Tree)");
-        SmartDashboard.putData("Tree side #3:", m_treeChooser3);
+        m_treeChooser3.addOption("A", "A");
+        m_treeChooser3.addOption("B", "B");
+        m_treeChooser3.addOption("C", "C");
+        m_treeChooser3.addOption("D", "D");
+        m_treeChooser3.addOption("E", "E");
+        m_treeChooser3.addOption("F", "F");
+        m_treeChooser3.addOption("G", "G");
+        m_treeChooser3.addOption("H", "H");
+        m_treeChooser3.addOption("I", "I");
+        m_treeChooser3.addOption("J", "J");
+        m_treeChooser3.addOption("K", "K");
+        m_treeChooser3.addOption("L", "L");
+        SmartDashboard.putData("Tree #3:", m_treeChooser3);
 
         m_levelChooser3.addOption("L1", ElevatorPositions.L1);
         m_levelChooser3.addOption("L2", ElevatorPositions.L2);
@@ -108,9 +117,18 @@ public class AutoCreator {
 
     private void createOneCoralAuto(String coralStationSelection) {
         if (coralStationSelection == null) {
-            String pathName = m_startPositionChooser.getSelected();
+            try {
+                String pathName = m_startPositionChooser.getSelected();
+                pathName += m_treeChooser.getSelected();
+                PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+                m_autoSequence = AutoBuilder.followPath(path);
+                // TODO: Add elevator command
+            } catch (Exception e) {
+                DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
+                m_autoSequence = Commands.none();
+                return;
+            }
         }
-        // TODO: finish
     }
 
     private void createTwoCoralAuto(String coralStationSelection) {

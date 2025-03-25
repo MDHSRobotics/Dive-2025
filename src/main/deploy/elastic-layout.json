@@ -6,7 +6,25 @@
       "name": "Teleoperated",
       "grid_layout": {
         "layouts": [],
-        "containers": []
+        "containers": [
+          {
+            "title": "Beam Broken",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1920.0,
+            "height": 896.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/Climb/Beam Broken",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          }
+        ]
       }
     },
     {
@@ -15,29 +33,123 @@
         "layouts": [],
         "containers": [
           {
-            "title": "Select your auto:",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 384.0,
-            "height": 128.0,
-            "type": "ComboBox Chooser",
-            "properties": {
-              "topic": "/SmartDashboard/Select your auto:",
-              "period": 0.06,
-              "sort_options": false
-            }
-          },
-          {
             "title": "Select your cage:",
-            "x": 384.0,
+            "x": 0.0,
             "y": 0.0,
             "width": 256.0,
             "height": 128.0,
-            "type": "ComboBox Chooser",
+            "type": "Split Button Chooser",
             "properties": {
               "topic": "/SmartDashboard/Select your cage:",
-              "period": 0.06,
-              "sort_options": false
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Starting position:",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Starting position:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Level #1:",
+            "x": 1024.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Level #1:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Tree #1:",
+            "x": 256.0,
+            "y": 128.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Tree #1:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Coral station #1:",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Coral station #1:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Coral station #2:",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Coral station #2:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Tree #2:",
+            "x": 256.0,
+            "y": 256.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Tree #2:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Level #2:",
+            "x": 1024.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Level #2:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Tree #3:",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Tree #3:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Level #3 and Create Auto:",
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Level #3 and Create Auto:",
+              "period": 0.06
             }
           }
         ]
@@ -136,6 +248,19 @@
             "properties": {
               "topic": "/SmartDashboard/Alerts",
               "period": 0.06
+            }
+          },
+          {
+            "title": "Select your test auto:",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Select your test auto:",
+              "period": 0.06,
+              "sort_options": false
             }
           }
         ]

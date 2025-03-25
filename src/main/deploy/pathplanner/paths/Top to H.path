@@ -1,0 +1,66 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 7.678124999999999,
+        "y": 7.546546052631578
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 6.681186868686869,
+        "y": 6.088320707070706
+      },
+      "isLocked": false,
+      "linkedName": "Top Start"
+    },
+    {
+      "anchor": {
+        "x": 5.8403782894736835,
+        "y": 4.178947368421053
+      },
+      "prevControl": {
+        "x": 7.972575259170654,
+        "y": 4.241017078681553
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": "Tree H"
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [
+    {
+      "name": "Start Auto Timer",
+      "waypointRelativePos": 0,
+      "endWaypointRelativePos": null,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "Start Auto Timer"
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 4.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 321.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "reversed": false,
+  "folder": "Top",
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 180.0
+  },
+  "useDefaultConstraints": true
+}
