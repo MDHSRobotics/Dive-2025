@@ -30,7 +30,6 @@ import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
 import frc.robot.util.AutoCreator;
-import frc.robot.util.AutoTimer;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -56,8 +55,6 @@ public class RobotContainer {
     private final Climb m_climb = new Climb();
     private final Elevator m_elevator = new Elevator();
     private final Intake m_intake = new Intake();
-
-    private final AutoTimer m_autoTimer = new AutoTimer();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -272,8 +269,6 @@ public class RobotContainer {
                 "Raise Catcher Arm", m_elevator.setArmPositionCommand(ElevatorArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
                 "Intake Coral", m_elevator.runWheelCommand().withTimeout(1));
-        NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
-        NamedCommands.registerCommand("End Auto Timer", Commands.runOnce(m_autoTimer::stopAndPublish));
     }
 
     /**

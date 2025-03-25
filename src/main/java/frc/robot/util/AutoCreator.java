@@ -25,6 +25,7 @@ public class AutoCreator {
     private final SendableChooser<ElevatorPositions> m_levelChooser3 = new SendableChooser<ElevatorPositions>();
 
     private final Elevator m_elevator;
+    private final AutoTimer m_autoTimer = new AutoTimer();
     private Command m_autoSequence = null;
 
     public AutoCreator(Elevator elevator) {
@@ -61,7 +62,7 @@ public class AutoCreator {
 
         // Options for second coral
         m_coralStationChooser.addOption("End Auto", null);
-        m_coralStationChooser.addOption("Top", "Top");
+        m_coralStationChooser.addOption("Top", "Top                   ");
         m_coralStationChooser.addOption("Bottom", "Bottom");
         m_coralStationChooser.onChange(this::createOneCoralAuto);
         SmartDashboard.putData("Coral station #1:", m_coralStationChooser);
@@ -121,8 +122,10 @@ public class AutoCreator {
                 String pathName = m_startPositionChooser.getSelected();
                 pathName += m_treeChooser.getSelected();
                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-                m_autoSequence = AutoBuilder.followPath(path);
-                // TODO: Add elevator command
+                m_autoSequence = Commands.sequence(
+                        Commands.parallel(Commands.runOnce(m_autoTimer::resetAndStart), AutoBuilder.followPath(path)),
+                        Commands.runOnce(m_autoTimer::stopAndPublish));
+                // TODO: Add elevator command to sequence
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
                 m_autoSequence = Commands.none();
@@ -133,7 +136,33 @@ public class AutoCreator {
 
     private void createTwoCoralAuto(String coralStationSelection) {
         if (coralStationSelection == null) {
-            String pathName = m_startPositionChooser.getSelected();
+            try {
+                String pathToFirstTreeName = m_startPositionChooser.getSelected();
+                String firstTree = m_treeChooser.getSelected();
+                pathToFirstTreeName += firstTree;
+                PathPlannerPath pathToFirstTree = PathPlannerPath.fromPathFile(pathToFirstTreeName);
+
+                String pathToCoralStationName = firstTree + " to ";
+                String coralStation = m_coralStationChooser.getSelected();
+                pathToCoralStationName += coralStation;
+                PathPlannerPath pathToCoralStation = PathPlannerPath.fromPathFile(pathToCoralStationName);
+
+                String pathToSecondTreeName = coralStation + " to ";
+                pathToSecondTreeName += m_treeChooser2.getSelected();
+                PathPlannerPath pathToSecondTree = PathPlannerPath.fromPathFile(pathToSecondTreeName);
+
+                m_autoSequence = Commands.sequence(
+                        Commands.parallel(
+                                Commands.runOnce(m_autoTimer::resetAndStart), AutoBuilder.followPath(pathToFirstTree)),
+                        AutoBuilder.followPath(pathToCoralStation),
+                        AutoBuilder.followPath(pathToSecondTree),
+                        Commands.runOnce(m_autoTimer::stopAndPublish));
+                // TODO: Add elevator command to sequence
+            } catch (Exception e) {
+                DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
+                m_autoSequence = Commands.none();
+                return;
+            }
         }
         // TODO: finish
     }

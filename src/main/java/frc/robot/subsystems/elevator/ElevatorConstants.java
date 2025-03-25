@@ -51,7 +51,8 @@ public class ElevatorConstants {
     /**
      * The conversion of motor input rotations to arm output radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.one().div(9).in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR =
+            Rotations.one().div(9).in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
      */
