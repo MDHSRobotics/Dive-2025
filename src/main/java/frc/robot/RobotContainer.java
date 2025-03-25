@@ -93,6 +93,11 @@ public class RobotContainer {
     /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> autoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
+    private final SendableChooser<String> startPositionChooser = new SendableChooser<String>();
+    private final SendableChooser<String> reefSideChooser = new SendableChooser<String>();
+    private final SendableChooser<String> treeChooser = new SendableChooser<String>();
+    private final SendableChooser<Double> levelChooser = new SendableChooser<Double>();
+    private final SendableChooser<String> coralStationChooser = new SendableChooser<String>();
 
     private final AimingRoutines aimingRoutines = new AimingRoutines(
             m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
@@ -120,6 +125,32 @@ public class RobotContainer {
         cageChooser.addOption("Right", CageLocation.RIGHT);
         SmartDashboard.putData("Select your cage:", cageChooser);
 
+        startPositionChooser.addOption("Top", "Top to");
+        startPositionChooser.addOption("Middle", "Middle to");
+        startPositionChooser.addOption("Bottom", "Bottom to");
+        SmartDashboard.putData("Select your position:", startPositionChooser);
+
+        reefSideChooser.addOption("1", "1");
+        reefSideChooser.addOption("2", "2");
+        reefSideChooser.addOption("3", "3");
+        reefSideChooser.addOption("4", "4");
+        reefSideChooser.addOption("5", "5");
+        reefSideChooser.addOption("6", "6");
+        SmartDashboard.putData("Select your reef side:", reefSideChooser);
+
+        treeChooser.addOption("Left", "(Left Tree)");
+        treeChooser.addOption("Right", "(Right Tree)");
+        SmartDashboard.putData("Select your tree side:", treeChooser);
+
+        levelChooser.addOption("L1", 1.0);
+        levelChooser.addOption("L2", 2.0);
+        levelChooser.addOption("L3", 3.0);
+        levelChooser.addOption("L4", 4.0);
+        SmartDashboard.putData("Select your level:", levelChooser);
+
+        coralStationChooser.addOption("Top", "Top");
+        coralStationChooser.addOption("Bottom", "Bottom");
+        SmartDashboard.putData("Select your coral station level:", coralStationChooser);
         // Select left tree on startup
         // selectLeftTree();
     }
