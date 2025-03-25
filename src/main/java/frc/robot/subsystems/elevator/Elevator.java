@@ -22,6 +22,7 @@ import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -29,12 +30,12 @@ import frc.robot.subsystems.drive.TunerConstants;
 import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
-    public enum CatcherArmPositions {
+    public enum ElevatorArmPositions {
         STOWED,
-        TROUGH,
         CORAL_STATION,
-        UP,
-        L_2
+        L1,
+        L_2_AND_3,
+        L4
     }
 
     private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
@@ -147,19 +148,22 @@ public class Elevator extends SubsystemBase {
                 .finallyDo(m_armMotor::stopMotor);
     }
 
-    public Command setArmPositionAndEndCommand(CatcherArmPositions armPosition) {
+    public Command setArmPositionCommand(ElevatorArmPositions armPosition) {
         return this.runOnce(() -> {
             double position;
-            if (armPosition == CatcherArmPositions.STOWED) {
+            if (armPosition == ElevatorArmPositions.STOWED) {
                 position = ARM_MIN_LIMIT;
-            } else if (armPosition == CatcherArmPositions.TROUGH) {
-                position = TROUGH_POSITION;
-            } else if (armPosition == CatcherArmPositions.CORAL_STATION) {
+            } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
                 position = CORAL_STATION_POSITION;
-            } else if (armPosition == CatcherArmPositions.UP) {
-                position = UP_POSITION;
+            } else if (armPosition == ElevatorArmPositions.L1) {
+                position = L1_POSITION;
+            } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
+                position = L2_AND_L3_POSITION;
+            } else if (armPosition == ElevatorArmPositions.L4) {
+                position = L4_POSITION;
             } else {
-                position = L2_POSITION;
+                DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
+                return;
             }
             m_armController.setReference(position, ControlType.kPosition);
             targetPositionPub.set(position);
@@ -173,7 +177,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command raiseAndRunWheelCommand() {
-        return setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION).andThen(runWheelCommand());
+        return setArmPositionCommand(ElevatorArmPositions.CORAL_STATION).andThen(runWheelCommand());
     }
 
     public Command wheelBackwardsCommand() {
@@ -203,8 +207,8 @@ public class Elevator extends SubsystemBase {
                 });
     }
 
-    public Command setArmPositionCommand(CatcherArmPositions armPosition) {
-        return setArmPositionAndEndCommand(armPosition).andThen(Commands.idle(this));
+    public Command setArmPositionAndWaitCommand(ElevatorArmPositions armPosition) {
+        return setArmPositionCommand(armPosition).andThen(Commands.idle(this));
     }
 
     public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {

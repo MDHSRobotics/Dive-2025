@@ -26,7 +26,7 @@ import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.Elevator.CatcherArmPositions;
+import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
 import frc.robot.util.AutoTimer;
@@ -82,13 +82,8 @@ public class RobotContainer {
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
-    private final SendableChooser<Command> autoChooser;
+    private final SendableChooser<Command> testAutoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
-    private final SendableChooser<String> startPositionChooser = new SendableChooser<String>();
-    private final SendableChooser<String> reefSideChooser = new SendableChooser<String>();
-    private final SendableChooser<String> treeChooser = new SendableChooser<String>();
-    private final SendableChooser<Double> levelChooser = new SendableChooser<Double>();
-    private final SendableChooser<String> coralStationChooser = new SendableChooser<String>();
 
     private final AimingRoutines aimingRoutines = new AimingRoutines(
             m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
@@ -103,45 +98,18 @@ public class RobotContainer {
 
         m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-        autoChooser = AutoBuilder.buildAutoChooser();
-        autoChooser.addOption(
+        testAutoChooser = AutoBuilder.buildAutoChooser();
+        testAutoChooser.addOption(
                 "Drive Wheel Radius Characterization",
                 WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        autoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
-        autoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
-        SmartDashboard.putData("Select your auto:", autoChooser);
+        testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
+        testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
+        SmartDashboard.putData("Select your test auto:", testAutoChooser);
 
         cageChooser.addOption("Left", CageLocation.LEFT);
         cageChooser.addOption("Middle", CageLocation.MIDDLE);
         cageChooser.addOption("Right", CageLocation.RIGHT);
         SmartDashboard.putData("Select your cage:", cageChooser);
-
-        startPositionChooser.addOption("Top", "Top to");
-        startPositionChooser.addOption("Middle", "Middle to");
-        startPositionChooser.addOption("Bottom", "Bottom to");
-        SmartDashboard.putData("Select your position:", startPositionChooser);
-
-        reefSideChooser.addOption("1", "1");
-        reefSideChooser.addOption("2", "2");
-        reefSideChooser.addOption("3", "3");
-        reefSideChooser.addOption("4", "4");
-        reefSideChooser.addOption("5", "5");
-        reefSideChooser.addOption("6", "6");
-        SmartDashboard.putData("Select your reef side:", reefSideChooser);
-
-        treeChooser.addOption("Left", "(Left Tree)");
-        treeChooser.addOption("Right", "(Right Tree)");
-        SmartDashboard.putData("Select your tree side:", treeChooser);
-
-        levelChooser.addOption("L1", 1.0);
-        levelChooser.addOption("L2", 2.0);
-        levelChooser.addOption("L3", 3.0);
-        levelChooser.addOption("L4", 4.0);
-        SmartDashboard.putData("Select your level:", levelChooser);
-
-        coralStationChooser.addOption("Top", "Top");
-        coralStationChooser.addOption("Bottom", "Bottom");
-        SmartDashboard.putData("Select your coral station level:", coralStationChooser);
     }
 
     private void setDefaultCommands() {
@@ -258,11 +226,6 @@ public class RobotContainer {
                 .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
         operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
 
-        operatorController
-                .leftBumper()
-                .toggleOnTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
-        operatorController.rightBumper().toggleOnTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.TROUGH));
-
         operatorController.a().whileTrue(m_elevator.raiseAndRunWheelCommand());
         operatorController.b().whileTrue(m_elevator.wheelBackwardsCommand());
 
@@ -300,11 +263,9 @@ public class RobotContainer {
      */
     private void registerNamedCommands() {
         NamedCommands.registerCommand(
-                "Lower Catcher Arm", m_elevator.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
-        NamedCommands.registerCommand(
                 "Eject Coral", m_elevator.wheelBackwardsCommand().withTimeout(0.5));
         NamedCommands.registerCommand(
-                "Raise Catcher Arm", m_elevator.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
+                "Raise Catcher Arm", m_elevator.setArmPositionCommand(ElevatorArmPositions.CORAL_STATION));
         NamedCommands.registerCommand(
                 "Intake Coral", m_elevator.runWheelCommand().withTimeout(1));
         NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
@@ -316,7 +277,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
+        return testAutoChooser.getSelected();
     }
 
     /**

@@ -71,21 +71,15 @@ public class ElevatorConstants {
      */
     public static final double K_P = 0.225;
 
-    // Common catcher positions
-    /**
-     * The position that aligns the arm with the trough in radians.
-     */
-    public static final double TROUGH_POSITION = 5.32;
+    // Common arm positions
     /** Units: radians */
-    public static final double L2_POSITION = 4.562;
+    public static final double STOWED_POSITION = 0;
     /** Units: radians */
-    public static final double ALGAE_POSITION = 4.91;
-    /**
-     * The position that aligns the arm with the coral station in radians.
-     * This is the actual position minus a fudge factor that accounts for the weight of gravity.
-     */
-    public static final double CORAL_STATION_POSITION =
-            Radians.of(4.022).minus(Radians.of(0.1)).minus(Degrees.of(1)).in(Radians);
+    public static final double CORAL_STATION_POSITION = 0;
     /** Units: radians */
-    public static final double UP_POSITION = 3.385;
+    public static final double L1_POSITION = 0;
+    /** Units: radians */
+    public static final double L2_AND_L3_POSITION = 0;
+    /** Units: radians */
+    public static final double L4_POSITION = 0;
 }
