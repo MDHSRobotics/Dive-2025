@@ -62,8 +62,8 @@ public class AutoCreator {
 
         // Options for second coral
         m_coralStationChooser.addOption("End Auto", null);
-        m_coralStationChooser.addOption("Top", "Top                   ");
-        m_coralStationChooser.addOption("Bottom", "Bottom");
+        m_coralStationChooser.addOption("Top", "Top Station");
+        m_coralStationChooser.addOption("Bottom", "Bottom Station");
         m_coralStationChooser.onChange(this::createOneCoralAuto);
         SmartDashboard.putData("Coral station #1:", m_coralStationChooser);
 
@@ -89,8 +89,8 @@ public class AutoCreator {
 
         // Options for third coral
         m_coralStationChooser2.addOption("End Auto", null);
-        m_coralStationChooser2.addOption("Top", "Top");
-        m_coralStationChooser2.addOption("Bottom", "Bottom");
+        m_coralStationChooser2.addOption("Top", "Top Station");
+        m_coralStationChooser2.addOption("Bottom", "Bottom Station");
         m_coralStationChooser2.onChange(this::createTwoCoralAuto);
         SmartDashboard.putData("Coral station #2:", m_coralStationChooser2);
 
@@ -164,11 +164,48 @@ public class AutoCreator {
                 return;
             }
         }
-        // TODO: finish
     }
 
     private void createThreeCoralAuto(ElevatorPositions elevatorPosition3) {
-        // TODO: finish
+        try {
+            String pathToFirstTreeName = m_startPositionChooser.getSelected();
+            String firstTree = m_treeChooser.getSelected();
+            pathToFirstTreeName += firstTree;
+            PathPlannerPath pathToFirstTree = PathPlannerPath.fromPathFile(pathToFirstTreeName);
+
+            String pathToCoralStationName = firstTree + " to ";
+            String firstCoralStation = m_coralStationChooser.getSelected();
+            pathToCoralStationName += firstCoralStation;
+            PathPlannerPath pathToFirstCoralStation = PathPlannerPath.fromPathFile(pathToCoralStationName);
+
+            String pathToSecondTreeName = firstCoralStation + " to ";
+            String secondTree = m_treeChooser2.getSelected();
+            pathToSecondTreeName += secondTree;
+            PathPlannerPath pathToSecondTree = PathPlannerPath.fromPathFile(pathToSecondTreeName);
+
+            String pathToSecondCoralStationName = secondTree + " to ";
+            String secondCoralStation = m_coralStationChooser2.getSelected();
+            pathToSecondCoralStationName += secondCoralStation;
+            PathPlannerPath pathToSecondCoralStation = PathPlannerPath.fromPathFile(pathToSecondCoralStationName);
+
+            String pathToThirdTreeName = secondCoralStation + " to ";
+            pathToThirdTreeName += m_treeChooser3.getSelected();
+            PathPlannerPath pathToThirdTree = PathPlannerPath.fromPathFile(pathToThirdTreeName);
+
+            m_autoSequence = Commands.sequence(
+                    Commands.parallel(
+                            Commands.runOnce(m_autoTimer::resetAndStart), AutoBuilder.followPath(pathToFirstTree)),
+                    AutoBuilder.followPath(pathToFirstCoralStation),
+                    AutoBuilder.followPath(pathToSecondTree),
+                    AutoBuilder.followPath(pathToSecondCoralStation),
+                    AutoBuilder.followPath(pathToThirdTree),
+                    Commands.runOnce(m_autoTimer::stopAndPublish));
+            // TODO: Add elevator command to sequence
+        } catch (Exception e) {
+            DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
+            m_autoSequence = Commands.none();
+            return;
+        }
     }
 
     public Command getAutonomousCommand() {
