@@ -26,7 +26,7 @@ public class ElevatorConstants {
     /**
      * Gear reduction of the elevator motor.
      */
-    private static final double ELEVATOR_GEAR_RATIO = 20.0;
+    private static final double ELEVATOR_GEAR_RATIO = 27.0;
 
     /**
      * The distance from the center of the hex bar to the outer edge of the elevator chain.
@@ -51,12 +51,12 @@ public class ElevatorConstants {
     /**
      * The conversion of motor input rotations to arm output radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.one().in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.one().div(9).in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).one().in(RadiansPerSecond);
+            Rotations.per(Minute).one().div(9).in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
