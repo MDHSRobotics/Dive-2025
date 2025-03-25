@@ -77,18 +77,9 @@ public class RobotContainer {
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
     /* Robot States */
-    // private final Trigger m_nearCoralStationTrigger = new Trigger(
-    // () -> Aiming.isNearCoralStation(m_drivetrain.getState().Pose.getTranslation()));
     private RobotSpeeds m_robotSpeed = RobotSpeeds.MAX_SPEED;
 
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
-
-    /* NetworkTables Logging */
-    // private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    // private final NetworkTable driverInfoTable = inst.getTable("Driver Info");
-
-    // private final StringPublisher selectedDirectionIndicator =
-    //         driverInfoTable.getStringTopic("Selected Tree Direction").publish();
 
     /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> autoChooser;
@@ -119,9 +110,6 @@ public class RobotContainer {
         cageChooser.addOption("Middle", CageLocation.MIDDLE);
         cageChooser.addOption("Right", CageLocation.RIGHT);
         SmartDashboard.putData("Select your cage:", cageChooser);
-
-        // Select left tree on startup
-        // selectLeftTree();
     }
 
     private void setDefaultCommands() {
@@ -138,10 +126,7 @@ public class RobotContainer {
     /**
      * Use this method to define trigger->command mappings that don't involve controller inputs.
      */
-    private void configureTriggers() {
-        // m_nearCoralStationTrigger.onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.HALF_SPEED));
-        // m_nearCoralStationTrigger.onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
-    }
+    private void configureTriggers() {}
 
     /**
      * Use this method to define controller input->command mappings.
@@ -351,28 +336,6 @@ public class RobotContainer {
         }
         return rotationalDeadband;
     }
-
-    /*private void selectLeftTree() {
-        // Update the target for tx values
-        LimelightHelpers.SetFidcuial3DOffset(
-                VisionConstants.FRONT_LIMELIGHT_NAME,
-                VisionConstants.TAG_TO_LEFT_TREE_FORWARD_OFFSET,
-                VisionConstants.TAG_TO_LEFT_TREE_RIGHT_OFFSET,
-                0);
-        // Log the direction
-        selectedDirectionIndicator.set("Left");
-    }
-
-    private void selectRightTree() {
-        // Update the target for tx values
-        LimelightHelpers.SetFidcuial3DOffset(
-                VisionConstants.FRONT_LIMELIGHT_NAME,
-                VisionConstants.TAG_TO_RIGHT_TREE_FORWARD_OFFSET,
-                VisionConstants.TAG_TO_RIGHT_TREE_RIGHT_OFFSET,
-                0);
-        // Log the direction
-        selectedDirectionIndicator.set("Right");
-    }*/
 
     public void resetRobotPosition(Pose2d position) {
         m_drivetrain.resetPose(position);
