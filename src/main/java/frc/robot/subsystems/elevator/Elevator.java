@@ -30,6 +30,15 @@ import frc.robot.subsystems.drive.TunerConstants;
 import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
+    public enum ElevatorPositions {
+        STOWED,
+        CORAL_STATION,
+        L1,
+        L2,
+        L3,
+        L4
+    }
+
     public enum ElevatorArmPositions {
         STOWED,
         CORAL_STATION,
