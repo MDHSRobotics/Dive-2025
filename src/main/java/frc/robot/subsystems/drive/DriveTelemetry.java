@@ -11,6 +11,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
@@ -25,13 +26,13 @@ public class DriveTelemetry {
      */
     private final DoubleArrayPublisher megatag2FrontUpdater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
-            .publish();
+            .publish(PubSubOption.periodic(0.004));
 
     private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
-            .publish();
+            .publish(PubSubOption.periodic(0.004));
 
-    /** Limelight requires this to be a array of size 6. */
+    /** Limelight requires this to be an array of size 6. */
     private double[] megatag2Orientation = new double[6];
 
     /** Used to derive linear accel */
@@ -80,7 +81,6 @@ public class DriveTelemetry {
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
         megatag2FrontUpdater.set(megatag2Orientation, timestamp);
         megatag2BackUpdater.set(megatag2Orientation, timestamp);
-        inst.flush();
 
         /* Telemeterize the swerve drive state */
         drivePosePub.set(state.Pose, timestamp);
