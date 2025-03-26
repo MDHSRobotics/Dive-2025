@@ -34,11 +34,6 @@ public class DriveTelemetry {
     /** Limelight requires this to be a array of size 6. */
     private double[] megatag2Orientation = new double[6];
 
-    /** Used to derive linear accel */
-    private double previousLinearSpeed = 0;
-    /** Used to derive angular accel */
-    private double previousYawRate = 0;
-
     /* Robot swerve drive state */
     private final NetworkTable driveStateTable = inst.getTable("DriveState");
     private final StructPublisher<Pose2d> drivePosePub = driveStateTable
@@ -62,10 +57,6 @@ public class DriveTelemetry {
             driveStateTable.getDoubleTopic("OdometryPeriod").publish();
     private final DoublePublisher linearSpeedPub =
             driveStateTable.getDoubleTopic("Linear Speed").publish();
-    private final DoublePublisher linearAccelPub =
-            driveStateTable.getDoubleTopic("Linear Accel").publish();
-    private final DoublePublisher angularAccelPub =
-            driveStateTable.getDoubleTopic("Angular Accel").publish();
 
     private final double[] poseArray = new double[3];
     private final double[] moduleStatesArray = new double[8];
@@ -93,14 +84,6 @@ public class DriveTelemetry {
 
         double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
         linearSpeedPub.set(linearSpeed, timestamp);
-
-        linearAccelPub.set((linearSpeed - previousLinearSpeed) / state.OdometryPeriod, timestamp);
-        // Update previous linear velocity
-        previousLinearSpeed = linearSpeed;
-
-        angularAccelPub.set((state.Speeds.omegaRadiansPerSecond - previousYawRate) / state.OdometryPeriod, timestamp);
-        // Update previous angular velocity
-        previousYawRate = state.Speeds.omegaRadiansPerSecond;
 
         /* Also write to log file */
         poseArray[0] = state.Pose.getX();
