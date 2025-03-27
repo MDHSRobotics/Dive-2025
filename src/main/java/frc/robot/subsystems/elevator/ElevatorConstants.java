@@ -51,19 +51,18 @@ public class ElevatorConstants {
     /**
      * The conversion of motor input rotations to arm output radians.
      */
-    public static final double ARM_POSITION_CONVERSION_FACTOR =
-            Rotations.one().div(9).in(Radians);
+    public static final double ARM_POSITION_CONVERSION_FACTOR = Rotations.one().in(Radians);
     /**
      * The conversion of motor input rotations per minute to arm output radians per second.
      */
     public static final double ARM_VELOCITY_CONVERSION_FACTOR =
-            Rotations.per(Minute).one().div(9).in(RadiansPerSecond);
+            Rotations.per(Minute).one().in(RadiansPerSecond);
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the arm's range of motion to prevent the position wrapping around from 1 to 0.
      */
-    public static final double ARM_ZERO_OFFSET = 0.75;
+    public static final double ARM_ZERO_OFFSET = 0.25;
 
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
