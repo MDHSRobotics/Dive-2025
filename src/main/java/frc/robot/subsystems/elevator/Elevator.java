@@ -103,9 +103,9 @@ public class Elevator extends SubsystemBase {
         armConfig
                 .softLimit
                 .forwardSoftLimit(ARM_MAX_LIMIT)
-                .forwardSoftLimitEnabled(true)
+                .forwardSoftLimitEnabled(false)
                 .reverseSoftLimit(ARM_MIN_LIMIT)
-                .reverseSoftLimitEnabled(true);
+                .reverseSoftLimitEnabled(false);
         armConfig
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)

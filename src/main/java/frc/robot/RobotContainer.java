@@ -219,15 +219,15 @@ public class RobotContainer {
                 .whileTrue(m_climb.setPowerCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
 
-        // operatorController
-        //         .leftStick()
-        //         .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getLeftY()));
         operatorController
                 .leftStick()
                 .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
-        operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
+        // operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
+        operatorController
+                .rightStick()
+                .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getRightY()));
 
-        operatorController.a().whileTrue(m_elevator.raiseAndRunWheelCommand());
+        operatorController.a().whileTrue(m_elevator.runWheelCommand());
         operatorController.b().whileTrue(m_elevator.wheelBackwardsCommand());
 
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
