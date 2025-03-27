@@ -6,6 +6,7 @@ import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.ControlType;
@@ -81,7 +82,9 @@ public class Elevator extends SubsystemBase {
     public Elevator() {
         TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
         elevatorConfig
-                .withMotorOutput(new MotorOutputConfigs().withNeutralMode(NeutralModeValue.Brake))
+                .withMotorOutput(new MotorOutputConfigs()
+                        .withNeutralMode(NeutralModeValue.Brake)
+                        .withInverted(InvertedValue.Clockwise_Positive))
                 .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
         m_elevatorMotor.getConfigurator().apply(elevatorConfig);
 
