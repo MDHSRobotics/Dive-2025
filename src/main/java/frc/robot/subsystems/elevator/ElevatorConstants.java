@@ -19,7 +19,7 @@ public class ElevatorConstants {
     public static final int CURRENT_LIMIT = 80;
 
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 3.5;
+    public static final double ARM_MIN_LIMIT = 3.875;
     /** Units: radians */
     public static final double ARM_MAX_LIMIT = 5.8;
 
