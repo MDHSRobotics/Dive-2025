@@ -156,7 +156,7 @@ public class Elevator extends SubsystemBase {
 
     public Command setArmPowerCommand(DoubleSupplier armPowerSupplier) {
         return this.run(() -> {
-                    m_armMotor.set(armPowerSupplier.getAsDouble() * 0.25);
+                    m_armMotor.set(armPowerSupplier.getAsDouble() * 0.5);
                 })
                 .finallyDo(m_armMotor::stopMotor);
     }

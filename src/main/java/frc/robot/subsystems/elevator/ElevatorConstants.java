@@ -19,9 +19,9 @@ public class ElevatorConstants {
     public static final int CURRENT_LIMIT = 80;
 
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 1.142;
+    public static final double ARM_MIN_LIMIT = 3.5;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 5.0;
+    public static final double ARM_MAX_LIMIT = 5.8;
 
     /**
      * Gear reduction of the elevator motor.
@@ -62,7 +62,7 @@ public class ElevatorConstants {
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the arm's range of motion to prevent the position wrapping around from 1 to 0.
      */
-    public static final double ARM_ZERO_OFFSET = 0.25;
+    public static final double ARM_ZERO_OFFSET = 0;
 
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
