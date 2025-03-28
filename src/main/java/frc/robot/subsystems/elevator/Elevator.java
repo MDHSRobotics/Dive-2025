@@ -99,18 +99,19 @@ public class Elevator extends SubsystemBase {
         // m_elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
-        armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake).inverted(true);
+        armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
         armConfig
                 .softLimit
                 .forwardSoftLimit(ARM_MAX_LIMIT)
-                .forwardSoftLimitEnabled(false)
+                .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(ARM_MIN_LIMIT)
-                .reverseSoftLimitEnabled(false);
+                .reverseSoftLimitEnabled(true);
         armConfig
                 .absoluteEncoder
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
-                .zeroOffset(ARM_ZERO_OFFSET);
+                .zeroOffset(ARM_ZERO_OFFSET)
+                .inverted(true);
         armConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P);
         armConfig
                 .signals

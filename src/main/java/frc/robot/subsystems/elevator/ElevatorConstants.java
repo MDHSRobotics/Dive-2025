@@ -19,9 +19,9 @@ public class ElevatorConstants {
     public static final int CURRENT_LIMIT = 80;
 
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 2.22;
+    public static final double ARM_MIN_LIMIT = 1.142;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 5.80;
+    public static final double ARM_MAX_LIMIT = 5.0;
 
     /**
      * Gear reduction of the elevator motor.

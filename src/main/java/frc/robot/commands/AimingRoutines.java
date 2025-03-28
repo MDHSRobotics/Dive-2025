@@ -28,7 +28,6 @@ import frc.robot.Constants.VisionConstants;
 import frc.robot.RobotContainer.CageLocation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.requests.DriveFacingAngle;
-import frc.robot.subsystems.drive.requests.DriveFacingNearestPosition;
 import frc.robot.subsystems.drive.requests.DriveFacingPosition;
 import frc.robot.subsystems.drive.requests.DriveWithVisualServoing;
 import frc.robot.subsystems.drive.requests.ProfiledXYHeadingAlignment;
@@ -63,12 +62,6 @@ public class AimingRoutines {
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(
-                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
-            .withTolerance(HEADING_TOLERANCE)
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-
-    private final DriveFacingNearestPosition driveFacingNearestPosition = new DriveFacingNearestPosition(
                     ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
@@ -265,7 +258,7 @@ public class AimingRoutines {
                     } else {
                         treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                     }
-                    return generatePath(currentState, treePose, PATHFINDING_CONSTRAINTS, false);
+                    return generatePath(currentState, treePose, ON_THE_FLY_CONSTRAINTS, false);
                 }),
                 m_drivetrain.startRun(
                         () -> {
@@ -342,7 +335,7 @@ public class AimingRoutines {
 
             PathConstraints pathConstraints;
             if (driveFast == true) {
-                pathConstraints = PATHFINDING_CONSTRAINTS;
+                pathConstraints = ON_THE_FLY_CONSTRAINTS;
             } else {
                 pathConstraints = CAGE_CONSTRAINTS;
             }

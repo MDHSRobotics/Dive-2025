@@ -55,7 +55,6 @@ public class DriveConstants {
 
     /**
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
-     * This still needs to be tuned.
      */
     public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
             new TrapezoidProfile.Constraints(4.0, 4.0);
@@ -162,8 +161,12 @@ public class DriveConstants {
     public static final RobotConfig PATHPLANNER_CONFIG =
             new RobotConfig(ROBOT_MASS, ROBOT_MOI, MODULE_CONFIG, MODULE_OFFSETS);
 
-    public static final PathConstraints PATHFINDING_CONSTRAINTS =
-            new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
+    public static final PathConstraints ON_THE_FLY_CONSTRAINTS = new PathConstraints(
+            LINEAR_MOTION_CONSTRAINTS.maxVelocity,
+            LINEAR_MOTION_CONSTRAINTS.maxAcceleration,
+            Units.degreesToRadians(540),
+            Units.degreesToRadians(540),
+            12);
     public static final PathConstraints CAGE_CONSTRAINTS =
             new PathConstraints(1, 1, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
 }
