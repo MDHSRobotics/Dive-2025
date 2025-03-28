@@ -3,10 +3,12 @@ package frc.robot.commands;
 import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
@@ -55,32 +57,32 @@ public class AimingRoutines {
     private final NetworkTable loggingTable = inst.getTable("Swerve Requests");
 
     private final DriveFacingAngle driveFacingAngle = new DriveFacingAngle(
-                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
+                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(
-                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
+                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveFacingNearestPosition driveFacingNearestPosition = new DriveFacingNearestPosition(
-                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
+                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveWithVisualServoing driveFacingVisionTarget = new DriveWithVisualServoing(
-                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, cameraTable, loggingTable)
+                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, cameraTable, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
-                    K_ANGULAR_P, 0.0, 0.0, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
-            .withTranslationalPIDGains(K_TRANSLATION_P, 0, 0)
+                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
+            .withTranslationalPIDGains(TRANSLATION_PID.kP, 0, 0)
             .withHeadingTolerance(HEADING_TOLERANCE)
             .withLinearTolerance(LINEAR_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
@@ -254,6 +256,7 @@ public class AimingRoutines {
     public Command driveToTree() {
         return Commands.sequence(
                 m_drivetrain.defer(() -> {
+                    SwerveDriveState currentState = m_drivetrain.getState();
                     Pose2d currentPose = m_drivetrain.getState().Pose;
                     Alliance alliance = DriverStation.getAlliance().orElseThrow();
                     Pose2d treePose;
@@ -262,7 +265,7 @@ public class AimingRoutines {
                     } else {
                         treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                     }
-                    return generatePath(currentPose, treePose, PATHFINDING_CONSTRAINTS, false);
+                    return generatePath(currentState, treePose, PATHFINDING_CONSTRAINTS, false);
                 }),
                 m_drivetrain.startRun(
                         () -> {
@@ -345,7 +348,7 @@ public class AimingRoutines {
             }
 
             return generatePath(
-                    m_drivetrain.getState().Pose, new Pose2d(targetPosition, targetRotation), pathConstraints, true);
+                    m_drivetrain.getState(), new Pose2d(targetPosition, targetRotation), pathConstraints, true);
         });
     }
 
@@ -375,40 +378,46 @@ public class AimingRoutines {
             }
 
             return generatePath(
-                    m_drivetrain.getState().Pose, new Pose2d(cagePosition, targetRotation), CAGE_CONSTRAINTS, true);
+                    m_drivetrain.getState(), new Pose2d(cagePosition, targetRotation), CAGE_CONSTRAINTS, true);
         });
     }
 
     /**
      * Generates a path-following command that drives the robot to a target position and rotation.
-     * @param currentPose The current position and rotation of the robot
+     * @param currentState The current pose and speeds of the robot
      * @param targetPose The target position and rotation of the robot
      * @param pathConstraints The constraints to use while driving
      * @param allowTargetFlipping Whether to flip targets when the alliance is red
      * @return The path following command
      */
     private static Command generatePath(
-            Pose2d currentPose, Pose2d targetPose, PathConstraints pathConstraints, boolean allowTargetFlipping) {
-        Translation2d currentPosition = currentPose.getTranslation();
+            SwerveDriveState currentState,
+            Pose2d targetPose,
+            PathConstraints pathConstraints,
+            boolean allowTargetFlipping) {
+        Rotation2d currentDirectionOfTravel =
+                new Rotation2d(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond);
+
         Translation2d targetPosition = targetPose.getTranslation();
         Rotation2d targetRotation = targetPose.getRotation();
-        // Flipping the target is handled here because it would take a lot more code to account for both red and blue
-        // alliances in
-        // the rest of the codebase.
+
         if (allowTargetFlipping && DriverStation.getAlliance().orElseThrow().equals(Alliance.Red)) {
             targetPosition = FlippingUtil.flipFieldPosition(targetPosition);
             targetRotation = FlippingUtil.flipFieldRotation(targetRotation);
         }
 
-        Translation2d currentToTargetDistance = targetPosition.minus(currentPosition);
-        Rotation2d currentToTargetDirection = currentToTargetDistance.getAngle();
-
+        // Create a list of waypoints from poses. Each pose represents one waypoint.
+        // The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-                new Pose2d(currentPosition.getX(), currentPose.getY(), currentToTargetDirection),
-                new Pose2d(targetPosition.getX(), targetPosition.getY(), currentToTargetDirection));
+                new Pose2d(currentState.Pose.getX(), currentState.Pose.getY(), currentDirectionOfTravel),
+                new Pose2d(targetPosition.getX(), targetPosition.getY(), targetRotation));
+
+        IdealStartingState startingState = new IdealStartingState(
+                Math.hypot(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond),
+                targetRotation);
 
         PathPlannerPath path =
-                new PathPlannerPath(waypoints, pathConstraints, null, new GoalEndState(0, targetRotation));
+                new PathPlannerPath(waypoints, pathConstraints, startingState, new GoalEndState(0, targetRotation));
         path.preventFlipping = true;
 
         // System.out.println("Target x: " + Units.metersToInches(treePose.getX()) + "\nTarget y: "

@@ -10,7 +10,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -281,11 +280,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withSpeeds(speeds)
                         .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
-                new PPHolonomicDriveController(
-                        // PID constants for translation
-                        DriveConstants.TRANSLATION_PID,
-                        // PID constants for rotation
-                        DriveConstants.ROTATION_PID),
+                DriveConstants.DRIVE_CONTROLLER,
                 DriveConstants.PATHPLANNER_CONFIG,
                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
                 () -> DriverStation.getAlliance().orElseThrow() == Alliance.Red,

@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -60,27 +61,11 @@ public class DriveConstants {
             new TrapezoidProfile.Constraints(4.0, 4.0);
 
     /**
-     * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
-     * used in custom swerve requests.
-     * The gain is output linear velocity (meters per second) per error (meters).
-     * This still needs to be tuned.
-     */
-    public static final double K_TRANSLATION_P = 2.5;
-
-    /**
      * Max angular rate of the robot in radians per second.
      * @see <a href="https://math.libretexts.org/Bookshelves/Precalculus/Elementary_Trigonometry_(Corral)/04%3A_Radian_Measure/4.04%3A_Circular_Motion-_Linear_and_Angular_Speed">explanation on how to convert from linear velocity to angular velocity</a>
      */
     public static final double MAX_ANGULAR_RATE =
             RadiansPerSecond.of(MAX_LINEAR_SPEED / DRIVEBASE_RADIUS.in(Meters)).in(RadiansPerSecond);
-
-    /**
-     * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-     * used in custom swerve requests.
-     * The gain is output angular velocity (radians per second) per error (radians).
-     * This comes from "Rotation RotationalRate Position.PNG"
-     */
-    public static final double K_ANGULAR_P = 4;
 
     /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
@@ -107,15 +92,16 @@ public class DriveConstants {
 
     /**
      * PID Constants for PathPlanner translation.
-     * This still needs to be tuned.
      */
-    public static final PIDConstants TRANSLATION_PID = new PIDConstants(10, 0, 0);
+    public static final PIDConstants TRANSLATION_PID = new PIDConstants(5.0, 0.0, 0.0);
 
     /**
      * PID Constants for PathPlanner rotation.
-     * This still needs to be tuned.
      */
-    public static final PIDConstants ROTATION_PID = new PIDConstants(7, 0, 0);
+    public static final PIDConstants ROTATION_PID = new PIDConstants(5.0, 0.0, 0.0);
+
+    public static final PPHolonomicDriveController DRIVE_CONTROLLER =
+            new PPHolonomicDriveController(TRANSLATION_PID, ROTATION_PID);
 
     /**
      * Robot mass with battery.

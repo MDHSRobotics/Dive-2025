@@ -319,7 +319,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
     }
 
     /**
-     * Modifies the PID gains for the y controller and returns itself.
+     * Modifies the PID gains for the x and y controllers and returns itself.
      *
      * @param kp The proportional coefficient.
      * @param ki The integral coefficient.
