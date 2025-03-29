@@ -390,6 +390,13 @@ public class AimingRoutines {
             boolean allowTargetFlipping) {
         Rotation2d currentDirectionOfTravel =
                 new Rotation2d(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond);
+        /** The linear velocity of the robot with respect to its current rotation.
+         * If the robot's velocity is 4 m/s to the left but the robot is facing right, the velocity becomes -4 m/s.
+         */
+        double robotVelocity = Math.hypot(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond)
+                * Math.cos(currentDirectionOfTravel
+                        .minus(currentState.Pose.getRotation())
+                        .getRadians());
 
         Translation2d targetPosition = targetPose.getTranslation();
         Rotation2d targetRotation = targetPose.getRotation();
@@ -405,9 +412,7 @@ public class AimingRoutines {
                 new Pose2d(currentState.Pose.getX(), currentState.Pose.getY(), currentDirectionOfTravel),
                 new Pose2d(targetPosition.getX(), targetPosition.getY(), targetRotation));
 
-        IdealStartingState startingState = new IdealStartingState(
-                Math.hypot(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond),
-                targetRotation);
+        IdealStartingState startingState = new IdealStartingState(robotVelocity, currentState.Pose.getRotation());
 
         PathPlannerPath path =
                 new PathPlannerPath(waypoints, pathConstraints, startingState, new GoalEndState(0, targetRotation));
