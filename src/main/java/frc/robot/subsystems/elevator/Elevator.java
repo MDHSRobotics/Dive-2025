@@ -6,13 +6,17 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -64,10 +68,11 @@ public class Elevator extends SubsystemBase {
 
     private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
     private final VoltageOut m_elevatorVoltage = new VoltageOut(0);
+    private final MotionMagicExpoVoltage m_elevatorPosition = new MotionMagicExpoVoltage(ELEVATOR_MIN_LIMIT);
     private final SysIdRoutine m_elevatorRoutine = new SysIdRoutine(
             new SysIdRoutine.Config(
-                    Volts.of(0.05).per(Second),
-                    Volts.of(4),
+                    Volts.of(1).per(Second),
+                    Volts.of(7),
                     null,
                     (state) -> SignalLogger.writeString("state", state.toString())),
             new SysIdRoutine.Mechanism(
@@ -99,8 +104,10 @@ public class Elevator extends SubsystemBase {
     private final NetworkTable table = inst.getTable("Elevator");
     private final DoubleEntry flywheelSpeedEntry =
             table.getDoubleTopic("Flywheel Speed").getEntry(1);
-    private final DoublePublisher targetPositionPub =
-            table.getDoubleTopic("Target Position (radians)").publish();
+    private final DoublePublisher armGoalPub =
+            table.getDoubleTopic("Arm Goal Position").publish();
+    private final DoublePublisher elevatorGoalPub =
+            table.getDoubleTopic("Elevator Goal Position").publish();
     private final DoubleEntry pGainEntry =
             table.getDoubleTopic("Arm P Gain").getEntry(ARM_K_P, PubSubOption.excludeSelf(true));
 
@@ -128,7 +135,17 @@ public class Elevator extends SubsystemBase {
                         .withReverseSoftLimitThreshold(ELEVATOR_MIN_LIMIT)
                         .withReverseSoftLimitEnable(true)
                         .withForwardSoftLimitThreshold(ELEVATOR_MAX_LIMIT)
-                        .withForwardSoftLimitEnable(true));
+                        .withForwardSoftLimitEnable(true))
+                .withSlot0(new Slot0Configs()
+                        .withKG(ELEVATOR_K_G)
+                        .withKS(ELEVATOR_K_S)
+                        .withKV(ELEVATOR_K_V)
+                        .withKA(ELEVATOR_K_A)
+                        .withKP(1)
+                        .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign))
+                .withMotionMagic(new MotionMagicConfigs()
+                        .withMotionMagicExpo_kV(ELEVATOR_K_V)
+                        .withMotionMagicExpo_kA(ELEVATOR_K_A));
         m_elevatorMotor.getConfigurator().apply(elevatorConfig);
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
@@ -196,44 +213,45 @@ public class Elevator extends SubsystemBase {
                 .finallyDo(m_armMotor::stopMotor);
     }
 
-    public Command profiledSetArmPositionCommand(ElevatorArmPositions armPosition) {
-        return this.startRun(
-                () -> {
-                    if (armPosition == ElevatorArmPositions.STOWED) {
-                        m_armPosition = ARM_MIN_LIMIT;
-                    } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
-                        m_armPosition = CORAL_STATION_POSITION;
-                    } else if (armPosition == ElevatorArmPositions.L1) {
-                        m_armPosition = L1_POSITION;
-                    } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
-                        m_armPosition = L2_AND_L3_POSITION;
-                    } else if (armPosition == ElevatorArmPositions.L4) {
-                        m_armPosition = L4_POSITION;
-                    } else {
-                        DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
-                        return;
-                    }
-                    targetPositionPub.set(m_armPosition);
-                    m_armGoal.position = m_armPosition;
-                    m_armStartingSetpoint.position = m_armEncoder.getPosition();
-                    m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
-                    m_armProfileTimer.restart();
-                },
-                () -> {
-                    double currentTime = m_armProfileTimer.get();
-                    TrapezoidProfile.State nextArmSetpoint =
-                            m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
-                    double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
-                            m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
-                            m_armCurrentSetpoint.velocity,
-                            nextArmSetpoint.velocity);
-                    m_armController.setReference(
-                            nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
-                    m_armCurrentSetpoint = nextArmSetpoint;
-                    currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
-                    currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
-                });
-    }
+    // public Command profiledSetArmPositionCommand(ElevatorArmPositions armPosition) {
+    //     return this.startRun(
+    //             () -> {
+    //                 if (armPosition == ElevatorArmPositions.STOWED) {
+    //                     m_armPosition = ARM_MIN_LIMIT;
+    //                 } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
+    //                     m_armPosition = CORAL_STATION_POSITION;
+    //                 } else if (armPosition == ElevatorArmPositions.L1) {
+    //                     m_armPosition = L1_POSITION;
+    //                 } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
+    //                     m_armPosition = L2_AND_L3_POSITION;
+    //                 } else if (armPosition == ElevatorArmPositions.L4) {
+    //                     m_armPosition = L4_POSITION;
+    //                 } else {
+    //                     DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
+    //                     return;
+    //                 }
+    //                 armGoalPub.set(m_armPosition);
+    //                 m_armGoal.position = m_armPosition;
+    //                 m_armStartingSetpoint.position = m_armEncoder.getPosition();
+    //                 m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
+    //                 m_armProfileTimer.restart();
+    //             },
+    //             () -> {
+    //                 double currentTime = m_armProfileTimer.get();
+    //                 TrapezoidProfile.State nextArmSetpoint =
+    //                         m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
+    //                 double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
+    //                         m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
+    //                         m_armCurrentSetpoint.velocity,
+    //                         nextArmSetpoint.velocity);
+    //                 m_armController.setReference(
+    //                         nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0,
+    // feedforwardVolts);
+    //                 m_armCurrentSetpoint = nextArmSetpoint;
+    //                 currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
+    //                 currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
+    //             });
+    // }
 
     public Command runWheelCommand() {
         return this.runOnce(() -> m_flywheelsMotor.set(0.5))
@@ -241,9 +259,9 @@ public class Elevator extends SubsystemBase {
                 .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
-    public Command raiseAndRunWheelCommand() {
-        return profiledSetArmPositionCommand(ElevatorArmPositions.CORAL_STATION).andThen(runWheelCommand());
-    }
+    // public Command raiseAndRunWheelCommand() {
+    //     return profiledSetArmPositionCommand(ElevatorArmPositions.CORAL_STATION).andThen(runWheelCommand());
+    // }
 
     public Command wheelBackwardsCommand() {
         return this.run(() -> {
@@ -272,15 +290,87 @@ public class Elevator extends SubsystemBase {
                 });
     }
 
-    public Command profiledSetArmPositionAndWaitCommand(ElevatorArmPositions armPosition) {
-        return profiledSetArmPositionCommand(armPosition).andThen(Commands.idle(this));
-    }
+    // public Command profiledSetArmPositionAndWaitCommand(ElevatorArmPositions armPosition) {
+    //     return profiledSetArmPositionCommand(armPosition).andThen(Commands.idle(this));
+    // }
 
     public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {
         return this.run(() -> {
                     m_elevatorMotor.set(powerSupplier.getAsDouble() * 0.25);
                 })
                 .finallyDo(m_elevatorMotor::stopMotor);
+    }
+
+    public Command setElevatorAndArmPositionCommand(
+            ElevatorPositions elevatorPosition, ElevatorArmPositions armPosition) {
+        return this.startRun(
+                        () -> {
+                            // Elevator
+                            double position;
+                            if (elevatorPosition == ElevatorPositions.STOWED) {
+                                position = ELEVATOR_MIN_LIMIT;
+                            } else if (elevatorPosition == ElevatorPositions.CORAL_STATION) {
+                                position = ELEVATOR_MIN_LIMIT;
+                            } else if (elevatorPosition == ElevatorPositions.L1) {
+                                position = ELEVATOR_MIN_LIMIT;
+                            } else if (elevatorPosition == ElevatorPositions.L2) {
+                                position = ELEVATOR_MIN_LIMIT;
+                            } else if (elevatorPosition == ElevatorPositions.L3) {
+                                position = ELEVATOR_MIN_LIMIT;
+                            } else if (elevatorPosition == ElevatorPositions.L4) {
+                                position = ELEVATOR_MAX_LIMIT;
+                            } else {
+                                DriverStation.reportWarning(
+                                        "Attempted to set the elevator arm to a null position!", true);
+                                return;
+                            }
+                            m_elevatorPosition.withPosition(position);
+                            m_elevatorMotor.setControl(m_elevatorPosition);
+                            elevatorGoalPub.set(position);
+
+                            // Arm
+                            if (armPosition == ElevatorArmPositions.STOWED) {
+                                m_armPosition = ARM_MIN_LIMIT;
+                            } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
+                                m_armPosition = CORAL_STATION_POSITION;
+                            } else if (armPosition == ElevatorArmPositions.L1) {
+                                m_armPosition = L1_POSITION;
+                            } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
+                                m_armPosition = L2_AND_L3_POSITION;
+                            } else if (armPosition == ElevatorArmPositions.L4) {
+                                m_armPosition = L4_POSITION;
+                            } else {
+                                DriverStation.reportWarning(
+                                        "Attempted to set the elevator arm to a null position!", true);
+                                return;
+                            }
+                            armGoalPub.set(m_armPosition);
+                            m_armGoal.position = m_armPosition;
+                            m_armStartingSetpoint.position = m_armEncoder.getPosition();
+                            m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
+                            m_armProfileTimer.restart();
+                        },
+                        () -> {
+                            double currentTime = m_armProfileTimer.get();
+                            TrapezoidProfile.State nextArmSetpoint =
+                                    m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
+                            double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
+                                    m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
+                                    m_armCurrentSetpoint.velocity,
+                                    nextArmSetpoint.velocity);
+                            m_armController.setReference(
+                                    nextArmSetpoint.position,
+                                    ControlType.kPosition,
+                                    ClosedLoopSlot.kSlot0,
+                                    feedforwardVolts);
+                            m_armCurrentSetpoint = nextArmSetpoint;
+                            currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
+                            currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
+                        })
+                .finallyDo(() -> {
+                    m_elevatorMotor.stopMotor();
+                    m_armMotor.stopMotor();
+                });
     }
 
     /**
@@ -301,11 +391,5 @@ public class Elevator extends SubsystemBase {
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_elevatorRoutine.dynamic(direction);
-    }
-
-    public Command elevatorTestCommand() {
-        return this.runOnce(() -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(0.01)))
-                .andThen(Commands.idle(this))
-                .finallyDo(m_elevatorMotor::stopMotor);
     }
 }

@@ -53,15 +53,15 @@ public class ElevatorConstants {
             2.0 * Math.PI * ELEVATOR_GEAR_RADIUS.in(Meters) * 2.0;
 
     /** Units: volts */
-    public static final double ELEVATOR_K_G = 0.01;
+    public static final double ELEVATOR_K_G = 0.18892;
     /** Units: volts */
-    public static final double ELEVATOR_K_S = 0;
-    /** Units: volts per rad/sec */
-    public static final double ELEVATOR_K_V = 0;
-    /** Units: volts per rad/sec^2 */
-    public static final double ELEVATOR_K_A = 0;
+    public static final double ELEVATOR_K_S = 0.074155;
+    /** Units: volts per rotation/sec */
+    public static final double ELEVATOR_K_V = 3.172;
+    /** Units: volts per rotation/sec^2 */
+    public static final double ELEVATOR_K_A = 0.030076;
 
-    /** Units: duty cycle out per radian */
+    /** Units: volts per rotation */
     public static final double ELEVATOR_K_P = 0;
 
     /**

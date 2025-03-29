@@ -169,6 +169,7 @@ public class Robot extends TimedRobot {
 
         m_robotContainer.resetFieldPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
         // LEDs.candle.setLEDs(255, 0, 255, 0, LEDConstants.LED_STRIP_START, LEDConstants.LED_STRIP_COUNT);
+        // SignalLogger.start();
     }
 
     /** This function is called periodically during test mode. */
