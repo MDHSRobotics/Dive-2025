@@ -55,7 +55,6 @@ public class Elevator extends SubsystemBase {
         L1,
         L2,
         L3,
-        L4,
         CURRENT_POSITION
     }
 
@@ -64,7 +63,6 @@ public class Elevator extends SubsystemBase {
         CORAL_STATION,
         L1,
         L_2_AND_3,
-        L4,
         CURRENT_POSITION
     }
 
@@ -215,69 +213,26 @@ public class Elevator extends SubsystemBase {
                 .finallyDo(m_armMotor::stopMotor);
     }
 
-    // public Command profiledSetArmPositionCommand(ElevatorArmPositions armPosition) {
-    //     return this.startRun(
-    //             () -> {
-    //                 if (armPosition == ElevatorArmPositions.STOWED) {
-    //                     m_armPosition = ARM_MIN_LIMIT;
-    //                 } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
-    //                     m_armPosition = CORAL_STATION_POSITION;
-    //                 } else if (armPosition == ElevatorArmPositions.L1) {
-    //                     m_armPosition = L1_POSITION;
-    //                 } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
-    //                     m_armPosition = L2_AND_L3_POSITION;
-    //                 } else if (armPosition == ElevatorArmPositions.L4) {
-    //                     m_armPosition = L4_POSITION;
-    //                 } else {
-    //                     DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
-    //                     return;
-    //                 }
-    //                 armGoalPub.set(m_armPosition);
-    //                 m_armGoal.position = m_armPosition;
-    //                 m_armStartingSetpoint.position = m_armEncoder.getPosition();
-    //                 m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
-    //                 m_armProfileTimer.restart();
-    //             },
-    //             () -> {
-    //                 double currentTime = m_armProfileTimer.get();
-    //                 TrapezoidProfile.State nextArmSetpoint =
-    //                         m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
-    //                 double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
-    //                         m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
-    //                         m_armCurrentSetpoint.velocity,
-    //                         nextArmSetpoint.velocity);
-    //                 m_armController.setReference(
-    //                         nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0,
-    // feedforwardVolts);
-    //                 m_armCurrentSetpoint = nextArmSetpoint;
-    //                 currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
-    //                 currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
-    //             });
-    // }
-
-    public Command runWheelCommand() {
+    public Command ejectCoralCommand() {
         return this.runOnce(() -> m_flywheelsMotor.set(0.5))
                 .andThen(Commands.idle(this))
                 .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
-    // public Command raiseAndRunWheelCommand() {
-    //     return profiledSetArmPositionCommand(ElevatorArmPositions.CORAL_STATION).andThen(runWheelCommand());
-    // }
+    public Command ejectCoralSlowCommand() {
+        return this.runOnce(() -> m_flywheelsMotor.set(0.25))
+                .andThen(Commands.idle(this))
+                .finallyDo(m_flywheelsMotor::stopMotor);
+    }
 
-    public Command wheelBackwardsCommand() {
-        return this.run(() -> {
-                    if (wheelsAreStopped()) {
-                        m_flywheelsMotor.set(-1);
-                    } else {
-                        m_flywheelsMotor.set(-0.2);
-                    }
-                })
+    public Command intakeCoralCommand() {
+        return this.runOnce(() -> m_flywheelsMotor.set(-0.2))
+                .andThen(Commands.idle(this))
                 .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
     public Command runWheelUntilStoppedCommand() {
-        return runWheelCommand().until(this::wheelsAreStopped);
+        return ejectCoralCommand().until(this::wheelsAreStopped);
     }
 
     public Command wheelBackwardsWhileRaisingArmCommand() {
@@ -291,10 +246,6 @@ public class Elevator extends SubsystemBase {
                     m_armMotor.stopMotor();
                 });
     }
-
-    // public Command profiledSetArmPositionAndWaitCommand(ElevatorArmPositions armPosition) {
-    //     return profiledSetArmPositionCommand(armPosition).andThen(Commands.idle(this));
-    // }
 
     public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {
         return this.run(() -> {
@@ -319,8 +270,6 @@ public class Elevator extends SubsystemBase {
                         position = ELEVATOR_MIN_LIMIT;
                     } else if (elevatorPosition == ElevatorPositions.L3) {
                         position = ELEVATOR_MIN_LIMIT;
-                    } else if (elevatorPosition == ElevatorPositions.L4) {
-                        position = ELEVATOR_MAX_LIMIT;
                     } else if (elevatorPosition == ElevatorPositions.CURRENT_POSITION) {
                         position = m_elevatorMotor.getPosition().getValueAsDouble();
                     } else {
@@ -340,8 +289,6 @@ public class Elevator extends SubsystemBase {
                         m_armPosition = ARM_L1_POSITION;
                     } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
                         m_armPosition = ARM_L2_AND_L3_POSITION;
-                    } else if (armPosition == ElevatorArmPositions.L4) {
-                        m_armPosition = ARM_L4_POSITION;
                     } else if (armPosition == ElevatorArmPositions.CURRENT_POSITION) {
                         m_armPosition = m_armEncoder.getPosition();
                     } else {

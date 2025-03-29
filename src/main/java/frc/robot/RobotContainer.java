@@ -228,8 +228,9 @@ public class RobotContainer {
                 .rightStick()
                 .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getRightY()));
 
-        operatorController.a().whileTrue(m_elevator.runWheelCommand());
-        operatorController.b().whileTrue(m_elevator.wheelBackwardsCommand());
+        operatorController.a().whileTrue(m_elevator.ejectCoralCommand());
+        operatorController.x().whileTrue(m_elevator.ejectCoralSlowCommand());
+        operatorController.b().whileTrue(m_elevator.intakeCoralCommand());
         operatorController
                 .leftBumper()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
@@ -237,10 +238,9 @@ public class RobotContainer {
         operatorController
                 .rightBumper()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
-                        ElevatorPositions.L4, ElevatorArmPositions.CORAL_STATION));
+                        ElevatorPositions.L3, ElevatorArmPositions.CORAL_STATION));
 
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        operatorController.povLeft().whileTrue(m_elevator.wheelBackwardsWhileRaisingArmCommand());
         // operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         // operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
 
