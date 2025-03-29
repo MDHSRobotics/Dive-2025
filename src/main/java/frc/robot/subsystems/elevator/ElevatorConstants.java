@@ -18,10 +18,14 @@ public class ElevatorConstants {
      */
     public static final int CURRENT_LIMIT = 80;
 
+    /** Units: rotations */
+    public static final double ELEVATOR_MIN_LIMIT = 0;
+    /** Units: rotations */
+    public static final double ELEVATOR_MAX_LIMIT = 4.8;
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 3.875;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 5.8;
+    public static final double ARM_MAX_LIMIT = 5.82;
 
     /**
      * Gear reduction of the elevator motor.
@@ -64,18 +68,19 @@ public class ElevatorConstants {
      */
     public static final double ARM_ZERO_OFFSET = 0;
 
+    public static final double K_G = 1;
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
      * in duty cycle (percent out) per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = 0.225;
+    public static final double K_P = 0.5;
 
     // Common arm positions
     /** Units: radians */
-    public static final double STOWED_POSITION = 0;
+    public static final double STOWED_POSITION = ARM_MIN_LIMIT;
     /** Units: radians */
-    public static final double CORAL_STATION_POSITION = 0;
+    public static final double CORAL_STATION_POSITION = 5.811;
     /** Units: radians */
     public static final double L1_POSITION = 0;
     /** Units: radians */

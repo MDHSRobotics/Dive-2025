@@ -4,6 +4,7 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -22,12 +23,16 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.drive.TunerConstants;
+import java.util.EnumSet;
 import java.util.function.DoubleSupplier;
 
 public class Elevator extends SubsystemBase {
@@ -63,16 +68,19 @@ public class Elevator extends SubsystemBase {
 
     private final RelativeEncoder m_flywheelsEncoder = m_flywheelsMotor.getEncoder();
 
+    private final SysIdRoutine m_armRoutine =
+            new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
+
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Catcher");
+    private final NetworkTable table = inst.getTable("Elevator");
     private final DoubleEntry flywheelSpeedEntry =
             table.getDoubleTopic("Flywheel Speed").getEntry(1);
     private final DoublePublisher targetPositionPub =
             table.getDoubleTopic("Target Position (radians)").publish();
-    // private final DoubleEntry pGainEntry =
-    //         table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
+    private final DoubleEntry pGainEntry =
+            table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -85,18 +93,13 @@ public class Elevator extends SubsystemBase {
                 .withMotorOutput(new MotorOutputConfigs()
                         .withNeutralMode(NeutralModeValue.Brake)
                         .withInverted(InvertedValue.Clockwise_Positive))
-                .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO));
+                .withFeedback(new FeedbackConfigs().withSensorToMechanismRatio(ELEVATOR_SENSOR_TO_MECHANISM_RATIO))
+                .withSoftwareLimitSwitch(new SoftwareLimitSwitchConfigs()
+                        .withReverseSoftLimitThreshold(ELEVATOR_MIN_LIMIT)
+                        .withReverseSoftLimitEnable(true)
+                        .withForwardSoftLimitThreshold(ELEVATOR_MAX_LIMIT)
+                        .withForwardSoftLimitEnable(true));
         m_elevatorMotor.getConfigurator().apply(elevatorConfig);
-
-        // SparkFlexConfig elevatorConfig = new SparkFlexConfig();
-        // elevatorConfig.smartCurrentLimit(80).idleMode(IdleMode.kBrake);
-        // elevatorConfig
-        //         .signals
-        //         .primaryEncoderPositionPeriodMs(10)
-        //         .primaryEncoderPositionAlwaysOn(true)
-        //         .primaryEncoderVelocityPeriodMs(10)
-        //         .primaryEncoderVelocityAlwaysOn(true);
-        // m_elevatorMotor.configure(elevatorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
@@ -113,12 +116,7 @@ public class Elevator extends SubsystemBase {
                 .zeroOffset(ARM_ZERO_OFFSET)
                 .inverted(true);
         armConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P);
-        armConfig
-                .signals
-                .absoluteEncoderPositionPeriodMs(10)
-                .absoluteEncoderPositionAlwaysOn(true)
-                .absoluteEncoderVelocityPeriodMs(10)
-                .absoluteEncoderVelocityAlwaysOn(true);
+        armConfig.signals.absoluteEncoderPositionAlwaysOn(true).absoluteEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         SparkFlexConfig flywheelsConfig = new SparkFlexConfig();
@@ -132,13 +130,12 @@ public class Elevator extends SubsystemBase {
         // You need to publish a value for the entry to appear in NetworkTables
         flywheelSpeedEntry.set(1);
 
-        // pGainEntry.set(K_P);
-        // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
-        //     SparkFlexConfig tempConfig = new SparkFlexConfig();
-        //     tempConfig.closedLoop.p(event.valueData.value.getDouble());
-        //     m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters,
-        // PersistMode.kNoPersistParameters);
-        // });
+        pGainEntry.set(K_P);
+        inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+            SparkFlexConfig tempConfig = new SparkFlexConfig();
+            tempConfig.closedLoop.p(event.valueData.value.getDouble());
+            m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
+        });
     }
 
     private boolean wheelsAreStopped() {
@@ -231,11 +228,31 @@ public class Elevator extends SubsystemBase {
                 .finallyDo(m_elevatorMotor::stopMotor);
     }
 
-    // public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-    //     return m_sysIdRoutine.quasistatic(direction);
-    // }
+    /**
+     * Runs the SysId Quasistatic test in the given direction for the routine.
+     *
+     * @param direction Direction of the SysId Quasistatic test
+     * @return Command to run
+     */
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return m_armRoutine.quasistatic(direction);
+    }
 
-    // public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-    //     return m_sysIdRoutine.dynamic(direction);
-    // }
+    /**
+     * Runs the SysId Dynamic test in the given direction for the routine
+     *
+     * @param direction Direction of the SysId Dynamic test
+     * @return Command to run
+     */
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_armRoutine.dynamic(direction);
+    }
+
+    public Command armTestCommand() {
+        return this.runOnce(() -> {
+                    m_armMotor.setVoltage(K_G);
+                })
+                .andThen(Commands.idle(this))
+                .finallyDo(m_armMotor::stopMotor);
+    }
 }
