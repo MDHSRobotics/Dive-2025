@@ -52,6 +52,18 @@ public class ElevatorConstants {
     public static final double ELEVATOR_ROTATIONS_TO_METERS_CONVERSION =
             2.0 * Math.PI * ELEVATOR_GEAR_RADIUS.in(Meters) * 2.0;
 
+    /** Units: volts */
+    public static final double ELEVATOR_K_G = 0.01;
+    /** Units: volts */
+    public static final double ELEVATOR_K_S = 0;
+    /** Units: volts per rad/sec */
+    public static final double ELEVATOR_K_V = 0;
+    /** Units: volts per rad/sec^2 */
+    public static final double ELEVATOR_K_A = 0;
+
+    /** Units: duty cycle out per radian */
+    public static final double ELEVATOR_K_P = 0;
+
     /**
      * The conversion of motor input rotations to arm output radians.
      */
@@ -68,13 +80,25 @@ public class ElevatorConstants {
      */
     public static final double ARM_ZERO_OFFSET = 0;
 
-    public static final double K_G = 1;
-    /**
-     * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
-     * in duty cycle (percent out) per radian.
-     * This still needs to be tuned.
-     */
-    public static final double K_P = 0.5;
+    /** The position of the absolute encoder in radians that makes the arm stick straight out at the horizontal. */
+    public static final double ARM_HORIZONTAL_OFFSET = 5.162;
+
+    /** Units: volts */
+    public static final double ARM_K_G = 1;
+    /** Units: volts */
+    public static final double ARM_K_S = 0.22457;
+    /** Units: volts per rad/sec */
+    public static final double ARM_K_V = 0.13233;
+    /** Units: volts per rad/sec^2 */
+    public static final double ARM_K_A = 0.039128;
+
+    /** Units: rad/sec */
+    public static final double ARM_MAX_VELOCITY = 6.587;
+    /** Units: rad/sec^2 */
+    public static final double ARM_MAX_ACCELERATION = 55.5;
+
+    /** Units: duty cycle out per radian */
+    public static final double ARM_K_P = 0.5;
 
     // Common arm positions
     /** Units: radians */

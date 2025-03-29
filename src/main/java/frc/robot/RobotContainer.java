@@ -8,7 +8,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -188,7 +187,7 @@ public class RobotContainer {
         driverController
                 .share()
                 .and(driverController.povUp())
-                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
         driverController
                 .share()
                 .and(driverController.povDown())
@@ -232,7 +231,8 @@ public class RobotContainer {
         operatorController.b().whileTrue(m_elevator.wheelBackwardsCommand());
         operatorController
                 .leftBumper()
-                .onTrue(m_elevator.setArmPositionAndWaitCommand(ElevatorArmPositions.CORAL_STATION));
+                .onTrue(m_elevator.profiledSetArmPositionCommand(ElevatorArmPositions.CORAL_STATION));
+        operatorController.rightBumper().onTrue(m_elevator.profiledSetArmPositionCommand(ElevatorArmPositions.STOWED));
 
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         operatorController.povLeft().whileTrue(m_elevator.wheelBackwardsWhileRaisingArmCommand());
@@ -266,14 +266,7 @@ public class RobotContainer {
     /**
      * Registers the <a href="https://pathplanner.dev/pplib-named-commands.html">Named Commands</a> used in PathPlanner.
      */
-    private void registerNamedCommands() {
-        NamedCommands.registerCommand(
-                "Eject Coral", m_elevator.wheelBackwardsCommand().withTimeout(0.5));
-        NamedCommands.registerCommand(
-                "Raise Catcher Arm", m_elevator.setArmPositionCommand(ElevatorArmPositions.CORAL_STATION));
-        NamedCommands.registerCommand(
-                "Intake Coral", m_elevator.runWheelCommand().withTimeout(1));
-    }
+    private void registerNamedCommands() {}
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.

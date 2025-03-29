@@ -1,15 +1,21 @@
 package frc.robot.subsystems.elevator;
 
+import static edu.wpi.first.units.Units.Second;
+import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -20,6 +26,8 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ArmFeedforward;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -27,6 +35,7 @@ import edu.wpi.first.networktables.NetworkTableEvent;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -54,22 +63,35 @@ public class Elevator extends SubsystemBase {
     }
 
     private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
-    // private final SysIdRoutine m_sysIdRoutine = new SysIdRoutine(
-    //         new SysIdRoutine.Config(
-    //                 Volts.of(0.1).per(Second),
-    //                 Volts.of(4),
-    //                 null,
-    //                 (state) -> SignalLogger.writeString("state", state.toString())),
-    //         new SysIdRoutine.Mechanism(
-    //                 (volts) -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(volts)), null, this));
+    private final VoltageOut m_elevatorVoltage = new VoltageOut(0);
+    private final SysIdRoutine m_elevatorRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                    Volts.of(0.05).per(Second),
+                    Volts.of(4),
+                    null,
+                    (state) -> SignalLogger.writeString("state", state.toString())),
+            new SysIdRoutine.Mechanism(
+                    (volts) -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(volts)), null, this));
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
+    private final AbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
+
+    private final SysIdRoutine m_armRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(Volts.of(0.25).per(Second), Volts.of(1), null),
+            new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
+
+    private final ArmFeedforward m_armFeedforward = new ArmFeedforward(ARM_K_S, ARM_K_G, ARM_K_V, ARM_K_A);
+    private final TrapezoidProfile m_armProfile =
+            new TrapezoidProfile(new TrapezoidProfile.Constraints(ARM_MAX_VELOCITY, ARM_MAX_ACCELERATION));
+    private final TrapezoidProfile.State m_armGoal = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_armStartingSetpoint = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_armCurrentSetpoint = new TrapezoidProfile.State();
+    private final Timer m_armProfileTimer = new Timer();
+    private double m_armPosition;
+
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
 
     private final RelativeEncoder m_flywheelsEncoder = m_flywheelsMotor.getEncoder();
-
-    private final SysIdRoutine m_armRoutine =
-            new SysIdRoutine(new SysIdRoutine.Config(), new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
 
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
@@ -80,7 +102,15 @@ public class Elevator extends SubsystemBase {
     private final DoublePublisher targetPositionPub =
             table.getDoubleTopic("Target Position (radians)").publish();
     private final DoubleEntry pGainEntry =
-            table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
+            table.getDoubleTopic("Arm P Gain").getEntry(ARM_K_P, PubSubOption.excludeSelf(true));
+
+    private double m_prevVelocity = 0;
+    private final DoublePublisher armAccelPub = table.getDoubleTopic("Accel").publish(PubSubOption.sendAll(true));
+
+    private final DoublePublisher currentPositionSetpointPub =
+            table.getDoubleTopic("Current Setpoint Position").publish();
+    private final DoublePublisher currentVelocitySetpointPub =
+            table.getDoubleTopic("Current Setpoint Velocity").publish();
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -115,7 +145,7 @@ public class Elevator extends SubsystemBase {
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
                 .zeroOffset(ARM_ZERO_OFFSET)
                 .inverted(true);
-        armConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(K_P);
+        armConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(ARM_K_P);
         armConfig.signals.absoluteEncoderPositionAlwaysOn(true).absoluteEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -130,12 +160,20 @@ public class Elevator extends SubsystemBase {
         // You need to publish a value for the entry to appear in NetworkTables
         flywheelSpeedEntry.set(1);
 
-        pGainEntry.set(K_P);
+        pGainEntry.set(ARM_K_P);
         inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             SparkFlexConfig tempConfig = new SparkFlexConfig();
             tempConfig.closedLoop.p(event.valueData.value.getDouble());
             m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         });
+    }
+
+    @Override
+    public void periodic() {
+        double armVelocity = m_armEncoder.getVelocity();
+        double armAccel = (armVelocity - m_prevVelocity) / 0.02;
+        armAccelPub.set(armAccel);
+        m_prevVelocity = armVelocity;
     }
 
     private boolean wheelsAreStopped() {
@@ -158,26 +196,43 @@ public class Elevator extends SubsystemBase {
                 .finallyDo(m_armMotor::stopMotor);
     }
 
-    public Command setArmPositionCommand(ElevatorArmPositions armPosition) {
-        return this.runOnce(() -> {
-            double position;
-            if (armPosition == ElevatorArmPositions.STOWED) {
-                position = ARM_MIN_LIMIT;
-            } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
-                position = CORAL_STATION_POSITION;
-            } else if (armPosition == ElevatorArmPositions.L1) {
-                position = L1_POSITION;
-            } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
-                position = L2_AND_L3_POSITION;
-            } else if (armPosition == ElevatorArmPositions.L4) {
-                position = L4_POSITION;
-            } else {
-                DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
-                return;
-            }
-            m_armController.setReference(position, ControlType.kPosition);
-            targetPositionPub.set(position);
-        });
+    public Command profiledSetArmPositionCommand(ElevatorArmPositions armPosition) {
+        return this.startRun(
+                () -> {
+                    if (armPosition == ElevatorArmPositions.STOWED) {
+                        m_armPosition = ARM_MIN_LIMIT;
+                    } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
+                        m_armPosition = CORAL_STATION_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.L1) {
+                        m_armPosition = L1_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
+                        m_armPosition = L2_AND_L3_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.L4) {
+                        m_armPosition = L4_POSITION;
+                    } else {
+                        DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
+                        return;
+                    }
+                    targetPositionPub.set(m_armPosition);
+                    m_armGoal.position = m_armPosition;
+                    m_armStartingSetpoint.position = m_armEncoder.getPosition();
+                    m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
+                    m_armProfileTimer.restart();
+                },
+                () -> {
+                    double currentTime = m_armProfileTimer.get();
+                    TrapezoidProfile.State nextArmSetpoint =
+                            m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
+                    double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
+                            m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
+                            m_armCurrentSetpoint.velocity,
+                            nextArmSetpoint.velocity);
+                    m_armController.setReference(
+                            nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
+                    m_armCurrentSetpoint = nextArmSetpoint;
+                    currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
+                    currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
+                });
     }
 
     public Command runWheelCommand() {
@@ -187,7 +242,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command raiseAndRunWheelCommand() {
-        return setArmPositionCommand(ElevatorArmPositions.CORAL_STATION).andThen(runWheelCommand());
+        return profiledSetArmPositionCommand(ElevatorArmPositions.CORAL_STATION).andThen(runWheelCommand());
     }
 
     public Command wheelBackwardsCommand() {
@@ -217,8 +272,8 @@ public class Elevator extends SubsystemBase {
                 });
     }
 
-    public Command setArmPositionAndWaitCommand(ElevatorArmPositions armPosition) {
-        return setArmPositionCommand(armPosition).andThen(Commands.idle(this));
+    public Command profiledSetArmPositionAndWaitCommand(ElevatorArmPositions armPosition) {
+        return profiledSetArmPositionCommand(armPosition).andThen(Commands.idle(this));
     }
 
     public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {
@@ -235,7 +290,7 @@ public class Elevator extends SubsystemBase {
      * @return Command to run
      */
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-        return m_armRoutine.quasistatic(direction);
+        return m_elevatorRoutine.quasistatic(direction);
     }
 
     /**
@@ -245,14 +300,12 @@ public class Elevator extends SubsystemBase {
      * @return Command to run
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-        return m_armRoutine.dynamic(direction);
+        return m_elevatorRoutine.dynamic(direction);
     }
 
-    public Command armTestCommand() {
-        return this.runOnce(() -> {
-                    m_armMotor.setVoltage(K_G);
-                })
+    public Command elevatorTestCommand() {
+        return this.runOnce(() -> m_elevatorMotor.setControl(m_elevatorVoltage.withOutput(0.01)))
                 .andThen(Commands.idle(this))
-                .finallyDo(m_armMotor::stopMotor);
+                .finallyDo(m_elevatorMotor::stopMotor);
     }
 }
