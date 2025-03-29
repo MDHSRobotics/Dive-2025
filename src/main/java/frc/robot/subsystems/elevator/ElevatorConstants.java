@@ -25,7 +25,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 3.875;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 5.82;
+    public static final double ARM_MAX_LIMIT = 6.0;
 
     /**
      * Gear reduction of the elevator motor.
@@ -63,6 +63,20 @@ public class ElevatorConstants {
 
     /** Units: volts per rotation */
     public static final double ELEVATOR_K_P = 0;
+
+    // Common elevator positions
+    /** Units: rotations */
+    public static final double ELEVATOR_STOWED_POSITION = ARM_MIN_LIMIT;
+    /** Units: rotations */
+    public static final double ELEVATOR_CORAL_STATION_POSITION = ARM_MAX_LIMIT;
+    /** Units: rotations */
+    public static final double ELEVATOR_L1_POSITION = 0.1384;
+    /** Units: rotations */
+    public static final double ELEVATOR_L2_POSITION = 1.0364;
+    /** Units: rotations */
+    public static final double ELEVATOR_L3_POSITION = 2.4186;
+    /** Units: rotations */
+    public static final double ELEVATOR_L4_POSITION = 4.7520;
 
     /**
      * The conversion of motor input rotations to arm output radians.
@@ -102,13 +116,13 @@ public class ElevatorConstants {
 
     // Common arm positions
     /** Units: radians */
-    public static final double STOWED_POSITION = ARM_MIN_LIMIT;
+    public static final double ARM_STOWED_POSITION = ARM_MIN_LIMIT;
     /** Units: radians */
-    public static final double CORAL_STATION_POSITION = 5.811;
+    public static final double ARM_CORAL_STATION_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double L1_POSITION = 0;
+    public static final double ARM_L1_POSITION = 5.107;
     /** Units: radians */
-    public static final double L2_AND_L3_POSITION = 0;
+    public static final double ARM_L2_AND_L3_POSITION = 4.830;
     /** Units: radians */
-    public static final double L4_POSITION = 0;
+    public static final double ARM_L4_POSITION = 4.800;
 }

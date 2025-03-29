@@ -55,7 +55,8 @@ public class Elevator extends SubsystemBase {
         L1,
         L2,
         L3,
-        L4
+        L4,
+        CURRENT_POSITION
     }
 
     public enum ElevatorArmPositions {
@@ -63,7 +64,8 @@ public class Elevator extends SubsystemBase {
         CORAL_STATION,
         L1,
         L_2_AND_3,
-        L4
+        L4,
+        CURRENT_POSITION
     }
 
     private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
@@ -304,72 +306,67 @@ public class Elevator extends SubsystemBase {
     public Command setElevatorAndArmPositionCommand(
             ElevatorPositions elevatorPosition, ElevatorArmPositions armPosition) {
         return this.startRun(
-                        () -> {
-                            // Elevator
-                            double position;
-                            if (elevatorPosition == ElevatorPositions.STOWED) {
-                                position = ELEVATOR_MIN_LIMIT;
-                            } else if (elevatorPosition == ElevatorPositions.CORAL_STATION) {
-                                position = ELEVATOR_MIN_LIMIT;
-                            } else if (elevatorPosition == ElevatorPositions.L1) {
-                                position = ELEVATOR_MIN_LIMIT;
-                            } else if (elevatorPosition == ElevatorPositions.L2) {
-                                position = ELEVATOR_MIN_LIMIT;
-                            } else if (elevatorPosition == ElevatorPositions.L3) {
-                                position = ELEVATOR_MIN_LIMIT;
-                            } else if (elevatorPosition == ElevatorPositions.L4) {
-                                position = ELEVATOR_MAX_LIMIT;
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Attempted to set the elevator arm to a null position!", true);
-                                return;
-                            }
-                            m_elevatorPosition.withPosition(position);
-                            m_elevatorMotor.setControl(m_elevatorPosition);
-                            elevatorGoalPub.set(position);
+                () -> {
+                    // Elevator
+                    double position;
+                    if (elevatorPosition == ElevatorPositions.STOWED) {
+                        position = ELEVATOR_MIN_LIMIT;
+                    } else if (elevatorPosition == ElevatorPositions.CORAL_STATION) {
+                        position = ELEVATOR_MIN_LIMIT;
+                    } else if (elevatorPosition == ElevatorPositions.L1) {
+                        position = ELEVATOR_MIN_LIMIT;
+                    } else if (elevatorPosition == ElevatorPositions.L2) {
+                        position = ELEVATOR_MIN_LIMIT;
+                    } else if (elevatorPosition == ElevatorPositions.L3) {
+                        position = ELEVATOR_MIN_LIMIT;
+                    } else if (elevatorPosition == ElevatorPositions.L4) {
+                        position = ELEVATOR_MAX_LIMIT;
+                    } else if (elevatorPosition == ElevatorPositions.CURRENT_POSITION) {
+                        position = m_elevatorMotor.getPosition().getValueAsDouble();
+                    } else {
+                        DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
+                        return;
+                    }
+                    m_elevatorPosition.withPosition(position);
+                    m_elevatorMotor.setControl(m_elevatorPosition);
+                    elevatorGoalPub.set(position);
 
-                            // Arm
-                            if (armPosition == ElevatorArmPositions.STOWED) {
-                                m_armPosition = ARM_MIN_LIMIT;
-                            } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
-                                m_armPosition = CORAL_STATION_POSITION;
-                            } else if (armPosition == ElevatorArmPositions.L1) {
-                                m_armPosition = L1_POSITION;
-                            } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
-                                m_armPosition = L2_AND_L3_POSITION;
-                            } else if (armPosition == ElevatorArmPositions.L4) {
-                                m_armPosition = L4_POSITION;
-                            } else {
-                                DriverStation.reportWarning(
-                                        "Attempted to set the elevator arm to a null position!", true);
-                                return;
-                            }
-                            armGoalPub.set(m_armPosition);
-                            m_armGoal.position = m_armPosition;
-                            m_armStartingSetpoint.position = m_armEncoder.getPosition();
-                            m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
-                            m_armProfileTimer.restart();
-                        },
-                        () -> {
-                            double currentTime = m_armProfileTimer.get();
-                            TrapezoidProfile.State nextArmSetpoint =
-                                    m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
-                            double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
-                                    m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
-                                    m_armCurrentSetpoint.velocity,
-                                    nextArmSetpoint.velocity);
-                            m_armController.setReference(
-                                    nextArmSetpoint.position,
-                                    ControlType.kPosition,
-                                    ClosedLoopSlot.kSlot0,
-                                    feedforwardVolts);
-                            m_armCurrentSetpoint = nextArmSetpoint;
-                            currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
-                            currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
-                        })
-                .finallyDo(() -> {
-                    m_elevatorMotor.stopMotor();
-                    m_armMotor.stopMotor();
+                    // Arm
+                    if (armPosition == ElevatorArmPositions.STOWED) {
+                        m_armPosition = ARM_STOWED_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.CORAL_STATION) {
+                        m_armPosition = ARM_CORAL_STATION_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.L1) {
+                        m_armPosition = ARM_L1_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
+                        m_armPosition = ARM_L2_AND_L3_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.L4) {
+                        m_armPosition = ARM_L4_POSITION;
+                    } else if (armPosition == ElevatorArmPositions.CURRENT_POSITION) {
+                        m_armPosition = m_armEncoder.getPosition();
+                    } else {
+                        DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
+                        return;
+                    }
+                    armGoalPub.set(m_armPosition);
+                    m_armGoal.position = m_armPosition;
+                    m_armStartingSetpoint.position = m_armEncoder.getPosition();
+                    m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
+                    m_armProfileTimer.restart();
+                },
+                () -> {
+                    double currentTime = m_armProfileTimer.get();
+                    TrapezoidProfile.State nextArmSetpoint =
+                            m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
+                    double feedforwardVolts = m_armFeedforward.calculateWithVelocities(
+                            m_armEncoder.getPosition() - ARM_HORIZONTAL_OFFSET,
+                            m_armCurrentSetpoint.velocity,
+                            nextArmSetpoint.velocity);
+                    m_armController.setReference(
+                            nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
+                    m_armCurrentSetpoint = nextArmSetpoint;
+                    currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
+                    currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
                 });
     }
 

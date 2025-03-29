@@ -120,7 +120,8 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_elevator.setDefaultCommand(m_elevator.disableMotorsCommand());
+        m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
+                ElevatorPositions.CURRENT_POSITION, ElevatorArmPositions.CURRENT_POSITION));
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
     }
 
