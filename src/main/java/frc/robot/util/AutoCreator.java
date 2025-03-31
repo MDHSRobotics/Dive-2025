@@ -57,7 +57,6 @@ public class AutoCreator {
         m_levelChooser.addOption("L1", ElevatorPositions.L1);
         m_levelChooser.addOption("L2", ElevatorPositions.L2);
         m_levelChooser.addOption("L3", ElevatorPositions.L3);
-        m_levelChooser.addOption("L4", ElevatorPositions.L4);
         SmartDashboard.putData("Level #1:", m_levelChooser);
 
         // Options for second coral
@@ -84,7 +83,6 @@ public class AutoCreator {
         m_levelChooser2.addOption("L1", ElevatorPositions.L1);
         m_levelChooser2.addOption("L2", ElevatorPositions.L2);
         m_levelChooser2.addOption("L3", ElevatorPositions.L3);
-        m_levelChooser2.addOption("L4", ElevatorPositions.L4);
         SmartDashboard.putData("Level #2:", m_levelChooser2);
 
         // Options for third coral
@@ -111,7 +109,6 @@ public class AutoCreator {
         m_levelChooser3.addOption("L1", ElevatorPositions.L1);
         m_levelChooser3.addOption("L2", ElevatorPositions.L2);
         m_levelChooser3.addOption("L3", ElevatorPositions.L3);
-        m_levelChooser3.addOption("L4", ElevatorPositions.L4);
         m_levelChooser3.onChange(this::createThreeCoralAuto);
         SmartDashboard.putData("Level #3 and Create Auto:", m_levelChooser3);
     }
