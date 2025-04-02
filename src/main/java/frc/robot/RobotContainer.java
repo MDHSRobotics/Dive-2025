@@ -133,23 +133,11 @@ public class RobotContainer {
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+on+to+reef&xButton=&yButton=Lock+on+to+processor&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=&leftTrigger=Slow+Mode&rightTrigger=Super+Slow+Mode&dpadLeft=&rightStick=Rotate
+     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+wheels&xButton=Drive+to+tree&yButton=Face+processor&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=Face+reef+wall&leftTrigger=Slow+Mode&rightTrigger=Super+Slow+Mode&dpadLeft=&rightStick=Rotate&dpadDown=Climb&dpadUp=Raise+climb
      * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureDriverControls() {
-        // driverController.square().onTrue(aimingRoutines.setTargetPoseToCurrentPose());
-        // driverController.triangle().whileTrue(aimingRoutines.driveToPositionTest());
-
-        // driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
-        //                 DriveConstants.MAX_LINEAR_SPEED)
-        //         .withVelocityY(0)
-        //         .withRotationalRate(0)
-        //         .withDeadband(getDeadband())
-        //         .withRotationalDeadband(getRotationalDeadband())));
-
-        // driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
-
         // Half Speed
         driverController.L2().onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.HALF_SPEED));
         driverController.L2().onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
@@ -162,23 +150,19 @@ public class RobotContainer {
         // Select right station
         driverController.R1().whileTrue(aimingRoutines.alignWithCoralStation(false));
 
-        // Point wheels with right joystick
-        // driverController
-        //         .povLeft()
-        //         .whileTrue(m_drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
-        //                 new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
-
         // Reset robot orientation
         driverController
                 .touchpad()
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
-        // driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
-        driverController.circle().whileTrue(m_drivetrain.applyRequest(() -> brake));
+        driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
-        driverController.cross().whileTrue(aimingRoutines.driveToTree());
-        driverController.square().whileTrue(aimingRoutines.driveIntoCage());
+        driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> brake));
+        driverController.square().whileTrue(aimingRoutines.driveToTree());
+
+        driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
+        driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -206,16 +190,11 @@ public class RobotContainer {
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Control+Climb+with+joysticks&leftTrigger=Control+both+Climb+with+left+joystick&leftBumper=Raise+catcher+to+coral+station&rightBumper=Catcher+to+trough&aButton=Raise+catcher+and+run+wheels&bButton=Spit+out+coral&xButton=Run+intake+until+algae+is+collected&yButton=Reverse+intake&dpadUp=Move+intake+to+algae+on+a+coral&dpadDown=Move+intake+to+ground&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control
+     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Elevator+and+arm+to+L2&leftTrigger=Elevator+and+arm+to+L1&leftBumper=Elevator+and+arm+to+coral+station&rightBumper=Elevator+and+arm+to+L3&aButton=Intake+coral&bButton=Eject+coral&xButton=Intake+algae&yButton=Eject+algae&dpadUp=Intake+to+on-coral+algae&dpadDown=Intake+to+ground+algae&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control&leftStick=Raise%2Flower+elevator&rightStick=Raise%2Flower+arm
      * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        operatorController
-                .leftTrigger()
-                .whileTrue(m_climb.setPowerCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
-
         operatorController
                 .leftStick()
                 .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
@@ -223,8 +202,8 @@ public class RobotContainer {
                 .rightStick()
                 .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getRightY()));
 
-        operatorController.a().whileTrue(m_elevator.ejectCoralCommand());
-        operatorController.b().whileTrue(m_elevator.intakeCoralCommand());
+        operatorController.b().whileTrue(m_elevator.ejectCoralCommand());
+        operatorController.a().whileTrue(m_elevator.intakeCoralCommand());
         operatorController
                 .leftBumper()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
@@ -234,16 +213,17 @@ public class RobotContainer {
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
         operatorController
-                .back()
+                .leftTrigger()
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
+        operatorController
+                .rightTrigger()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
-        operatorController
-                .start()
-                .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
 
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        operatorController.povLeft().whileTrue(m_elevator.removeAlgaeFromReefCommand());
 
         operatorController.x().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());

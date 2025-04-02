@@ -288,10 +288,10 @@ public class Elevator extends SubsystemBase {
         return ejectCoralCommand().until(this::wheelsAreStopped);
     }
 
-    public Command wheelBackwardsWhileRaisingArmCommand() {
+    public Command removeAlgaeFromReefCommand() {
         return this.runOnce(() -> {
                     m_flywheelsMotor.set(-0.2);
-                    m_armMotor.set(-0.1);
+                    m_armMotor.set(0.5);
                 })
                 .andThen(Commands.idle(this))
                 .finallyDo(() -> {
