@@ -21,16 +21,16 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_MIN_LIMIT = 0;
     /** Units: rotations */
-    public static final double ELEVATOR_MAX_LIMIT = 9.6;
+    public static final double ELEVATOR_MAX_LIMIT = 4.85;
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 3.875;
+    public static final double ARM_MIN_LIMIT = 3.911;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 6.0;
+    public static final double ARM_MAX_LIMIT = 6.062;
 
     /**
      * Gear reduction of the elevator motor.
      */
-    private static final double ELEVATOR_GEAR_RATIO = 12.0;
+    private static final double ELEVATOR_GEAR_REDUCTION = 12.0;
 
     /**
      * The distance from the center of the hex bar to the outer edge of the elevator chain.
@@ -40,7 +40,7 @@ public class ElevatorConstants {
     /**
      * The conversion of motor rotations to elevator chain rotations.
      */
-    public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = ELEVATOR_GEAR_RATIO;
+    public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = ELEVATOR_GEAR_REDUCTION;
 
     /**
      * The conversion of elevator chain rotations to elevator distance traveled.
@@ -68,11 +68,11 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_CORAL_STATION_POSITION = ELEVATOR_MAX_LIMIT;
     /** Units: rotations */
-    public static final double ELEVATOR_L1_POSITION = 0.2768;
+    public static final double ELEVATOR_L1_POSITION = 0.1230;
     /** Units: rotations */
-    public static final double ELEVATOR_L2_POSITION = 2.0728;
+    public static final double ELEVATOR_L2_POSITION = 0.9212;
     /** Units: rotations */
-    public static final double ELEVATOR_L3_POSITION = 4.8372;
+    public static final double ELEVATOR_L3_POSITION = 2.1499;
 
     /**
      * The conversion of motor input rotations to arm output radians.

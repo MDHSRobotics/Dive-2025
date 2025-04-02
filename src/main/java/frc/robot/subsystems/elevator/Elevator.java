@@ -161,7 +161,7 @@ public class Elevator extends SubsystemBase {
                 .positionConversionFactor(ARM_POSITION_CONVERSION_FACTOR)
                 .velocityConversionFactor(ARM_VELOCITY_CONVERSION_FACTOR)
                 .zeroOffset(ARM_ZERO_OFFSET)
-                .inverted(true);
+                .inverted(false);
         armConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder).p(ARM_K_P);
         armConfig.signals.absoluteEncoderPositionAlwaysOn(true).absoluteEncoderVelocityAlwaysOn(true);
         m_armMotor.configure(armConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);

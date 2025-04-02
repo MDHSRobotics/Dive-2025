@@ -54,7 +54,7 @@ public final class Constants {
         /**
          * Distance from the floor to the front limelight lens in meters.
          */
-        public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(8.5).in(Meters);
+        public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(10.125).in(Meters);
 
         public static final String BACK_LIMELIGHT_NAME = "limelight-back";
         /**

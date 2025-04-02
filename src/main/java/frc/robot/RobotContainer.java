@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -185,22 +186,22 @@ public class RobotContainer {
          * Note that each routine should be run exactly once in a single log.
          * Comment out when finished.
          */
-        // driverController
-        //         .share()
-        //         .and(driverController.povUp())
-        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        // driverController
-        //         .share()
-        //         .and(driverController.povDown())
-        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        // driverController
-        //         .options()
-        //         .and(driverController.povUp())
-        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        // driverController
-        //         .options()
-        //         .and(driverController.povDown())
-        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        driverController
+                .share()
+                .and(driverController.povUp())
+                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        driverController
+                .share()
+                .and(driverController.povDown())
+                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        driverController
+                .options()
+                .and(driverController.povUp())
+                .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        driverController
+                .options()
+                .and(driverController.povDown())
+                .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
