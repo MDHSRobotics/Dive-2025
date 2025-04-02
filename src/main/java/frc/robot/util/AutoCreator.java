@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPositions;
 
 /**
@@ -119,10 +120,25 @@ public class AutoCreator {
                 String pathName = m_startPositionChooser.getSelected();
                 pathName += m_treeChooser.getSelected();
                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+                ElevatorPositions elevatorPosition = m_levelChooser.getSelected();
+                ElevatorArmPositions armPosition;
+                if (elevatorPosition == ElevatorPositions.L2 || elevatorPosition == ElevatorPositions.L3) {
+                    armPosition = ElevatorArmPositions.L_2_AND_3;
+                } else {
+                    armPosition = ElevatorArmPositions.L1;
+                }
                 m_autoSequence = Commands.sequence(
-                        Commands.parallel(Commands.runOnce(m_autoTimer::resetAndStart), AutoBuilder.followPath(path)),
-                        Commands.runOnce(m_autoTimer::stopAndPublish));
-                // TODO: Add elevator command to sequence
+                        Commands.deadline(
+                                AutoBuilder.followPath(path),
+                                Commands.runOnce(m_autoTimer::resetAndStart),
+                                Commands.waitSeconds(1)
+                                        .andThen(m_elevator.setElevatorAndArmPositionCommand(
+                                                elevatorPosition, armPosition))),
+                        m_elevator.ejectCoralCommand().withTimeout(1),
+                        Commands.parallel(
+                                m_elevator.setElevatorAndArmPositionCommand(
+                                        ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION),
+                                Commands.runOnce(m_autoTimer::stopAndPublish)));
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
                 m_autoSequence = Commands.none();
@@ -138,6 +154,13 @@ public class AutoCreator {
                 String firstTree = m_treeChooser.getSelected();
                 pathToFirstTreeName += firstTree;
                 PathPlannerPath pathToFirstTree = PathPlannerPath.fromPathFile(pathToFirstTreeName);
+                ElevatorPositions firstElevatorPosition = m_levelChooser.getSelected();
+                ElevatorArmPositions firstArmPosition;
+                if (firstElevatorPosition == ElevatorPositions.L2 || firstElevatorPosition == ElevatorPositions.L3) {
+                    firstArmPosition = ElevatorArmPositions.L_2_AND_3;
+                } else {
+                    firstArmPosition = ElevatorArmPositions.L1;
+                }
 
                 String pathToCoralStationName = firstTree + " to ";
                 String coralStation = m_coralStationChooser.getSelected();
@@ -147,14 +170,34 @@ public class AutoCreator {
                 String pathToSecondTreeName = coralStation + " to ";
                 pathToSecondTreeName += m_treeChooser2.getSelected();
                 PathPlannerPath pathToSecondTree = PathPlannerPath.fromPathFile(pathToSecondTreeName);
+                ElevatorPositions secondElevatorPosition = m_levelChooser2.getSelected();
+                ElevatorArmPositions secondArmPosition;
+                if (secondElevatorPosition == ElevatorPositions.L2 || secondElevatorPosition == ElevatorPositions.L3) {
+                    secondArmPosition = ElevatorArmPositions.L_2_AND_3;
+                } else {
+                    secondArmPosition = ElevatorArmPositions.L1;
+                }
 
                 m_autoSequence = Commands.sequence(
-                        Commands.parallel(
-                                Commands.runOnce(m_autoTimer::resetAndStart), AutoBuilder.followPath(pathToFirstTree)),
-                        AutoBuilder.followPath(pathToCoralStation),
-                        AutoBuilder.followPath(pathToSecondTree),
+                        Commands.deadline(
+                                AutoBuilder.followPath(pathToFirstTree),
+                                Commands.runOnce(m_autoTimer::resetAndStart),
+                                Commands.waitSeconds(1)
+                                        .andThen(m_elevator.setElevatorAndArmPositionCommand(
+                                                firstElevatorPosition, firstArmPosition))),
+                        m_elevator.ejectCoralCommand().withTimeout(1),
+                        Commands.deadline(
+                                AutoBuilder.followPath(pathToCoralStation),
+                                m_elevator.setElevatorAndArmPositionCommand(
+                                        ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION)),
+                        m_elevator.intakeCoralCommand().withTimeout(1),
+                        Commands.deadline(
+                                AutoBuilder.followPath(pathToSecondTree),
+                                Commands.waitSeconds(1)
+                                        .andThen(m_elevator.setElevatorAndArmPositionCommand(
+                                                secondElevatorPosition, secondArmPosition))),
+                        m_elevator.ejectCoralCommand().withTimeout(1),
                         Commands.runOnce(m_autoTimer::stopAndPublish));
-                // TODO: Add elevator command to sequence
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
                 m_autoSequence = Commands.none();
@@ -169,6 +212,13 @@ public class AutoCreator {
             String firstTree = m_treeChooser.getSelected();
             pathToFirstTreeName += firstTree;
             PathPlannerPath pathToFirstTree = PathPlannerPath.fromPathFile(pathToFirstTreeName);
+            ElevatorPositions firstElevatorPosition = m_levelChooser.getSelected();
+            ElevatorArmPositions firstArmPosition;
+            if (firstElevatorPosition == ElevatorPositions.L2 || firstElevatorPosition == ElevatorPositions.L3) {
+                firstArmPosition = ElevatorArmPositions.L_2_AND_3;
+            } else {
+                firstArmPosition = ElevatorArmPositions.L1;
+            }
 
             String pathToCoralStationName = firstTree + " to ";
             String firstCoralStation = m_coralStationChooser.getSelected();
@@ -179,6 +229,13 @@ public class AutoCreator {
             String secondTree = m_treeChooser2.getSelected();
             pathToSecondTreeName += secondTree;
             PathPlannerPath pathToSecondTree = PathPlannerPath.fromPathFile(pathToSecondTreeName);
+            ElevatorPositions secondElevatorPosition = m_levelChooser2.getSelected();
+            ElevatorArmPositions secondArmPosition;
+            if (secondElevatorPosition == ElevatorPositions.L2 || secondElevatorPosition == ElevatorPositions.L3) {
+                secondArmPosition = ElevatorArmPositions.L_2_AND_3;
+            } else {
+                secondArmPosition = ElevatorArmPositions.L1;
+            }
 
             String pathToSecondCoralStationName = secondTree + " to ";
             String secondCoralStation = m_coralStationChooser2.getSelected();
@@ -188,16 +245,45 @@ public class AutoCreator {
             String pathToThirdTreeName = secondCoralStation + " to ";
             pathToThirdTreeName += m_treeChooser3.getSelected();
             PathPlannerPath pathToThirdTree = PathPlannerPath.fromPathFile(pathToThirdTreeName);
+            ElevatorPositions thirdElevatorPosition = m_levelChooser3.getSelected();
+            ElevatorArmPositions thirdArmPosition;
+            if (thirdElevatorPosition == ElevatorPositions.L2 || thirdElevatorPosition == ElevatorPositions.L3) {
+                thirdArmPosition = ElevatorArmPositions.L_2_AND_3;
+            } else {
+                thirdArmPosition = ElevatorArmPositions.L1;
+            }
 
             m_autoSequence = Commands.sequence(
-                    Commands.parallel(
-                            Commands.runOnce(m_autoTimer::resetAndStart), AutoBuilder.followPath(pathToFirstTree)),
-                    AutoBuilder.followPath(pathToFirstCoralStation),
-                    AutoBuilder.followPath(pathToSecondTree),
-                    AutoBuilder.followPath(pathToSecondCoralStation),
-                    AutoBuilder.followPath(pathToThirdTree),
+                    Commands.deadline(
+                            AutoBuilder.followPath(pathToFirstTree),
+                            Commands.runOnce(m_autoTimer::resetAndStart),
+                            Commands.waitSeconds(1)
+                                    .andThen(m_elevator.setElevatorAndArmPositionCommand(
+                                            firstElevatorPosition, firstArmPosition))),
+                    m_elevator.ejectCoralCommand().withTimeout(1),
+                    Commands.deadline(
+                            AutoBuilder.followPath(pathToFirstCoralStation),
+                            m_elevator.setElevatorAndArmPositionCommand(
+                                    ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION)),
+                    m_elevator.intakeCoralCommand().withTimeout(1),
+                    Commands.deadline(
+                            AutoBuilder.followPath(pathToSecondTree),
+                            Commands.waitSeconds(1)
+                                    .andThen(m_elevator.setElevatorAndArmPositionCommand(
+                                            secondElevatorPosition, secondArmPosition))),
+                    m_elevator.ejectCoralCommand().withTimeout(1),
+                    Commands.deadline(
+                            AutoBuilder.followPath(pathToSecondCoralStation),
+                            m_elevator.setElevatorAndArmPositionCommand(
+                                    ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION)),
+                    m_elevator.intakeCoralCommand().withTimeout(1),
+                    Commands.deadline(
+                            AutoBuilder.followPath(pathToThirdTree),
+                            Commands.waitSeconds(1)
+                                    .andThen(m_elevator.setElevatorAndArmPositionCommand(
+                                            thirdElevatorPosition, thirdArmPosition))),
+                    m_elevator.ejectCoralCommand().withTimeout(1),
                     Commands.runOnce(m_autoTimer::stopAndPublish));
-            // TODO: Add elevator command to sequence
         } catch (Exception e) {
             DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
             m_autoSequence = Commands.none();

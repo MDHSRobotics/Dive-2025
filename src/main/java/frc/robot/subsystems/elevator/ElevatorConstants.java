@@ -59,8 +59,10 @@ public class ElevatorConstants {
     /** Units: volts per rotation/sec^2 */
     public static final double ELEVATOR_K_A = 0.009668;
 
-    /** Units: volts per rotation */
-    public static final double ELEVATOR_K_P = 1.0;
+    /** Units: volts per rotation
+     * This is currently set to the value recommended by "sysid_results/elevator/ElevatorSysId.wpilog"
+     */
+    public static final double ELEVATOR_K_P = 58.801;
 
     // Common elevator positions
     /** Units: rotations */

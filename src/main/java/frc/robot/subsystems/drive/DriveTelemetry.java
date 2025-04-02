@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -59,10 +58,6 @@ public class DriveTelemetry {
     private final DoublePublisher linearSpeedPub =
             driveStateTable.getDoubleTopic("Linear Speed").publish();
 
-    private final double[] poseArray = new double[3];
-    private final double[] moduleStatesArray = new double[8];
-    private final double[] moduleTargetsArray = new double[8];
-
     /** Accept the swerve drive state and log it to NetworkTables and SignalLogger. */
     public void telemeterize(SwerveDriveState state) {
         long timestamp = stateTimestampToNTTimestamp(state.Timestamp);
@@ -72,6 +67,7 @@ public class DriveTelemetry {
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
         megatag2FrontUpdater.set(megatag2Orientation, timestamp);
         megatag2BackUpdater.set(megatag2Orientation, timestamp);
+        // Flushing is ESSENTIAL for the limelight to receive accurate yaw and give accurate pose estimates.
         inst.flush();
 
         /* Telemeterize the swerve drive state */
@@ -85,22 +81,6 @@ public class DriveTelemetry {
 
         double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
         linearSpeedPub.set(linearSpeed, timestamp);
-
-        /* Also write to log file */
-        poseArray[0] = state.Pose.getX();
-        poseArray[1] = state.Pose.getY();
-        poseArray[2] = state.Pose.getRotation().getDegrees();
-        for (int i = 0; i < 4; ++i) {
-            moduleStatesArray[i * 2 + 0] = state.ModuleStates[i].angle.getRadians();
-            moduleStatesArray[i * 2 + 1] = state.ModuleStates[i].speedMetersPerSecond;
-            moduleTargetsArray[i * 2 + 0] = state.ModuleTargets[i].angle.getRadians();
-            moduleTargetsArray[i * 2 + 1] = state.ModuleTargets[i].speedMetersPerSecond;
-        }
-
-        SignalLogger.writeDoubleArray("DriveState/Pose", poseArray);
-        SignalLogger.writeDoubleArray("DriveState/ModuleStates", moduleStatesArray);
-        SignalLogger.writeDoubleArray("DriveState/ModuleTargets", moduleTargetsArray);
-        SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
     }
 
     /**
