@@ -72,6 +72,7 @@ public class DriveTelemetry {
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
         megatag2FrontUpdater.set(megatag2Orientation, timestamp);
         megatag2BackUpdater.set(megatag2Orientation, timestamp);
+        inst.flush();
 
         /* Telemeterize the swerve drive state */
         drivePosePub.set(state.Pose, timestamp);

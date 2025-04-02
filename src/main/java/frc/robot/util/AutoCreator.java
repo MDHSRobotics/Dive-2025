@@ -54,7 +54,7 @@ public class AutoCreator {
         m_treeChooser.addOption("L", "L");
         SmartDashboard.putData("Tree #1:", m_treeChooser);
 
-        m_levelChooser.addOption("L1", ElevatorPositions.L1);
+        m_levelChooser.addOption("L1", ElevatorPositions.STOWED);
         m_levelChooser.addOption("L2", ElevatorPositions.L2);
         m_levelChooser.addOption("L3", ElevatorPositions.L3);
         SmartDashboard.putData("Level #1:", m_levelChooser);
@@ -80,7 +80,7 @@ public class AutoCreator {
         m_treeChooser2.addOption("L", "L");
         SmartDashboard.putData("Tree #2:", m_treeChooser2);
 
-        m_levelChooser2.addOption("L1", ElevatorPositions.L1);
+        m_levelChooser2.addOption("L1", ElevatorPositions.STOWED);
         m_levelChooser2.addOption("L2", ElevatorPositions.L2);
         m_levelChooser2.addOption("L3", ElevatorPositions.L3);
         SmartDashboard.putData("Level #2:", m_levelChooser2);
@@ -106,7 +106,7 @@ public class AutoCreator {
         m_treeChooser3.addOption("L", "L");
         SmartDashboard.putData("Tree #3:", m_treeChooser3);
 
-        m_levelChooser3.addOption("L1", ElevatorPositions.L1);
+        m_levelChooser3.addOption("L1", ElevatorPositions.STOWED);
         m_levelChooser3.addOption("L2", ElevatorPositions.L2);
         m_levelChooser3.addOption("L3", ElevatorPositions.L3);
         m_levelChooser3.onChange(this::createThreeCoralAuto);

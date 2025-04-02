@@ -21,7 +21,7 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_MIN_LIMIT = 0;
     /** Units: rotations */
-    public static final double ELEVATOR_MAX_LIMIT = 4.85;
+    public static final double ELEVATOR_MAX_LIMIT = 4.8;
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 3.911;
     /** Units: radians */
@@ -51,28 +51,24 @@ public class ElevatorConstants {
             2.0 * Math.PI * ELEVATOR_GEAR_RADIUS.in(Meters);
 
     /** Units: volts */
-    public static final double ELEVATOR_K_G = 0.18892;
+    public static final double ELEVATOR_K_G = 0.18397;
     /** Units: volts */
-    public static final double ELEVATOR_K_S = 0.074155;
+    public static final double ELEVATOR_K_S = 0.077725;
     /** Units: volts per rotation/sec */
-    public static final double ELEVATOR_K_V = 3.172;
+    public static final double ELEVATOR_K_V = 1.3859;
     /** Units: volts per rotation/sec^2 */
-    public static final double ELEVATOR_K_A = 0.030076;
+    public static final double ELEVATOR_K_A = 0.009668;
 
     /** Units: volts per rotation */
-    public static final double ELEVATOR_K_P = 0;
+    public static final double ELEVATOR_K_P = 1.0;
 
     // Common elevator positions
     /** Units: rotations */
     public static final double ELEVATOR_STOWED_POSITION = ELEVATOR_MIN_LIMIT;
     /** Units: rotations */
-    public static final double ELEVATOR_CORAL_STATION_POSITION = ELEVATOR_MAX_LIMIT;
+    public static final double ELEVATOR_L2_POSITION = 1.3728;
     /** Units: rotations */
-    public static final double ELEVATOR_L1_POSITION = 0.1230;
-    /** Units: rotations */
-    public static final double ELEVATOR_L2_POSITION = 0.9212;
-    /** Units: rotations */
-    public static final double ELEVATOR_L3_POSITION = 2.1499;
+    public static final double ELEVATOR_L3_POSITION = 4.8;
 
     /**
      * The conversion of motor input rotations to arm output radians.
@@ -116,7 +112,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_CORAL_STATION_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double ARM_L1_POSITION = 5.107;
+    public static final double ARM_L1_POSITION = 6.044;
     /** Units: radians */
     public static final double ARM_L2_AND_L3_POSITION = 4.830;
 }

@@ -57,7 +57,7 @@ public class DriveConstants {
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
      */
     public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
-            new TrapezoidProfile.Constraints(4.0, 4.0);
+            new TrapezoidProfile.Constraints(4.0, 2.0);
 
     /**
      * Max angular rate of the robot in radians per second.

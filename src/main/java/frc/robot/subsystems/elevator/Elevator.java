@@ -51,8 +51,6 @@ import java.util.function.DoubleSupplier;
 public class Elevator extends SubsystemBase {
     public enum ElevatorPositions {
         STOWED,
-        CORAL_STATION,
-        L1,
         L2,
         L3,
         CURRENT_POSITION
@@ -141,7 +139,7 @@ public class Elevator extends SubsystemBase {
                         .withKS(ELEVATOR_K_S)
                         .withKV(ELEVATOR_K_V)
                         .withKA(ELEVATOR_K_A)
-                        .withKP(1)
+                        .withKP(ELEVATOR_K_P)
                         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseVelocitySign))
                 .withMotionMagic(new MotionMagicConfigs()
                         .withMotionMagicExpo_kV(ELEVATOR_K_V)
@@ -197,14 +195,10 @@ public class Elevator extends SubsystemBase {
         double position;
         if (elevatorPosition == ElevatorPositions.STOWED) {
             position = ELEVATOR_MIN_LIMIT;
-        } else if (elevatorPosition == ElevatorPositions.CORAL_STATION) {
-            position = ELEVATOR_MIN_LIMIT;
-        } else if (elevatorPosition == ElevatorPositions.L1) {
-            position = ELEVATOR_MIN_LIMIT;
         } else if (elevatorPosition == ElevatorPositions.L2) {
-            position = ELEVATOR_MIN_LIMIT;
+            position = ELEVATOR_L2_POSITION;
         } else if (elevatorPosition == ElevatorPositions.L3) {
-            position = ELEVATOR_MIN_LIMIT;
+            position = ELEVATOR_L3_POSITION;
         } else if (elevatorPosition == ElevatorPositions.CURRENT_POSITION) {
             position = m_elevatorMotor.getPosition().getValueAsDouble();
         } else {
@@ -311,6 +305,10 @@ public class Elevator extends SubsystemBase {
                     m_elevatorMotor.set(powerSupplier.getAsDouble() * 0.25);
                 })
                 .finallyDo(m_elevatorMotor::stopMotor);
+    }
+
+    public Command setArmPositionCommand(ElevatorArmPositions armPosition) {
+        return this.startRun(() -> setArmPosition(armPosition), this::updateArmProfile);
     }
 
     public Command setElevatorAndArmPositionCommand(

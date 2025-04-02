@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.commands.WheelRadiusCharacterization;
@@ -186,22 +185,22 @@ public class RobotContainer {
          * Note that each routine should be run exactly once in a single log.
          * Comment out when finished.
          */
-        driverController
-                .share()
-                .and(driverController.povUp())
-                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        driverController
-                .share()
-                .and(driverController.povDown())
-                .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        driverController
-                .options()
-                .and(driverController.povUp())
-                .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        driverController
-                .options()
-                .and(driverController.povDown())
-                .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // driverController
+        //         .share()
+        //         .and(driverController.povUp())
+        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // driverController
+        //         .share()
+        //         .and(driverController.povDown())
+        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // driverController
+        //         .options()
+        //         .and(driverController.povUp())
+        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // driverController
+        //         .options()
+        //         .and(driverController.povDown())
+        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
@@ -213,10 +212,6 @@ public class RobotContainer {
      */
     private void configureOperatorControls() {
         operatorController
-                .rightTrigger()
-                .whileTrue(m_climb.setPowerCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
-        operatorController
                 .leftTrigger()
                 .whileTrue(m_climb.setPowerCommand(
                         () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
@@ -224,13 +219,11 @@ public class RobotContainer {
         operatorController
                 .leftStick()
                 .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
-        // operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
         operatorController
                 .rightStick()
                 .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getRightY()));
 
         operatorController.a().whileTrue(m_elevator.ejectCoralCommand());
-        operatorController.x().whileTrue(m_elevator.ejectCoralSlowCommand());
         operatorController.b().whileTrue(m_elevator.intakeCoralCommand());
         operatorController
                 .leftBumper()
@@ -239,17 +232,21 @@ public class RobotContainer {
         operatorController
                 .rightBumper()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
-                        ElevatorPositions.L3, ElevatorArmPositions.CORAL_STATION));
+                        ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
+        operatorController
+                .back()
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                        ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
+        operatorController
+                .start()
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
 
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        // operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        // operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
 
-        // operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        // operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
-
-        // operatorController.back().onTrue(m_elevator.setArmPositionCommand(CatcherArmPositions.STOWED));
-        // operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        operatorController.x().whileTrue(m_intake.runWheelsCommand());
+        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
 
         // operatorController
         //         .back()
