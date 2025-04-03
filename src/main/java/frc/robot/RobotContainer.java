@@ -82,7 +82,7 @@ public class RobotContainer {
     /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> testAutoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
-    private final AutoCreator autoCreator = new AutoCreator(m_elevator);
+    private final AutoCreator autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
     private final AimingRoutines aimingRoutines = new AimingRoutines(
             m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
@@ -223,10 +223,20 @@ public class RobotContainer {
         operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
-        operatorController.povLeft().whileTrue(m_elevator.removeAlgaeFromReefCommand());
+        operatorController
+                .povLeft()
+                .and(operatorController.a())
+                .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
+        operatorController
+                .povLeft()
+                .and(operatorController.y())
+                .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
 
         operatorController.x().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
+
+        operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
 
         // operatorController
         //         .back()

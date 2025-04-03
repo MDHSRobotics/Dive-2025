@@ -2,7 +2,10 @@ package frc.robot.util;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.FlippingUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -10,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPositions;
+import java.util.function.Consumer;
 
 /**
  * This util class is specific to our PathPlanner path naming scheme for this year.
@@ -25,11 +29,13 @@ public class AutoCreator {
     private final SendableChooser<String> m_treeChooser3 = new SendableChooser<String>();
     private final SendableChooser<ElevatorPositions> m_levelChooser3 = new SendableChooser<ElevatorPositions>();
 
+    private final Consumer<Pose2d> m_odometryResetter;
     private final Elevator m_elevator;
     private final AutoTimer m_autoTimer = new AutoTimer();
     private Command m_autoSequence = null;
 
-    public AutoCreator(Elevator elevator) {
+    public AutoCreator(Consumer<Pose2d> odometryResetter, Elevator elevator) {
+        m_odometryResetter = odometryResetter;
         m_elevator = elevator;
     }
 
@@ -128,13 +134,12 @@ public class AutoCreator {
                     armPosition = ElevatorArmPositions.L1;
                 }
                 m_autoSequence = Commands.sequence(
+                        resetOdometryCommand(path.getStartingHolonomicPose().orElseThrow()),
                         Commands.deadline(
                                 AutoBuilder.followPath(path),
                                 Commands.runOnce(m_autoTimer::resetAndStart),
-                                Commands.waitSeconds(1)
-                                        .andThen(m_elevator.setElevatorAndArmPositionCommand(
-                                                elevatorPosition, armPosition))),
-                        m_elevator.ejectCoralCommand().withTimeout(1),
+                                m_elevator.setElevatorAndArmPositionCommand(elevatorPosition, armPosition)),
+                        m_elevator.ejectCoralCommand().withTimeout(0.25),
                         Commands.parallel(
                                 m_elevator.setElevatorAndArmPositionCommand(
                                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION),
@@ -179,24 +184,24 @@ public class AutoCreator {
                 }
 
                 m_autoSequence = Commands.sequence(
+                        resetOdometryCommand(
+                                pathToFirstTree.getStartingHolonomicPose().orElseThrow()),
                         Commands.deadline(
                                 AutoBuilder.followPath(pathToFirstTree),
                                 Commands.runOnce(m_autoTimer::resetAndStart),
-                                Commands.waitSeconds(1)
-                                        .andThen(m_elevator.setElevatorAndArmPositionCommand(
-                                                firstElevatorPosition, firstArmPosition))),
-                        m_elevator.ejectCoralCommand().withTimeout(1),
+                                m_elevator.setElevatorAndArmPositionCommand(firstElevatorPosition, firstArmPosition)),
+                        m_elevator.ejectCoralCommand().withTimeout(0.25),
                         Commands.deadline(
                                 AutoBuilder.followPath(pathToCoralStation),
                                 m_elevator.setElevatorAndArmPositionCommand(
                                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION)),
-                        m_elevator.intakeCoralCommand().withTimeout(1),
+                        m_elevator.intakeCoralCommand().withTimeout(0.75),
                         Commands.deadline(
                                 AutoBuilder.followPath(pathToSecondTree),
                                 Commands.waitSeconds(1)
                                         .andThen(m_elevator.setElevatorAndArmPositionCommand(
                                                 secondElevatorPosition, secondArmPosition))),
-                        m_elevator.ejectCoralCommand().withTimeout(1),
+                        m_elevator.ejectCoralCommand().withTimeout(0.25),
                         Commands.runOnce(m_autoTimer::stopAndPublish));
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
@@ -254,41 +259,51 @@ public class AutoCreator {
             }
 
             m_autoSequence = Commands.sequence(
+                    resetOdometryCommand(
+                            pathToFirstTree.getStartingHolonomicPose().orElseThrow()),
                     Commands.deadline(
                             AutoBuilder.followPath(pathToFirstTree),
                             Commands.runOnce(m_autoTimer::resetAndStart),
-                            Commands.waitSeconds(1)
-                                    .andThen(m_elevator.setElevatorAndArmPositionCommand(
-                                            firstElevatorPosition, firstArmPosition))),
-                    m_elevator.ejectCoralCommand().withTimeout(1),
+                            m_elevator.setElevatorAndArmPositionCommand(firstElevatorPosition, firstArmPosition)),
+                    m_elevator.ejectCoralCommand().withTimeout(0.25),
                     Commands.deadline(
                             AutoBuilder.followPath(pathToFirstCoralStation),
                             m_elevator.setElevatorAndArmPositionCommand(
                                     ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION)),
-                    m_elevator.intakeCoralCommand().withTimeout(1),
+                    m_elevator.intakeCoralCommand().withTimeout(0.75),
                     Commands.deadline(
                             AutoBuilder.followPath(pathToSecondTree),
                             Commands.waitSeconds(1)
                                     .andThen(m_elevator.setElevatorAndArmPositionCommand(
                                             secondElevatorPosition, secondArmPosition))),
-                    m_elevator.ejectCoralCommand().withTimeout(1),
+                    m_elevator.ejectCoralCommand().withTimeout(0.25),
                     Commands.deadline(
                             AutoBuilder.followPath(pathToSecondCoralStation),
                             m_elevator.setElevatorAndArmPositionCommand(
                                     ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION)),
-                    m_elevator.intakeCoralCommand().withTimeout(1),
+                    m_elevator.intakeCoralCommand().withTimeout(0.75),
                     Commands.deadline(
                             AutoBuilder.followPath(pathToThirdTree),
                             Commands.waitSeconds(1)
                                     .andThen(m_elevator.setElevatorAndArmPositionCommand(
                                             thirdElevatorPosition, thirdArmPosition))),
-                    m_elevator.ejectCoralCommand().withTimeout(1),
+                    m_elevator.ejectCoralCommand().withTimeout(0.25),
                     Commands.runOnce(m_autoTimer::stopAndPublish));
         } catch (Exception e) {
             DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
             m_autoSequence = Commands.none();
             return;
         }
+    }
+
+    public Command resetOdometryCommand(Pose2d startingPose) {
+        return Commands.runOnce(() -> {
+            Pose2d newStartingPose = startingPose;
+            if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
+                newStartingPose = FlippingUtil.flipFieldPose(startingPose);
+            }
+            m_odometryResetter.accept(newStartingPose);
+        });
     }
 
     public Command getAutonomousCommand() {

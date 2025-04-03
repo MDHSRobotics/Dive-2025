@@ -52,6 +52,7 @@ public class Elevator extends SubsystemBase {
     public enum ElevatorPositions {
         STOWED,
         L2,
+        L3_ALGAE,
         L3,
         CURRENT_POSITION
     }
@@ -61,6 +62,7 @@ public class Elevator extends SubsystemBase {
         CORAL_STATION,
         L1,
         L_2_AND_3,
+        ALGAE_REMOVAL,
         CURRENT_POSITION
     }
 
@@ -197,6 +199,8 @@ public class Elevator extends SubsystemBase {
             position = ELEVATOR_MIN_LIMIT;
         } else if (elevatorPosition == ElevatorPositions.L2) {
             position = ELEVATOR_L2_POSITION;
+        } else if (elevatorPosition == ElevatorPositions.L3_ALGAE) {
+            position = ELEVATOR_L3_ALGAE_POSITION;
         } else if (elevatorPosition == ElevatorPositions.L3) {
             position = ELEVATOR_L3_POSITION;
         } else if (elevatorPosition == ElevatorPositions.CURRENT_POSITION) {
@@ -219,6 +223,8 @@ public class Elevator extends SubsystemBase {
             m_armPosition = ARM_L1_POSITION;
         } else if (armPosition == ElevatorArmPositions.L_2_AND_3) {
             m_armPosition = ARM_L2_AND_L3_POSITION;
+        } else if (armPosition == ElevatorArmPositions.ALGAE_REMOVAL) {
+            m_armPosition = ARM_ALGAE_REMOVAL_POSITION;
         } else if (armPosition == ElevatorArmPositions.CURRENT_POSITION) {
             m_armPosition = m_armEncoder.getPosition();
         } else {
@@ -288,16 +294,15 @@ public class Elevator extends SubsystemBase {
         return ejectCoralCommand().until(this::wheelsAreStopped);
     }
 
-    public Command removeAlgaeFromReefCommand() {
-        return this.runOnce(() -> {
-                    m_flywheelsMotor.set(-0.2);
-                    m_armMotor.set(0.5);
-                })
-                .andThen(Commands.idle(this))
-                .finallyDo(() -> {
-                    m_flywheelsMotor.stopMotor();
-                    m_armMotor.stopMotor();
-                });
+    public Command removeAlgaeFromReefCommand(ElevatorPositions elevatorPosition) {
+        return this.startRun(
+                        () -> {
+                            setElevatorPosition(elevatorPosition);
+                            setArmPosition(ElevatorArmPositions.ALGAE_REMOVAL);
+                            m_flywheelsMotor.set(0.5);
+                        },
+                        this::updateArmProfile)
+                .finallyDo(m_flywheelsMotor::stopMotor);
     }
 
     public Command setElevatorPowerCommand(DoubleSupplier powerSupplier) {
@@ -317,6 +322,9 @@ public class Elevator extends SubsystemBase {
                 () -> {
                     setElevatorPosition(elevatorPosition);
                     setArmPosition(armPosition);
+                    if (armPosition == ElevatorArmPositions.L1 || armPosition == ElevatorArmPositions.L_2_AND_3) {
+                        m_flywheelsMotor.set(-0.2);
+                    }
                 },
                 this::updateArmProfile);
     }

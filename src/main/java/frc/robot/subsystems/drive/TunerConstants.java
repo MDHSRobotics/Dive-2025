@@ -83,7 +83,7 @@ public class TunerConstants {
     public static final double kDriveGearRatio = 6.746031746031747;
     private static final double kSteerGearRatio = 12.8;
     /** Found from {@link frc.robot.commands.WheelRadiusCharacterization Wheel Radius Characterization} */
-    public static final Distance kWheelRadius = Inches.of(1.976);
+    public static final Distance kWheelRadius = Inches.of(1.916);
 
     private static final boolean kInvertLeftSide = false;
     private static final boolean kInvertRightSide = true;

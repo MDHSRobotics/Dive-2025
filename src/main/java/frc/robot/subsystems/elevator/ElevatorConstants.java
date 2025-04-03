@@ -21,11 +21,11 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_MIN_LIMIT = 0;
     /** Units: rotations */
-    public static final double ELEVATOR_MAX_LIMIT = 4.8;
+    public static final double ELEVATOR_MAX_LIMIT = 4.7;
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 3.911;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 6.062;
+    public static final double ARM_MAX_LIMIT = 6.2;
 
     /**
      * Gear reduction of the elevator motor.
@@ -68,9 +68,11 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_STOWED_POSITION = ELEVATOR_MIN_LIMIT;
     /** Units: rotations */
-    public static final double ELEVATOR_L2_POSITION = 1.3728;
+    public static final double ELEVATOR_L2_POSITION = 1.865;
     /** Units: rotations */
-    public static final double ELEVATOR_L3_POSITION = 4.8;
+    public static final double ELEVATOR_L3_ALGAE_POSITION = 2.6535;
+    /** Units: rotations */
+    public static final double ELEVATOR_L3_POSITION = ELEVATOR_MAX_LIMIT;
 
     /**
      * The conversion of motor input rotations to arm output radians.
@@ -89,7 +91,7 @@ public class ElevatorConstants {
     public static final double ARM_ZERO_OFFSET = 0;
 
     /** The position of the absolute encoder in radians that makes the arm stick straight out at the horizontal. */
-    public static final double ARM_HORIZONTAL_OFFSET = 5.162;
+    public static final double ARM_HORIZONTAL_OFFSET = 5.395;
 
     /** Units: volts */
     public static final double ARM_K_G = 1;
@@ -116,5 +118,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L1_POSITION = 6.044;
     /** Units: radians */
-    public static final double ARM_L2_AND_L3_POSITION = 4.830;
+    public static final double ARM_L2_AND_L3_POSITION = 4.95;
+    /** Units: radians */
+    public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357;
 }

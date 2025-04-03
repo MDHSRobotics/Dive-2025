@@ -68,17 +68,17 @@ public class IntakeConstants {
      * in duty cycle (percent out) per radian.
      * This still needs to be tuned.
      */
-    public static final double K_P = 0.2;
+    public static final double K_P = 0.25;
 
     // Common intake positions
     /**
      * The position that aligns the arm with the algae resting on a coral in radians.
      */
-    public static final double ON_CORAL_PICKUP_POSITION = 3.854;
+    public static final double ON_CORAL_PICKUP_POSITION = 4.0;
     /**
      * The position that aligns the arm with the algae resting on the ground in radians.
      */
-    public static final double GROUND_PICKUP_POSITION = ARM_MIN_LIMIT;
+    public static final double GROUND_PICKUP_POSITION = 3.6;
     /** Units: radians */
-    public static final double PROCESSOR_POSITION = 3.903;
+    public static final double PROCESSOR_POSITION = 4.0;
 }
