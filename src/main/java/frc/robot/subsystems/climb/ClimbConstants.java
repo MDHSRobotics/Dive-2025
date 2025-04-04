@@ -25,7 +25,7 @@ public class ClimbConstants {
     public static final double BACK_MIN_LIMIT = 0.533;
 
     /** The furthest safe angle that is away from the cage in radians. */
-    public static final double FRONT_MAX_LIMIT = 4.561;
+    public static final double FRONT_MAX_LIMIT = 4.543;
     /** The angle that pushes the cage down as far as possible in radians. */
     public static final double FRONT_MIN_LIMIT = 1.496;
 
