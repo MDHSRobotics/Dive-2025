@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 import static frc.robot.subsystems.elevator.ElevatorConstants.*;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -147,6 +148,16 @@ public class Elevator extends SubsystemBase {
                         .withMotionMagicExpo_kV(ELEVATOR_K_V)
                         .withMotionMagicExpo_kA(ELEVATOR_K_A));
         m_elevatorMotor.getConfigurator().apply(elevatorConfig);
+
+        BaseStatusSignal.setUpdateFrequencyForAll(
+                250,
+                m_elevatorMotor.getMotorVoltage(false),
+                m_elevatorMotor.getPosition(false),
+                m_elevatorMotor.getVelocity(false),
+                m_elevatorMotor.getClosedLoopReference(false),
+                m_elevatorMotor.getClosedLoopReferenceSlope(false));
+
+        m_elevatorMotor.optimizeBusUtilization();
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
         armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
