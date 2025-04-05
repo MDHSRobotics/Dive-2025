@@ -156,7 +156,7 @@ public class RobotContainer {
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
-        driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
+        driverController.circle().whileTrue(aimingRoutines.driveToCoralStation());
         driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
         driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> brake));
         driverController.square().whileTrue(aimingRoutines.driveToTree());

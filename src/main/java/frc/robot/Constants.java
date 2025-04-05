@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -271,10 +272,10 @@ public final class Constants {
         /**
          * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
          * <p>
-         * IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22.
-         * Basically, index into the array by subtracting one from the id.
+         * Index into the array with the id number starting from 1.
          */
         public static final Translation3d[] APRILTAG_POSES = {
+            new Translation3d(),
             new Translation3d(Inches.of(657.37), Inches.of(25.80), Inches.of(58.50)),
             new Translation3d(Inches.of(657.37), Inches.of(291.20), Inches.of(58.50)),
             new Translation3d(Inches.of(455.15), Inches.of(317.15), Inches.of(51.25)),
@@ -386,6 +387,14 @@ public final class Constants {
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(198.688).plus(SEMICIRCLE_TO_CAGE_DISTANCE)),
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(241.625).plus(SEMICIRCLE_TO_CAGE_DISTANCE)),
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE)));
+
+        private static final Pose2d BLUE_TOP_CORAL_STATION = new Pose2d(3.137, 3.852, Rotation2d.fromDegrees(126));
+        private static final Pose2d BLUE_BOTTOM_CORAL_STATION = new Pose2d(3.127, 4.179, Rotation2d.fromDegrees(-126));
+        public static final List<Pose2d> BLUE_CORAL_STATION_POSES =
+                List.of(BLUE_TOP_CORAL_STATION, BLUE_BOTTOM_CORAL_STATION);
+        public static final List<Pose2d> RED_CORAL_STATION_POSES = List.of(
+                FlippingUtil.flipFieldPose(BLUE_TOP_CORAL_STATION),
+                FlippingUtil.flipFieldPose(BLUE_BOTTOM_CORAL_STATION));
     }
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */

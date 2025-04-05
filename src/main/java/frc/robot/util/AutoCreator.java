@@ -135,6 +135,7 @@ public class AutoCreator {
                 }
                 m_autoSequence = Commands.sequence(
                         resetOdometryCommand(path.getStartingHolonomicPose().orElseThrow()),
+                        Commands.waitSeconds(5),
                         Commands.deadline(
                                 AutoBuilder.followPath(path),
                                 Commands.runOnce(m_autoTimer::resetAndStart),

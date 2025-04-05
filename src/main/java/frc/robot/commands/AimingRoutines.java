@@ -276,6 +276,36 @@ public class AimingRoutines {
                         () -> m_drivetrain.setControl(driveToPosition)));
     }
 
+    public Command driveToCoralStation() {
+        return Commands.sequence(
+                m_drivetrain.defer(() -> {
+                    SwerveDriveState currentState = m_drivetrain.getState();
+                    Pose2d currentPose = m_drivetrain.getState().Pose;
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    Pose2d coralStationPose;
+                    if (alliance == Alliance.Blue) {
+                        coralStationPose = currentPose.nearest(FieldConstants.BLUE_CORAL_STATION_POSES);
+                    } else {
+                        coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
+                    }
+                    return generatePath(currentState, coralStationPose, ON_THE_FLY_CONSTRAINTS, false);
+                }),
+                m_drivetrain.startRun(
+                        () -> {
+                            driveToPosition.resetProfile();
+                            Pose2d currentPose = m_drivetrain.getState().Pose;
+                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                            Pose2d coralStationPose;
+                            if (alliance == Alliance.Blue) {
+                                coralStationPose = currentPose.nearest(FieldConstants.BLUE_CORAL_STATION_POSES);
+                            } else {
+                                coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
+                            }
+                            m_drivetrain.setControl(driveToPosition.withTargetPose(coralStationPose));
+                        },
+                        () -> m_drivetrain.setControl(driveToPosition)));
+    }
+
     /**
      * If the robot is on it's alliance's side, it will drive in front of the cage, then forwards/behind the cage, then to the cage's center.
      * If the robot is on the opposing alliance's side, it will drive behind the cage, then forwards/in front of the cage, then to the cage's center.
