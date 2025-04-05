@@ -8,7 +8,6 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
-import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -388,13 +387,21 @@ public final class Constants {
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(241.625).plus(SEMICIRCLE_TO_CAGE_DISTANCE)),
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE)));
 
-        private static final Pose2d BLUE_TOP_CORAL_STATION = new Pose2d(3.137, 3.852, Rotation2d.fromDegrees(126));
-        private static final Pose2d BLUE_BOTTOM_CORAL_STATION = new Pose2d(3.127, 4.179, Rotation2d.fromDegrees(-126));
-        public static final List<Pose2d> BLUE_CORAL_STATION_POSES =
-                List.of(BLUE_TOP_CORAL_STATION, BLUE_BOTTOM_CORAL_STATION);
+        public static final List<Pose2d> BLUE_CORAL_STATION_POSES = List.of(
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[13].getX(), APRILTAG_POSES[13].getY(), APRILTAG_ROTATIONS[13]),
+                        new Translation2d(TREE_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[13].plus(Rotation2d.k180deg))),
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[12].getX(), APRILTAG_POSES[12].getY(), APRILTAG_ROTATIONS[12]),
+                        new Translation2d(TREE_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[12].plus(Rotation2d.k180deg))));
+
         public static final List<Pose2d> RED_CORAL_STATION_POSES = List.of(
-                FlippingUtil.flipFieldPose(BLUE_TOP_CORAL_STATION),
-                FlippingUtil.flipFieldPose(BLUE_BOTTOM_CORAL_STATION));
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[1].getX(), APRILTAG_POSES[1].getY(), APRILTAG_ROTATIONS[1]),
+                        new Translation2d(TREE_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[1].plus(Rotation2d.k180deg))),
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[2].getX(), APRILTAG_POSES[2].getY(), APRILTAG_ROTATIONS[2]),
+                        new Translation2d(TREE_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[2].plus(Rotation2d.k180deg))));
     }
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
