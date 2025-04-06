@@ -288,7 +288,7 @@ public class AimingRoutines {
                     } else {
                         coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                     }
-                    return generatePath(currentState, coralStationPose, ON_THE_FLY_CONSTRAINTS, false);
+                    return generatePath(currentState, coralStationPose, CORAL_STATION_CONSTRAINTS, false);
                 }),
                 m_drivetrain.startRun(
                         () -> {

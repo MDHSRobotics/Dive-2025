@@ -167,6 +167,8 @@ public class DriveConstants {
             Units.degreesToRadians(540),
             Units.degreesToRadians(540),
             12);
+    public static final PathConstraints CORAL_STATION_CONSTRAINTS =
+            new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
     public static final PathConstraints CAGE_CONSTRAINTS =
             new PathConstraints(1, 1, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
 }

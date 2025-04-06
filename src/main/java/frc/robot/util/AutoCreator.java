@@ -135,16 +135,13 @@ public class AutoCreator {
                 }
                 m_autoSequence = Commands.sequence(
                         resetOdometryCommand(path.getStartingHolonomicPose().orElseThrow()),
-                        Commands.waitSeconds(5),
+                        Commands.waitSeconds(7.5),
                         Commands.deadline(
                                 AutoBuilder.followPath(path),
                                 Commands.runOnce(m_autoTimer::resetAndStart),
                                 m_elevator.setElevatorAndArmPositionCommand(elevatorPosition, armPosition)),
                         m_elevator.ejectCoralCommand().withTimeout(0.25),
-                        Commands.parallel(
-                                m_elevator.setElevatorAndArmPositionCommand(
-                                        ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION),
-                                Commands.runOnce(m_autoTimer::stopAndPublish)));
+                        Commands.runOnce(m_autoTimer::stopAndPublish));
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
                 m_autoSequence = Commands.none();

@@ -30,7 +30,7 @@ public class IntakeConstants {
     public static final int WHEEL_CURRENT_LIMIT = 40;
 
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 5.693;
+    public static final double ARM_MAX_LIMIT = 5.6;
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 3.517;
 

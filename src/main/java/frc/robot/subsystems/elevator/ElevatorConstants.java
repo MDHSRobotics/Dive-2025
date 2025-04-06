@@ -116,7 +116,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_CORAL_STATION_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double ARM_L1_POSITION = 6.044;
+    public static final double ARM_L1_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
     public static final double ARM_L2_AND_L3_POSITION = 4.95;
     /** Units: radians */
