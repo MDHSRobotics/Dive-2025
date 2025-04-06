@@ -7,7 +7,6 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -18,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
-import frc.robot.commands.WheelRadiusCharacterization;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -80,7 +78,7 @@ public class RobotContainer {
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
-    private final SendableChooser<Command> testAutoChooser;
+    // private final SendableChooser<Command> testAutoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
     private final AutoCreator autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
@@ -97,13 +95,13 @@ public class RobotContainer {
 
         m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-        testAutoChooser = AutoBuilder.buildAutoChooser();
-        testAutoChooser.addOption(
-                "Drive Wheel Radius Characterization",
-                WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
-        testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
-        SmartDashboard.putData("Select your test auto:", testAutoChooser);
+        // testAutoChooser = AutoBuilder.buildAutoChooser();
+        // testAutoChooser.addOption(
+        //         "Drive Wheel Radius Characterization",
+        //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
+        // testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
+        // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
+        // SmartDashboard.putData("Select your test auto:", testAutoChooser);
 
         cageChooser.addOption("Left", CageLocation.LEFT);
         cageChooser.addOption("Middle", CageLocation.MIDDLE);
