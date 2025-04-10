@@ -79,12 +79,6 @@ public class DriveConstants {
     public static final Distance LINEAR_TOLERANCE = Inches.of(1);
 
     /**
-     * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
-     * used in custom swerve requests.
-     */
-    public static final Distance LINEAR_TOLERANCE = Inches.of(1);
-
-    /**
      * Multiply wheel rotations by this number to convert to meters.
      * This accounts for the drive gear ratio.
      * Units: meter / rotations
