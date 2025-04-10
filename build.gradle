@@ -1,7 +1,7 @@
 plugins {
     id "java"
     id "edu.wpi.first.GradleRIO" version "2025.3.2"
-    id("com.diffplug.spotless") version "7.0.2"
+    id("com.diffplug.spotless") version "7.0.3"
 }
 
 java {
@@ -115,7 +115,7 @@ spotless {
             exclude '**/build/**', '**/build-*/**', '**/bin/**', '**/.idea/**'
         }
         toggleOffOn()
-        palantirJavaFormat('2.50.0')
+        palantirJavaFormat('2.63.0')
         removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
