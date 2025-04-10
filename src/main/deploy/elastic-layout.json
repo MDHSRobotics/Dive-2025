@@ -6,7 +6,24 @@
       "name": "Teleoperated",
       "grid_layout": {
         "layouts": [],
-        "containers": []
+        "containers": [
+          {
+            "title": "Match Time",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1920.0,
+            "height": 896.0,
+            "type": "Match Time",
+            "properties": {
+              "topic": "Match Time",
+              "period": 0.06,
+              "data_type": "double",
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 15,
+              "yellow_start_time": 30
+            }
+          }
+        ]
       }
     },
     {
@@ -135,14 +152,14 @@
             }
           },
           {
-            "title": "Select your cage:",
-            "x": 384.0,
+            "title": "Select your test auto:",
+            "x": 256.0,
             "y": 0.0,
             "width": 256.0,
             "height": 128.0,
             "type": "ComboBox Chooser",
             "properties": {
-              "topic": "/SmartDashboard/Select your cage:",
+              "topic": "/SmartDashboard/Select your test auto:",
               "period": 0.06,
               "sort_options": false
             }

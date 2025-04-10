@@ -11,6 +11,8 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.net.WebServer;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
@@ -33,6 +35,7 @@ public class Robot extends TimedRobot {
 
     private RobotContainer m_robotContainer;
     private boolean m_hasAppliedRobotRotation;
+    private DoublePublisher m_matchTimePub;
 
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -48,6 +51,9 @@ public class Robot extends TimedRobot {
         m_robotContainer = new RobotContainer();
 
         m_hasAppliedRobotRotation = false;
+
+        m_matchTimePub =
+                NetworkTableInstance.getDefault().getDoubleTopic("Match Time").publish();
 
         // Create the webserver for accessing Elastic's saved layout across computers
         WebServer.start(5800, Filesystem.getDeployDirectory().getPath());
@@ -102,6 +108,7 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+        m_matchTimePub.set(DriverStation.getMatchTime());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
