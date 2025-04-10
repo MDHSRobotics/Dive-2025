@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -11,6 +10,7 @@ import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
@@ -25,13 +25,13 @@ public class DriveTelemetry {
      */
     private final DoubleArrayPublisher megatag2FrontUpdater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
-            .publish();
+            .publish(PubSubOption.periodic(0.004));
 
     private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
-            .publish();
+            .publish(PubSubOption.periodic(0.004));
 
-    /** Limelight requires this to be a array of size 6. */
+    /** Limelight requires this to be an array of size 6. */
     private double[] megatag2Orientation = new double[6];
 
     /* Robot swerve drive state */
@@ -58,10 +58,6 @@ public class DriveTelemetry {
     private final DoublePublisher linearSpeedPub =
             driveStateTable.getDoubleTopic("Linear Speed").publish();
 
-    private final double[] poseArray = new double[3];
-    private final double[] moduleStatesArray = new double[8];
-    private final double[] moduleTargetsArray = new double[8];
-
     /** Accept the swerve drive state and log it to NetworkTables and SignalLogger. */
     public void telemeterize(SwerveDriveState state) {
         long timestamp = stateTimestampToNTTimestamp(state.Timestamp);
@@ -71,6 +67,7 @@ public class DriveTelemetry {
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
         megatag2FrontUpdater.set(megatag2Orientation, timestamp);
         megatag2BackUpdater.set(megatag2Orientation, timestamp);
+        // Flushing is ESSENTIAL for the limelight to receive accurate yaw and give accurate pose estimates.
         inst.flush();
 
         /* Telemeterize the swerve drive state */
@@ -84,22 +81,6 @@ public class DriveTelemetry {
 
         double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
         linearSpeedPub.set(linearSpeed, timestamp);
-
-        /* Also write to log file */
-        poseArray[0] = state.Pose.getX();
-        poseArray[1] = state.Pose.getY();
-        poseArray[2] = state.Pose.getRotation().getDegrees();
-        for (int i = 0; i < 4; ++i) {
-            moduleStatesArray[i * 2 + 0] = state.ModuleStates[i].angle.getRadians();
-            moduleStatesArray[i * 2 + 1] = state.ModuleStates[i].speedMetersPerSecond;
-            moduleTargetsArray[i * 2 + 0] = state.ModuleTargets[i].angle.getRadians();
-            moduleTargetsArray[i * 2 + 1] = state.ModuleTargets[i].speedMetersPerSecond;
-        }
-
-        SignalLogger.writeDoubleArray("DriveState/Pose", poseArray);
-        SignalLogger.writeDoubleArray("DriveState/ModuleStates", moduleStatesArray);
-        SignalLogger.writeDoubleArray("DriveState/ModuleTargets", moduleTargetsArray);
-        SignalLogger.writeDouble("DriveState/OdometryPeriod", state.OdometryPeriod, "seconds");
     }
 
     /**

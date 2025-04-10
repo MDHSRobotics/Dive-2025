@@ -76,6 +76,9 @@ public class Robot extends TimedRobot {
         // If there are differences, they will be reported in SmartDashboard.
         // DriveConstants.PATHPLANNER_CONFIG.hasValidConfig();
 
+        // Turn the LEDs red
+        // LEDs.candle.setLEDs(255, 0, 0, 0, LEDConstants.LED_STRIP_START, LEDConstants.LED_STRIP_COUNT);
+
         SignalLogger.setPath("/media/sda1/logs/");
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog(), true);
@@ -103,7 +106,10 @@ public class Robot extends TimedRobot {
 
     /** This function is called once each time the robot enters Disabled mode. */
     @Override
-    public void disabledInit() {}
+    public void disabledInit() {
+        // Turn the LEDs white to indicate the robot is connected to Driver Station/FMS
+        // LEDs.candle.setLEDs(255, 255, 255, 0, LEDConstants.LED_STRIP_START, LEDConstants.LED_STRIP_COUNT);
+    }
 
     @Override
     public void disabledPeriodic() {
@@ -132,6 +138,7 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             System.out.println("Starting auto: " + m_autonomousCommand.getName());
             m_autonomousCommand.schedule();
+            // LEDs.candle.setLEDs(0, 0, 255, 0, LEDConstants.LED_STRIP_START, LEDConstants.LED_STRIP_COUNT);
         }
     }
 
@@ -150,6 +157,7 @@ public class Robot extends TimedRobot {
         }
 
         Elastic.selectTab("Teleoperated");
+        // LEDs.candle.setLEDs(0, 255, 0, 0, LEDConstants.LED_STRIP_START, LEDConstants.LED_STRIP_COUNT);
     }
 
     /** This function is called periodically during operator control. */
@@ -161,7 +169,9 @@ public class Robot extends TimedRobot {
         // Cancels all running commands at the start of test mode.
         CommandScheduler.getInstance().cancelAll();
 
-        m_robotContainer.resetRobotPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
+        m_robotContainer.resetFieldPosition(new Pose2d(Meters.of(10), Meters.of(5), Rotation2d.fromDegrees(180)));
+        // LEDs.candle.setLEDs(255, 0, 255, 0, LEDConstants.LED_STRIP_START, LEDConstants.LED_STRIP_COUNT);
+        // SignalLogger.start();
     }
 
     /** This function is called periodically during test mode. */

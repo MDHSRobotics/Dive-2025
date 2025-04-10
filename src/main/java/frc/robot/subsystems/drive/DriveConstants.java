@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -54,18 +55,9 @@ public class DriveConstants {
 
     /**
      * Constraints for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/controllers/trapezoidal-profiles.html">motion profiles</a> used in custom swerve requests.
-     * This still needs to be tuned.
      */
     public static final TrapezoidProfile.Constraints LINEAR_MOTION_CONSTRAINTS =
-            new TrapezoidProfile.Constraints(4.0, 4.0);
-
-    /**
-     * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
-     * used in custom swerve requests.
-     * The gain is output linear velocity (meters per second) per error (meters).
-     * This still needs to be tuned.
-     */
-    public static final double K_TRANSLATION_P = 2.5;
+            new TrapezoidProfile.Constraints(4.0, 2.0);
 
     /**
      * Max angular rate of the robot in radians per second.
@@ -75,18 +67,16 @@ public class DriveConstants {
             RadiansPerSecond.of(MAX_LINEAR_SPEED / DRIVEBASE_RADIUS.in(Meters)).in(RadiansPerSecond);
 
     /**
-     * Proportional gain for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
-     * used in custom swerve requests.
-     * The gain is output angular velocity (radians per second) per error (radians).
-     * This comes from "Rotation RotationalRate Position.PNG"
-     */
-    public static final double K_ANGULAR_P = 4;
-
-    /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">heading PID controller</a>
      * used in custom swerve requests.
      */
     public static final Angle HEADING_TOLERANCE = Degrees.of(2);
+
+    /**
+     * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
+     * used in custom swerve requests.
+     */
+    public static final Distance LINEAR_TOLERANCE = Inches.of(1);
 
     /**
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
@@ -107,15 +97,16 @@ public class DriveConstants {
 
     /**
      * PID Constants for PathPlanner translation.
-     * This still needs to be tuned.
      */
-    public static final PIDConstants TRANSLATION_PID = new PIDConstants(10, 0, 0);
+    public static final PIDConstants TRANSLATION_PID = new PIDConstants(5.0, 0.0, 0.0);
 
     /**
      * PID Constants for PathPlanner rotation.
-     * This still needs to be tuned.
      */
-    public static final PIDConstants ROTATION_PID = new PIDConstants(7, 0, 0);
+    public static final PIDConstants ROTATION_PID = new PIDConstants(5.0, 0.0, 0.0);
+
+    public static final PPHolonomicDriveController DRIVE_CONTROLLER =
+            new PPHolonomicDriveController(TRANSLATION_PID, ROTATION_PID);
 
     /**
      * Robot mass with battery.
@@ -176,7 +167,13 @@ public class DriveConstants {
     public static final RobotConfig PATHPLANNER_CONFIG =
             new RobotConfig(ROBOT_MASS, ROBOT_MOI, MODULE_CONFIG, MODULE_OFFSETS);
 
-    public static final PathConstraints PATHFINDING_CONSTRAINTS =
+    public static final PathConstraints ON_THE_FLY_CONSTRAINTS = new PathConstraints(
+            LINEAR_MOTION_CONSTRAINTS.maxVelocity,
+            LINEAR_MOTION_CONSTRAINTS.maxAcceleration,
+            Units.degreesToRadians(540),
+            Units.degreesToRadians(540),
+            12);
+    public static final PathConstraints CORAL_STATION_CONSTRAINTS =
             new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
     public static final PathConstraints CAGE_CONSTRAINTS =
             new PathConstraints(1, 1, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);

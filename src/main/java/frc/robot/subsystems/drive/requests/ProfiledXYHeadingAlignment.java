@@ -16,7 +16,6 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.*;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.drive.DriveTelemetry;
 
 /**
@@ -112,9 +111,9 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
         this.maxAngularVelocity = maxAngularVelocity;
 
         // Make PID gains tunable from NetworkTables
-        SmartDashboard.putData("X Controller", xController);
-        SmartDashboard.putData("Y Controller", yController);
-        SmartDashboard.putData("Heading Controller", headingController);
+        // SmartDashboard.putData("X Controller", xController);
+        // SmartDashboard.putData("Y Controller", yController);
+        // SmartDashboard.putData("Heading Controller", headingController);
 
         goalPositionPub = null;
         setpointPositionPub = null;
@@ -149,9 +148,9 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
         this.maxAngularVelocity = maxAngularVelocity;
 
         // Make PID gains tunable from NetworkTables
-        SmartDashboard.putData("X Controller", xController);
-        SmartDashboard.putData("Y Controller", yController);
-        SmartDashboard.putData("Heading Controller", headingController);
+        // SmartDashboard.putData("X Controller", xController);
+        // SmartDashboard.putData("Y Controller", yController);
+        // SmartDashboard.putData("Heading Controller", headingController);
 
         NetworkTable motionTable = loggingPath.getSubTable("X Y Heading Alignment");
         NetworkTable goalTable = motionTable.getSubTable("Goal");
@@ -319,7 +318,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
     }
 
     /**
-     * Modifies the PID gains for the y controller and returns itself.
+     * Modifies the PID gains for the x and y controllers and returns itself.
      *
      * @param kp The proportional coefficient.
      * @param ki The integral coefficient.

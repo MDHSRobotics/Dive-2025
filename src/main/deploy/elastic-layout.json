@@ -15,16 +15,123 @@
         "layouts": [],
         "containers": [
           {
-            "title": "Select your auto:",
+            "title": "Select your cage:",
             "x": 0.0,
             "y": 0.0,
-            "width": 384.0,
+            "width": 256.0,
             "height": 128.0,
-            "type": "ComboBox Chooser",
+            "type": "Split Button Chooser",
             "properties": {
-              "topic": "/SmartDashboard/Select your auto:",
-              "period": 0.06,
-              "sort_options": false
+              "topic": "/SmartDashboard/Select your cage:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Starting position:",
+            "x": 0.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Starting position:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Level #1:",
+            "x": 1024.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Level #1:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Tree #1:",
+            "x": 256.0,
+            "y": 128.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Tree #1:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Coral station #1:",
+            "x": 0.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Coral station #1:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Coral station #2:",
+            "x": 0.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Coral station #2:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Tree #2:",
+            "x": 256.0,
+            "y": 256.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Tree #2:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Level #2:",
+            "x": 1024.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Level #2:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Tree #3:",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 768.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Tree #3:",
+              "period": 0.06
+            }
+          },
+          {
+            "title": "Level #3 and Create Auto:",
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Split Button Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Level #3 and Create Auto:",
+              "period": 0.06
             }
           },
           {
@@ -136,6 +243,19 @@
             "properties": {
               "topic": "/SmartDashboard/Alerts",
               "period": 0.06
+            }
+          },
+          {
+            "title": "Select your test auto:",
+            "x": 768.0,
+            "y": 0.0,
+            "width": 384.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Select your test auto:",
+              "period": 0.06,
+              "sort_options": false
             }
           }
         ]

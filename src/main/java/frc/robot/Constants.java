@@ -16,9 +16,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.subsystems.catcher.CatcherConstants;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.drive.DriveConstants;
+import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.Aiming;
 import java.util.List;
@@ -54,7 +54,7 @@ public final class Constants {
         /**
          * Distance from the floor to the front limelight lens in meters.
          */
-        public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(8.5).in(Meters);
+        public static final double FRONT_LIMELIGHT_UP_OFFSET = Inches.of(10.125).in(Meters);
 
         public static final String BACK_LIMELIGHT_NAME = "limelight-back";
         /**
@@ -271,10 +271,10 @@ public final class Constants {
         /**
          * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
          * <p>
-         * IMPORTANT: Index 0 corresponds to tag id 1. Index 21 corresponds to tag id 22.
-         * Basically, index into the array by subtracting one from the id.
+         * Index into the array with the id number starting from 1.
          */
         public static final Translation3d[] APRILTAG_POSES = {
+            new Translation3d(),
             new Translation3d(Inches.of(657.37), Inches.of(25.80), Inches.of(58.50)),
             new Translation3d(Inches.of(657.37), Inches.of(291.20), Inches.of(58.50)),
             new Translation3d(Inches.of(455.15), Inches.of(317.15), Inches.of(51.25)),
@@ -386,6 +386,29 @@ public final class Constants {
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(198.688).plus(SEMICIRCLE_TO_CAGE_DISTANCE)),
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(241.625).plus(SEMICIRCLE_TO_CAGE_DISTANCE)),
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE)));
+
+        private static final double CORAL_STATION_TO_ROBOT_DISTANCE =
+                DriveConstants.CENTER_TO_BUMPER_LENGTH.plus(Inches.of(6)).in(Meters);
+
+        public static final List<Pose2d> BLUE_CORAL_STATION_POSES = List.of(
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[13].getX(), APRILTAG_POSES[13].getY(), APRILTAG_ROTATIONS[13]),
+                        new Translation2d(
+                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[13].plus(Rotation2d.k180deg))),
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[12].getX(), APRILTAG_POSES[12].getY(), APRILTAG_ROTATIONS[12]),
+                        new Translation2d(
+                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[12].plus(Rotation2d.k180deg))));
+
+        public static final List<Pose2d> RED_CORAL_STATION_POSES = List.of(
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[1].getX(), APRILTAG_POSES[1].getY(), APRILTAG_ROTATIONS[1]),
+                        new Translation2d(
+                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[1].plus(Rotation2d.k180deg))),
+                Aiming.translatePose(
+                        new Pose2d(APRILTAG_POSES[2].getX(), APRILTAG_POSES[2].getY(), APRILTAG_ROTATIONS[2]),
+                        new Translation2d(
+                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[2].plus(Rotation2d.k180deg))));
     }
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
@@ -394,9 +417,9 @@ public final class Constants {
             "Climb-Back",
             ClimbConstants.FRONT_ID,
             "Climb-Front",
-            CatcherConstants.ARM_ID,
+            ElevatorConstants.ARM_ID,
             "Catcher-Arm",
-            CatcherConstants.WHEELS_ID,
+            ElevatorConstants.WHEELS_ID,
             "Catcher-Wheels",
             IntakeConstants.ARM_ID,
             "Intake-Arm",

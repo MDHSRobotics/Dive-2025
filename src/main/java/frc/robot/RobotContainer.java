@@ -7,8 +7,6 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -19,17 +17,17 @@ import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
-import frc.robot.commands.WheelRadiusCharacterization;
-import frc.robot.subsystems.catcher.Catcher;
-import frc.robot.subsystems.catcher.Catcher.CatcherArmPositions;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
+import frc.robot.subsystems.elevator.Elevator.ElevatorPositions;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.intake.Intake.IntakeArmPositions;
-import frc.robot.util.AutoTimer;
+import frc.robot.util.AutoCreator;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -53,10 +51,8 @@ public class RobotContainer {
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
-    private final Catcher m_catcher = new Catcher();
+    private final Elevator m_elevator = new Elevator();
     private final Intake m_intake = new Intake();
-
-    private final AutoTimer m_autoTimer = new AutoTimer();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -82,8 +78,9 @@ public class RobotContainer {
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
-    private final SendableChooser<Command> autoChooser;
+    // private final SendableChooser<Command> testAutoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
+    private final AutoCreator autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
     private final AimingRoutines aimingRoutines = new AimingRoutines(
             m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
@@ -98,18 +95,20 @@ public class RobotContainer {
 
         m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-        autoChooser = AutoBuilder.buildAutoChooser();
-        autoChooser.addOption(
-                "Drive Wheel Radius Characterization",
-                WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        autoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
-        autoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
-        SmartDashboard.putData("Select your auto:", autoChooser);
+        // testAutoChooser = AutoBuilder.buildAutoChooser();
+        // testAutoChooser.addOption(
+        //         "Drive Wheel Radius Characterization",
+        //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
+        // testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
+        // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
+        // SmartDashboard.putData("Select your test auto:", testAutoChooser);
 
         cageChooser.addOption("Left", CageLocation.LEFT);
         cageChooser.addOption("Middle", CageLocation.MIDDLE);
         cageChooser.addOption("Right", CageLocation.RIGHT);
         SmartDashboard.putData("Select your cage:", cageChooser);
+
+        autoCreator.sendAutoChoosers();
     }
 
     private void setDefaultCommands() {
@@ -119,7 +118,8 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_catcher.setDefaultCommand(m_catcher.disableMotorsCommand());
+        m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
+                ElevatorPositions.CURRENT_POSITION, ElevatorArmPositions.CURRENT_POSITION));
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
     }
 
@@ -131,23 +131,11 @@ public class RobotContainer {
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+on+to+reef&xButton=&yButton=Lock+on+to+processor&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=&leftTrigger=Slow+Mode&rightTrigger=Super+Slow+Mode&dpadLeft=&rightStick=Rotate
+     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+wheels&xButton=Drive+to+tree&yButton=Face+processor&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=Face+reef+wall&leftTrigger=Slow+Mode&rightTrigger=Super+Slow+Mode&dpadLeft=&rightStick=Rotate&dpadDown=Climb&dpadUp=Raise+climb
      * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureDriverControls() {
-        // driverController.square().onTrue(aimingRoutines.setTargetPoseToCurrentPose());
-        // driverController.triangle().whileTrue(aimingRoutines.driveToPositionTest());
-
-        // driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> drive.withVelocityX(
-        //                 DriveConstants.MAX_LINEAR_SPEED)
-        //         .withVelocityY(0)
-        //         .withRotationalRate(0)
-        //         .withDeadband(getDeadband())
-        //         .withRotationalDeadband(getRotationalDeadband())));
-
-        // driverController.povUp().whileTrue(m_drivetrain.applyRequest(() -> angularConstraintsCharacterizer));
-
         // Half Speed
         driverController.L2().onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.HALF_SPEED));
         driverController.L2().onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
@@ -160,23 +148,19 @@ public class RobotContainer {
         // Select right station
         driverController.R1().whileTrue(aimingRoutines.alignWithCoralStation(false));
 
-        // Point wheels with right joystick
-        // driverController
-        //         .povLeft()
-        //         .whileTrue(m_drivetrain.applyRequest(() -> pointWheelsAt.withModuleDirection(
-        //                 new Rotation2d(-driverController.getRightY(), -driverController.getRightX()))));
-
         // Reset robot orientation
         driverController
                 .touchpad()
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
-        // driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
-        driverController.circle().whileTrue(m_drivetrain.applyRequest(() -> brake));
-        driverController.triangle().whileTrue(aimingRoutines.alignWithProcessor());
-        driverController.cross().whileTrue(aimingRoutines.driveToTree());
-        driverController.square().whileTrue(aimingRoutines.driveIntoCage());
+        driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
+        driverController.triangle().whileTrue(aimingRoutines.driveToCoralStation());
+        driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> brake));
+        driverController.square().whileTrue(aimingRoutines.driveToTree());
+
+        driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
+        driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -186,83 +170,102 @@ public class RobotContainer {
         // driverController
         //         .share()
         //         .and(driverController.povUp())
-        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
         // driverController
         //         .share()
         //         .and(driverController.povDown())
-        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
         // driverController
         //         .options()
         //         .and(driverController.povUp())
-        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
         // driverController
         //         .options()
         //         .and(driverController.povDown())
-        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Control+Climb+with+joysticks&leftTrigger=Control+both+Climb+with+left+joystick&leftBumper=Raise+catcher+to+coral+station&rightBumper=Catcher+to+trough&aButton=Raise+catcher+and+run+wheels&bButton=Spit+out+coral&xButton=Run+intake+until+algae+is+collected&yButton=Reverse+intake&dpadUp=Move+intake+to+algae+on+a+coral&dpadDown=Move+intake+to+ground&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control
+     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Elevator+and+arm+to+L2&leftTrigger=Elevator+and+arm+to+L1&leftBumper=Elevator+and+arm+to+coral+station&rightBumper=Elevator+and+arm+to+L3&aButton=Intake+coral&bButton=Eject+coral&xButton=Intake+algae&yButton=Eject+algae&dpadUp=Intake+to+on-coral+algae&dpadDown=Intake+to+ground+algae&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control&leftStick=Raise%2Flower+elevator&rightStick=Raise%2Flower+arm
      * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
         operatorController
-                .rightTrigger()
-                .whileTrue(m_climb.setPowerCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getRightY()));
+                .leftStick()
+                .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
         operatorController
-                .leftTrigger()
-                .whileTrue(m_climb.setPowerCommand(
-                        () -> -operatorController.getLeftY(), () -> -operatorController.getLeftY()));
+                .rightStick()
+                .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getRightY()));
 
-        operatorController.leftStick().toggleOnTrue(m_catcher.setArmPowerCommand(() -> -operatorController.getLeftY()));
-        operatorController.rightStick().toggleOnTrue(m_intake.armTestCommand(() -> -operatorController.getRightY()));
-
+        operatorController.b().whileTrue(m_elevator.ejectCoralCommand());
+        operatorController.a().whileTrue(m_elevator.intakeCoralCommand());
         operatorController
                 .leftBumper()
-                .toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.CORAL_STATION));
-        operatorController.rightBumper().toggleOnTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.TROUGH));
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                        ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
+        operatorController
+                .rightBumper()
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                        ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
+        operatorController
+                .leftTrigger()
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
+        operatorController
+                .rightTrigger()
+                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                        ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
 
-        operatorController.a().whileTrue(m_catcher.raiseAndRunWheelCommand());
-        operatorController.b().whileTrue(m_catcher.wheelBackwardsCommand());
-
-        operatorController.povLeft().whileTrue(m_catcher.wheelBackwardsWhileRaisingArmCommand());
+        operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
-        operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
+        operatorController
+                .povLeft()
+                .and(operatorController.a())
+                .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
+        operatorController
+                .povLeft()
+                .and(operatorController.y())
+                .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
 
         operatorController.x().whileTrue(m_intake.runWheelsCommand());
         operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
 
-        operatorController.back().onTrue(m_catcher.setArmPositionCommand(CatcherArmPositions.STOWED));
-        operatorController.start().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
+
+        // operatorController
+        //         .back()
+        //         .and(operatorController.povUp())
+        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // operatorController
+        //         .back()
+        //         .and(operatorController.povDown())
+        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // operatorController
+        //         .start()
+        //         .and(operatorController.povUp())
+        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // operatorController
+        //         .start()
+        //         .and(operatorController.povDown())
+        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
      * Registers the <a href="https://pathplanner.dev/pplib-named-commands.html">Named Commands</a> used in PathPlanner.
      */
-    private void registerNamedCommands() {
-        NamedCommands.registerCommand(
-                "Lower Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.TROUGH));
-        NamedCommands.registerCommand(
-                "Eject Coral", m_catcher.wheelBackwardsCommand().withTimeout(0.5));
-        NamedCommands.registerCommand(
-                "Raise Catcher Arm", m_catcher.setArmPositionAndEndCommand(CatcherArmPositions.CORAL_STATION));
-        NamedCommands.registerCommand(
-                "Intake Coral", m_catcher.runWheelCommand().withTimeout(1));
-        NamedCommands.registerCommand("Start Auto Timer", Commands.runOnce(m_autoTimer::resetAndStart));
-        NamedCommands.registerCommand("End Auto Timer", Commands.runOnce(m_autoTimer::stopAndPublish));
-    }
+    private void registerNamedCommands() {}
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return autoChooser.getSelected();
+        // return testAutoChooser.getSelected();
+        return autoCreator.getAutonomousCommand();
     }
 
     /**
@@ -337,7 +340,7 @@ public class RobotContainer {
         return rotationalDeadband;
     }
 
-    public void resetRobotPosition(Pose2d position) {
+    public void resetFieldPosition(Pose2d position) {
         m_drivetrain.resetPose(position);
     }
 
