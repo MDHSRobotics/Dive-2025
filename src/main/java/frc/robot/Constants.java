@@ -271,6 +271,8 @@ public final class Constants {
         /**
          * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
          * <p>
+         * These were taken from <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">the FRC field layout</a>.
+         * <p>
          * Index into the array with the id number starting from 1.
          */
         public static final Translation3d[] APRILTAG_POSES = {

@@ -87,7 +87,9 @@ public class DriveConstants {
     private static final double WHEEL_ROTATIONS_TO_METERS_CONVERSION =
             2.0 * Math.PI * TunerConstants.kWheelRadius.in(Meters) / TunerConstants.kDriveGearRatio;
 
-    /* PathPlanner Configuration */
+    /* PathPlanner Configuration
+     * We configure PathPlanner here instead of in the GUI so we can use constants from the code.
+     */
 
     /**
      * PID Constants for PathPlanner translation.
