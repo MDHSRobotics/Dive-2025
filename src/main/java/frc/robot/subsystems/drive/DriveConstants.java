@@ -36,11 +36,11 @@ public class DriveConstants {
     /**
      * Distance between front left module (cancoder) and front right module (cancoder)
      */
-    private static final Distance TRACKWIDTH = Inches.of(20.25);
+    private static final Distance TRACKWIDTH = TunerConstants.kFrontLeftYPos.minus(TunerConstants.kFrontRightYPos);
     /**
      * Distance between front left module (cancoder) and back left module (cancoder)
      */
-    private static final Distance WHEELBASE = Inches.of(25.25);
+    private static final Distance WHEELBASE = TunerConstants.kFrontLeftXPos.minus(TunerConstants.kBackLeftXPos);
     /**
      * Distance from center of robot to a module (cancoder)
      */
@@ -120,7 +120,6 @@ public class DriveConstants {
     /**
      * Linear acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveTranslation a SysId routine}.
      * This comes from "Translation Velocity.PNG" in the project files.
-     * 0.0024069 volts/rotation per second squared / 0.0473146029 meters/rotation
      */
     private static final Per<VoltageUnit, LinearAccelerationUnit> K_A_LINEAR =
             VoltsPerMeterPerSecondSquared.ofNative(0.0024069 / WHEEL_ROTATIONS_TO_METERS_CONVERSION);

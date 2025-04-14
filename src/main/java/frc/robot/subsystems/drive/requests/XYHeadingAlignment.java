@@ -30,7 +30,7 @@ import frc.robot.subsystems.drive.DriveTelemetry;
  * <p>
  * Important: You may not change the targetPose while the swerve request is in use.
  */
-public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
+public class XYHeadingAlignment implements ResettableSwerveRequest {
     /**
      * The field-centric chassis speeds to apply to the drivetrain.
      */
@@ -99,7 +99,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
      */
-    public ProfiledXYHeadingAlignment(
+    public XYHeadingAlignment(
             double kTranslationP,
             double kRotationP,
             double maxAngularVelocity,
@@ -135,7 +135,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
      * @param loggingPath The NetworkTable to log data into.
      */
-    public ProfiledXYHeadingAlignment(
+    public XYHeadingAlignment(
             double kTranslationP,
             double kRotationP,
             double maxAngularVelocity,
@@ -259,7 +259,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param newTargetPose Parameter to modify
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withTargetPose(Pose2d newTargetPose) {
+    public XYHeadingAlignment withTargetPose(Pose2d newTargetPose) {
         this.targetPose = newTargetPose;
         this.xGoal.position = newTargetPose.getX();
         this.yGoal.position = newTargetPose.getY();
@@ -275,7 +275,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param newCenterOfRotation Parameter to modify
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withCenterOfRotation(Translation2d newCenterOfRotation) {
+    public XYHeadingAlignment withCenterOfRotation(Translation2d newCenterOfRotation) {
         this.centerOfRotation = newCenterOfRotation;
         return this;
     }
@@ -288,7 +288,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param newDriveRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
+    public XYHeadingAlignment withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
         this.driveRequestType = newDriveRequestType;
         return this;
     }
@@ -301,7 +301,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param newSteerRequestType Parameter to modify
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
+    public XYHeadingAlignment withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
         this.steerRequestType = newSteerRequestType;
         return this;
     }
@@ -315,7 +315,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param newDesaturateWheelSpeeds Parameter to modify
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
+    public XYHeadingAlignment withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
         this.desaturateWheelSpeeds = newDesaturateWheelSpeeds;
         return this;
     }
@@ -328,7 +328,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withTranslationalPIDGains(double kp, double ki, double kd) {
+    public XYHeadingAlignment withTranslationalPIDGains(double kp, double ki, double kd) {
         this.xController.setPID(kp, ki, kd);
         this.yController.setPID(kp, ki, kd);
         return this;
@@ -342,7 +342,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withRotationalPIDGains(double kp, double ki, double kd) {
+    public XYHeadingAlignment withRotationalPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
         return this;
     }
@@ -353,7 +353,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withHeadingTolerance(Angle toleranceAmount) {
+    public XYHeadingAlignment withHeadingTolerance(Angle toleranceAmount) {
         this.headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
@@ -364,7 +364,7 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * @param toleranceAmount The maximum amount of distance the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public ProfiledXYHeadingAlignment withLinearTolerance(Distance toleranceAmount) {
+    public XYHeadingAlignment withLinearTolerance(Distance toleranceAmount) {
         this.xController.setTolerance(toleranceAmount.in(Meters));
         this.yController.setTolerance(toleranceAmount.in(Meters));
         return this;

@@ -30,7 +30,7 @@ import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.requests.DriveFacingAngle;
 import frc.robot.subsystems.drive.requests.DriveFacingPosition;
 import frc.robot.subsystems.drive.requests.DriveWithVisualServoing;
-import frc.robot.subsystems.drive.requests.ProfiledXYHeadingAlignment;
+import frc.robot.subsystems.drive.requests.XYHeadingAlignment;
 import frc.robot.util.Aiming;
 import java.util.List;
 import java.util.function.DoubleSupplier;
@@ -73,7 +73,7 @@ public class AimingRoutines {
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
+    private final XYHeadingAlignment driveToPosition = new XYHeadingAlignment(
                     TRANSLATION_PID.kP, ROTATION_PID.kP, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
             .withHeadingTolerance(HEADING_TOLERANCE)
             .withLinearTolerance(LINEAR_TOLERANCE)
