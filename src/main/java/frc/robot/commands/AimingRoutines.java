@@ -56,26 +56,25 @@ public class AimingRoutines {
     private final NetworkTable loggingTable = inst.getTable("Swerve Requests");
 
     private final DriveFacingAngle driveFacingAngle = new DriveFacingAngle(
-                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
+                    ROTATION_PID.kP, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(
-                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, loggingTable)
+                    ROTATION_PID.kP, MAX_ANGULAR_RATE, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveWithVisualServoing driveFacingVisionTarget = new DriveWithVisualServoing(
-                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, cameraTable, loggingTable)
+                    ROTATION_PID.kP, MAX_ANGULAR_RATE, cameraTable, loggingTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final ProfiledXYHeadingAlignment driveToPosition = new ProfiledXYHeadingAlignment(
-                    ROTATION_PID.kP, 0.0, 0.0, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
-            .withTranslationalPIDGains(TRANSLATION_PID.kP, 0, 0)
+                    TRANSLATION_PID.kP, ROTATION_PID.kP, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
             .withHeadingTolerance(HEADING_TOLERANCE)
             .withLinearTolerance(LINEAR_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)

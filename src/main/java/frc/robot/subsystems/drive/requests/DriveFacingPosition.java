@@ -92,13 +92,11 @@ public class DriveFacingPosition implements ResettableSwerveRequest {
     /**
      * Creates a new request with the given gains.
      *
-     * @param kp The P gain for the heading controller in radians per second output per radian error.
-     * @param ki The I gain for the heading controller in radians per second output per integral of radian error.
-     * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      */
-    public DriveFacingPosition(double kp, double ki, double kd, double maxAngularVelocity) {
-        headingController = new PhoenixPIDController(kp, ki, kd);
+    public DriveFacingPosition(double kRotationP, double maxAngularVelocity) {
+        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 
@@ -111,13 +109,11 @@ public class DriveFacingPosition implements ResettableSwerveRequest {
      * Creates a new profiled request with the given gains,
      * and logs motion profile data in a subtable named "Facing Position".
      *
-     * @param kp The P gain for the heading controller in radians per second output per radian error.
-     * @param ki The I gain for the heading controller in radians per second output per integral of radian error.
-     * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      */
-    public DriveFacingPosition(double kp, double ki, double kd, double maxAngularVelocity, NetworkTable loggingPath) {
-        headingController = new PhoenixPIDController(kp, ki, kd);
+    public DriveFacingPosition(double kRotationP, double maxAngularVelocity, NetworkTable loggingPath) {
+        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 

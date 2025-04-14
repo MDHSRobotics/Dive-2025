@@ -22,7 +22,10 @@ import frc.robot.subsystems.drive.DriveTelemetry;
  * Drives the swerve drivetrain in a field-centric manner, maintaining a
  * specified x and y position and heading angle to ensure the robot is in the right position and facing the desired direction.
  * <p>
- * This swerve request is based on {@link com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle FieldCentricFacingAngle},
+ * This swerve request uses {@link edu.wpi.first.math.trajectory.TrapezoidProfile trapezoid profiles} for x and y,
+ * and a {@link com.ctre.phoenix6.swerve.utility.PhoenixPIDController PhoenixPIDController} for heading.
+ * <p>
+ * The request is based on {@link com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle FieldCentricFacingAngle},
  * and makes some other improvements besides the motion profiles.
  * <p>
  * Important: You may not change the targetPose while the swerve request is in use.
@@ -65,13 +68,13 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
     private final TrapezoidProfile xProfile;
     private final TrapezoidProfile.State xStartingState = new TrapezoidProfile.State();
     private final TrapezoidProfile.State xGoal = new TrapezoidProfile.State();
-    private final PhoenixPIDController xController = new PhoenixPIDController(0, 0, 0);
+    private final PhoenixPIDController xController;
 
     // Y position profile and PID controller
     private final TrapezoidProfile yProfile;
     private final TrapezoidProfile.State yStartingState = new TrapezoidProfile.State();
     private final TrapezoidProfile.State yGoal = new TrapezoidProfile.State();
-    private final PhoenixPIDController yController = new PhoenixPIDController(0, 0, 0);
+    private final PhoenixPIDController yController;
 
     // Rotation PID controller
     private final PhoenixPIDController headingController;
@@ -91,22 +94,22 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
     /**
      * Creates a new profiled request with the given constraints.
      *
-     * @param kp The P gain for the heading controller in radians per second output per radian error.
-     * @param ki The I gain for the heading controller in radians per second output per integral of radian error.
-     * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
+     * @param kTranslationP The P gain for the translation controller in meters per second output per meter error.
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
      */
     public ProfiledXYHeadingAlignment(
-            double kp,
-            double ki,
-            double kd,
+            double kTranslationP,
+            double kRotationP,
             double maxAngularVelocity,
             TrapezoidProfile.Constraints linearConstraints) {
         xProfile = new TrapezoidProfile(linearConstraints);
+        xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
         yProfile = new TrapezoidProfile(linearConstraints);
+        yController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
 
-        headingController = new PhoenixPIDController(kp, ki, kd);
+        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 
@@ -126,24 +129,24 @@ public class ProfiledXYHeadingAlignment implements ResettableSwerveRequest {
      * Creates a new profiled request with the given constraints,
      * and logs data to "X Y Heading Alignment"
      *
-     * @param kp The P gain for the heading controller in radians per second output per radian error.
-     * @param ki The I gain for the heading controller in radians per second output per integral of radian error.
-     * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
+     * @param kTranslationP The P gain for the translation controller in meters per second output per meter error.
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
      * @param loggingPath The NetworkTable to log data into.
      */
     public ProfiledXYHeadingAlignment(
-            double kp,
-            double ki,
-            double kd,
+            double kTranslationP,
+            double kRotationP,
             double maxAngularVelocity,
             TrapezoidProfile.Constraints linearConstraints,
             NetworkTable loggingPath) {
         xProfile = new TrapezoidProfile(linearConstraints);
+        xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
         yProfile = new TrapezoidProfile(linearConstraints);
+        yController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
 
-        headingController = new PhoenixPIDController(kp, ki, kd);
+        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 

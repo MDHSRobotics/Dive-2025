@@ -102,15 +102,12 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
     /**
      * Creates a new profiled request with the given gains and camera.
      *
-     * @param kp The P gain for the heading controller in radians per second output per radian error.
-     * @param ki The I gain for the heading controller in radians per second output per integral of radian error.
-     * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param cameraTable The NetworkTable for the limelight.
      */
-    public DriveWithVisualServoing(
-            double kp, double ki, double kd, double maxAngularVelocity, NetworkTable cameraTable) {
-        headingController = new PhoenixPIDController(kp, ki, kd);
+    public DriveWithVisualServoing(double kRotationP, double maxAngularVelocity, NetworkTable cameraTable) {
+        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 
@@ -132,21 +129,14 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * Creates a new profiled request with the given gains and camera,
      * and logs motion profile data in a subtable named "Visual Servoing".
      *
-     * @param kp The P gain for the heading controller in radians per second output per radian error.
-     * @param ki The I gain for the heading controller in radians per second output per integral of radian error.
-     * @param kp The P gain for the heading controller in radians per second output per the derivative of error radians per second.
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param cameraTable The NetworkTable for the limelight.
      * @param loggingPath The NetworkTable to log data into.
      */
     public DriveWithVisualServoing(
-            double kp,
-            double ki,
-            double kd,
-            double maxAngularVelocity,
-            NetworkTable cameraTable,
-            NetworkTable loggingPath) {
-        headingController = new PhoenixPIDController(kp, ki, kd);
+            double kRotationP, double maxAngularVelocity, NetworkTable cameraTable, NetworkTable loggingPath) {
+        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 
