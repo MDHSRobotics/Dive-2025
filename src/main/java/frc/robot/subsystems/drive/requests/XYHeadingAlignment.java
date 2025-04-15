@@ -44,8 +44,6 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * The robot-relative chassis speeds to apply to the drivetrain.
      */
     private ChassisSpeeds toApplyRobotSpeeds = new ChassisSpeeds();
-    /** The field-relative chassis speeds from the X and Y PID controllers to correct the final output. */
-    private ChassisSpeeds fieldRelativeCorrectionOutput = new ChassisSpeeds();
     /**
      * The field-relative chassis speeds to log to NetworkTables.
      */
@@ -248,10 +246,18 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
 
         double time = parameters.timestamp - startingTimestamp;
         TrapezoidProfile.State xSetpoint = xProfile.calculate(time, xStartingState, xGoal);
-        toApplyFieldSpeeds.vxMetersPerSecond = xSetpoint.velocity;
+        double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
+        if (xController.atSetpoint()) {
+            xCorrectionOutput = 0;
+        }
+        toApplyFieldSpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
 
         TrapezoidProfile.State ySetpoint = yProfile.calculate(time, yStartingState, yGoal);
-        toApplyFieldSpeeds.vyMetersPerSecond = ySetpoint.velocity;
+        double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
+        if (yController.atSetpoint()) {
+            yCorrectionOutput = 0;
+        }
+        toApplyFieldSpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
         double headingCorrectionOutput = headingController.calculate(
@@ -270,21 +276,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
         previousSwerveSetpoint =
                 setpointGenerator.generateSetpoint(previousSwerveSetpoint, toApplyRobotSpeeds, updatePeriod);
 
-        // Apply correction using the PID controllers
-        double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
-        if (xController.atSetpoint()) {
-            xCorrectionOutput = 0;
-        }
-        double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
-        if (yController.atSetpoint()) {
-            yCorrectionOutput = 0;
-        }
-        fieldRelativeCorrectionOutput.vxMetersPerSecond = xCorrectionOutput;
-        fieldRelativeCorrectionOutput.vyMetersPerSecond = yCorrectionOutput;
-
-        toApplyRobotSpeeds = previousSwerveSetpoint
-                .robotRelativeSpeeds()
-                .plus(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeCorrectionOutput, currentAngle));
+        toApplyRobotSpeeds = previousSwerveSetpoint.robotRelativeSpeeds();
 
         // Convert back to field-relative speeds for the sake of easier logging.
         toApplyFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(toApplyRobotSpeeds, currentAngle);
