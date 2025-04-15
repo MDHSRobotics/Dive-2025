@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.RobotContainer.CageLocation;
@@ -74,7 +75,14 @@ public class AimingRoutines {
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final XYHeadingAlignment driveToPosition = new XYHeadingAlignment(
-                    TRANSLATION_PID.kP, ROTATION_PID.kP, MAX_ANGULAR_RATE, LINEAR_MOTION_CONSTRAINTS, loggingTable)
+                    TRANSLATION_PID.kP,
+                    ROTATION_PID.kP,
+                    MAX_ANGULAR_RATE,
+                    LINEAR_MOTION_CONSTRAINTS,
+                    PATHPLANNER_CONFIG,
+                    MAX_STEER_VELOCITY,
+                    Constants.UPDATE_PERIOD,
+                    loggingTable)
             .withHeadingTolerance(HEADING_TOLERANCE)
             .withLinearTolerance(LINEAR_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
@@ -273,6 +281,23 @@ public class AimingRoutines {
                             m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
                         },
                         () -> m_drivetrain.setControl(driveToPosition)));
+    }
+
+    public Command driveToTreeSimple() {
+        return m_drivetrain.startRun(
+                () -> {
+                    driveToPosition.resetProfile();
+                    Pose2d currentPose = m_drivetrain.getState().Pose;
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    Pose2d treePose;
+                    if (alliance == Alliance.Blue) {
+                        treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
+                    } else {
+                        treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+                    }
+                    m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
+                },
+                () -> m_drivetrain.setControl(driveToPosition));
     }
 
     public Command driveToCoralStation() {

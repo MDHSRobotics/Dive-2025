@@ -172,4 +172,12 @@ public class DriveConstants {
             new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
     public static final PathConstraints CAGE_CONSTRAINTS =
             new PathConstraints(1, 1, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
+
+    /* Swerve Setpoint Generator Constants */
+    /**
+     * The maximum angular velocity of the steer motor in radians per second.
+     * <p>
+     * Units: volts / volts per radian per second
+     */
+    public static final double MAX_STEER_VELOCITY = 7.0 / TunerConstants.steerGains.kV;
 }

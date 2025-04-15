@@ -3,15 +3,21 @@ package frc.robot.subsystems.drive.requests;
 import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.StatusCode;
+import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.StructPublisher;
@@ -23,18 +29,27 @@ import frc.robot.subsystems.drive.DriveTelemetry;
  * specified x and y position and heading angle to ensure the robot is in the right position and facing the desired direction.
  * <p>
  * This swerve request uses {@link edu.wpi.first.math.trajectory.TrapezoidProfile trapezoid profiles} for x and y,
- * and a {@link com.ctre.phoenix6.swerve.utility.PhoenixPIDController PhoenixPIDController} for heading.
+ * a {@link com.ctre.phoenix6.swerve.utility.PhoenixPIDController PhoenixPIDController} for heading,
+ * and PathPlanner's {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator SwerveSetpointGenerator} to limit all three velocities.
  * <p>
  * The request is based on {@link com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle FieldCentricFacingAngle},
  * and makes some other improvements besides the motion profiles.
  * <p>
  * Important: You may not change the targetPose while the swerve request is in use.
+ * <p>
+ * This request currently supports drivetrains with 4 modules.
  */
 public class XYHeadingAlignment implements ResettableSwerveRequest {
     /**
-     * The field-centric chassis speeds to apply to the drivetrain.
+     * The robot-relative chassis speeds to apply to the drivetrain.
      */
-    private final ChassisSpeeds toApplySpeeds = new ChassisSpeeds();
+    private ChassisSpeeds toApplyRobotSpeeds = new ChassisSpeeds();
+    /** The field-relative chassis speeds from the X and Y PID controllers to correct the final output. */
+    private ChassisSpeeds fieldRelativeCorrectionOutput = new ChassisSpeeds();
+    /**
+     * The field-relative chassis speeds to log to NetworkTables.
+     */
+    private ChassisSpeeds toApplyFieldSpeeds = new ChassisSpeeds();
     /**
      * The desired pose to reach.
      * This pose has the blue alliance origin.
@@ -59,10 +74,10 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * Whether to desaturate wheel speeds before applying.
      * For more information, see the documentation of {@link SwerveDriveKinematics#desaturateWheelSpeeds}.
      */
-    private boolean desaturateWheelSpeeds = true;
+    private boolean desaturateWheelSpeeds = false;
 
-    private final ApplyFieldSpeeds applyFieldSpeeds =
-            new ApplyFieldSpeeds().withForwardPerspective(ForwardPerspectiveValue.BlueAlliance);
+    /** Must be robot-relative because the swerve setpoint generator outputs robot-relative wheel forces */
+    private final ApplyRobotSpeeds applyRobotSpeeds = new ApplyRobotSpeeds();
 
     // X position profile and PID controller
     private final TrapezoidProfile xProfile;
@@ -80,7 +95,19 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
     private final PhoenixPIDController headingController;
     private final double maxAngularVelocity;
 
+    /**
+     * The timestamp for the start of this request, in the timebase of {@link Utils#getCurrentTimeSeconds()}.
+     * This is used for the trapezoid profiles.
+     */
     private double startingTimestamp = 0;
+
+    private final SwerveSetpointGenerator setpointGenerator;
+    private SwerveModuleState[] startingModuleStates = new SwerveModuleState[4];
+    private SwerveSetpoint previousSwerveSetpoint;
+    /**
+     * The update period for the {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator swerve setpoint generator} in seconds.
+     */
+    private final double updatePeriod;
 
     private boolean resetRequested = false;
 
@@ -98,12 +125,18 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
+     * @param robotConfig The PathPlanner config for the robot
+     * @param maxSteerVelocityRadsPerSec The maximum rotation velocity of a swerve module, in radians per second
+     * @param updatePeriod The amount of time between robot updates in seconds.
      */
     public XYHeadingAlignment(
             double kTranslationP,
             double kRotationP,
             double maxAngularVelocity,
-            TrapezoidProfile.Constraints linearConstraints) {
+            TrapezoidProfile.Constraints linearConstraints,
+            RobotConfig robotConfig,
+            double maxSteerVelocityRadsPerSec,
+            double updatePeriod) {
         xProfile = new TrapezoidProfile(linearConstraints);
         xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
         yProfile = new TrapezoidProfile(linearConstraints);
@@ -117,6 +150,9 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
         // SmartDashboard.putData("X Controller", xController);
         // SmartDashboard.putData("Y Controller", yController);
         // SmartDashboard.putData("Heading Controller", headingController);
+
+        setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
+        this.updatePeriod = updatePeriod;
 
         goalPositionPub = null;
         setpointPositionPub = null;
@@ -133,6 +169,9 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      * @param linearConstraints Constraints for the X and Y trapezoid profiles
+     * @param robotConfig The PathPlanner config for the robot
+     * @param maxSteerVelocityRadsPerSec The maximum rotation velocity of a swerve module, in radians per second
+     * @param updatePeriod The amount of time between robot updates in seconds.
      * @param loggingPath The NetworkTable to log data into.
      */
     public XYHeadingAlignment(
@@ -140,6 +179,9 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
             double kRotationP,
             double maxAngularVelocity,
             TrapezoidProfile.Constraints linearConstraints,
+            RobotConfig robotConfig,
+            double maxSteerVelocityRadsPerSec,
+            double updatePeriod,
             NetworkTable loggingPath) {
         xProfile = new TrapezoidProfile(linearConstraints);
         xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
@@ -154,6 +196,9 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
         // SmartDashboard.putData("X Controller", xController);
         // SmartDashboard.putData("Y Controller", yController);
         // SmartDashboard.putData("Heading Controller", headingController);
+
+        setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
+        this.updatePeriod = updatePeriod;
 
         NetworkTable motionTable = loggingPath.getSubTable("X Y Heading Alignment");
         NetworkTable goalTable = motionTable.getSubTable("Goal");
@@ -188,6 +233,13 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
             yStartingState.position = currentPose.getY();
             yStartingState.velocity = parameters.currentChassisSpeed.vyMetersPerSecond;
             startingTimestamp = parameters.timestamp;
+
+            for (int i = 0; i < 4; ++i) {
+                startingModuleStates[i] = modulesToApply[i].getCurrentState();
+            }
+            previousSwerveSetpoint = new SwerveSetpoint(
+                    parameters.currentChassisSpeed, startingModuleStates, DriveFeedforwards.zeros(4));
+
             xController.reset();
             yController.reset();
             headingController.reset();
@@ -196,18 +248,10 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
 
         double time = parameters.timestamp - startingTimestamp;
         TrapezoidProfile.State xSetpoint = xProfile.calculate(time, xStartingState, xGoal);
-        double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
-        if (xController.atSetpoint()) {
-            xCorrectionOutput = 0;
-        }
-        toApplySpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
+        toApplyFieldSpeeds.vxMetersPerSecond = xSetpoint.velocity;
 
         TrapezoidProfile.State ySetpoint = yProfile.calculate(time, yStartingState, yGoal);
-        double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
-        if (yController.atSetpoint()) {
-            yCorrectionOutput = 0;
-        }
-        toApplySpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
+        toApplyFieldSpeeds.vyMetersPerSecond = ySetpoint.velocity;
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
         double headingCorrectionOutput = headingController.calculate(
@@ -217,8 +261,33 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
             headingCorrectionOutput = 0;
         }
 
-        toApplySpeeds.omegaRadiansPerSecond =
+        toApplyFieldSpeeds.omegaRadiansPerSecond =
                 MathUtil.clamp(headingCorrectionOutput, -maxAngularVelocity, maxAngularVelocity);
+
+        // The generator requires robot-relative speeds
+        toApplyRobotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(toApplyFieldSpeeds, currentAngle);
+
+        previousSwerveSetpoint =
+                setpointGenerator.generateSetpoint(previousSwerveSetpoint, toApplyRobotSpeeds, updatePeriod);
+
+        // Apply correction using the PID controllers
+        double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
+        if (xController.atSetpoint()) {
+            xCorrectionOutput = 0;
+        }
+        double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
+        if (yController.atSetpoint()) {
+            yCorrectionOutput = 0;
+        }
+        fieldRelativeCorrectionOutput.vxMetersPerSecond = xCorrectionOutput;
+        fieldRelativeCorrectionOutput.vyMetersPerSecond = yCorrectionOutput;
+
+        toApplyRobotSpeeds = previousSwerveSetpoint
+                .robotRelativeSpeeds()
+                .plus(ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelativeCorrectionOutput, currentAngle));
+
+        // Convert back to field-relative speeds for the sake of easier logging.
+        toApplyFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(toApplyRobotSpeeds, currentAngle);
 
         // If one of the publishers isn't null, all of them were initialized, so log data
         if (this.goalPositionPub != null) {
@@ -230,15 +299,19 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
                     new ChassisSpeeds(xSetpoint.velocity, ySetpoint.velocity, headingCorrectionOutput), timestamp);
             errorCorrectionVelocityPub.set(
                     new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput), timestamp);
-            appliedVelocityPub.set(toApplySpeeds, timestamp);
+            appliedVelocityPub.set(toApplyFieldSpeeds, timestamp);
         }
 
-        return applyFieldSpeeds
-                .withSpeeds(toApplySpeeds)
+        return applyRobotSpeeds
+                .withSpeeds(toApplyRobotSpeeds)
                 .withCenterOfRotation(centerOfRotation)
                 .withDriveRequestType(driveRequestType)
                 .withSteerRequestType(steerRequestType)
                 .withDesaturateWheelSpeeds(desaturateWheelSpeeds)
+                .withWheelForceFeedforwardsX(
+                        previousSwerveSetpoint.feedforwards().robotRelativeForcesXNewtons())
+                .withWheelForceFeedforwardsY(
+                        previousSwerveSetpoint.feedforwards().robotRelativeForcesYNewtons())
                 .apply(parameters, modulesToApply);
     }
 

@@ -7,6 +7,7 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -78,7 +79,7 @@ public class RobotContainer {
     private final DriveTelemetry driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
-    // private final SendableChooser<Command> testAutoChooser;
+    private final SendableChooser<Command> testAutoChooser;
     private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
     private final AutoCreator autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
@@ -95,13 +96,13 @@ public class RobotContainer {
 
         m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
 
-        // testAutoChooser = AutoBuilder.buildAutoChooser();
+        testAutoChooser = AutoBuilder.buildAutoChooser();
         // testAutoChooser.addOption(
         //         "Drive Wheel Radius Characterization",
         //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        // testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTree());
+        testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTreeSimple());
         // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
-        // SmartDashboard.putData("Select your test auto:", testAutoChooser);
+        SmartDashboard.putData("Select your test auto:", testAutoChooser);
 
         cageChooser.addOption("Left", CageLocation.LEFT);
         cageChooser.addOption("Middle", CageLocation.MIDDLE);
@@ -264,8 +265,8 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        // return testAutoChooser.getSelected();
-        return autoCreator.getAutonomousCommand();
+        return testAutoChooser.getSelected();
+        // return autoCreator.getAutonomousCommand();
     }
 
     /**

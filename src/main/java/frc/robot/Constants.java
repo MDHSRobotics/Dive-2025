@@ -35,6 +35,11 @@ import java.util.Map;
 public final class Constants {
     private Constants() {}
 
+    /**
+     * The update period of the robot in seconds.
+     */
+    public static final double UPDATE_PERIOD = 0.02;
+
     public static class ControllerConstants {
         private ControllerConstants() {}
 
