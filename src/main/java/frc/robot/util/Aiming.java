@@ -1,6 +1,5 @@
 package frc.robot.util;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -26,15 +25,6 @@ public class Aiming {
                 otherRotations,
                 Comparator.comparing(
                         (Rotation2d other) -> Math.abs(rotation.minus(other).getRadians())));
-    }
-
-    /**
-     * Translates a pose based on a given translation and returns a new pose.
-     * @param pose The pose to translate
-     * @param translation The amount to move the pose by
-     */
-    public static Pose2d translatePose(Pose2d pose, Translation2d translation) {
-        return new Pose2d(pose.getX() + translation.getX(), pose.getY() + translation.getY(), pose.getRotation());
     }
 
     /**

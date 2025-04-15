@@ -31,7 +31,7 @@ public class DriveConstants {
     /**
      * Distance between center to front bumper in meters
      */
-    public static final Distance CENTER_TO_BUMPER_LENGTH = Inches.of(16);
+    public static final Distance CENTER_TO_BUMPER_LENGTH = Inches.of(18);
 
     /**
      * Distance between front left module (cancoder) and front right module (cancoder)
