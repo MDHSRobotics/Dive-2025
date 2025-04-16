@@ -36,6 +36,7 @@ import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.subsystems.drive.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.drive.requests.ResettableSwerveRequest;
+import frc.robot.util.Aiming;
 import java.util.EnumSet;
 import java.util.function.Supplier;
 
@@ -44,6 +45,13 @@ import java.util.function.Supplier;
  * Subsystem so it can easily be used in command-based projects.
  */
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
+    /**
+     * Whether the drivetrain is currently targeting the reef with a swerve request.
+     * This is used to ensure only vision measurements from reef tags are added when targeting the reef.
+     * This must be volatile because NetworkTable listeners run on separate threads.
+     */
+    private volatile boolean m_targetingReef = false;
+
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -69,9 +77,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new SwerveRequest.SysIdSwerveRotation();
     private final SwerveRequest.SysIdSwerveTranslation m_slipCurrentCharacterization =
             new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.ApplyFieldSpeeds m_drivingPIDCharacterization = new SwerveRequest.ApplyFieldSpeeds()
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     /** SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
@@ -386,10 +391,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double latency = poseArray[6];
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
-            /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(
-                    botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.FRONT_STD_DEVS);
-
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];
             int valsPerFiducial = 7;
@@ -402,17 +403,27 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 return;
             }
 
+            boolean nonReefTagSeen = false;
             Translation3d[] visibleTagPositions = new Translation3d[tagCount];
             double[] distancesToTags = new double[tagCount];
             for (int i = 0; i < tagCount; i++) {
                 int currentIndex = 11 + (i * valsPerFiducial);
                 int id = (int) poseArray[currentIndex];
+                if (!Aiming.isReefTag(id)) {
+                    nonReefTagSeen = true;
+                }
                 double distance = poseArray[currentIndex + 4];
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
                 distancesToTags[i] = distance;
             }
             frontVisibleTagsPub.set(visibleTagPositions, timestamp);
             frontToTagDistancePub.set(distancesToTags, timestamp);
+
+            if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
+                /* Add the vision measurement to the pose estimator */
+                this.addVisionMeasurement(
+                        botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.FRONT_STD_DEVS);
+            }
         });
 
         DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
@@ -450,10 +461,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double latency = poseArray[6];
             double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
 
-            /* Add the vision measurement to the pose estimator */
-            this.addVisionMeasurement(
-                    botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.BACK_STD_DEVS);
-
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];
             int valsPerFiducial = 7;
@@ -466,17 +473,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 return;
             }
 
+            boolean nonReefTagSeen = false;
             Translation3d[] visibleTagPositions = new Translation3d[tagCount];
             double[] distancesToTags = new double[tagCount];
             for (int i = 0; i < tagCount; i++) {
                 int currentIndex = 11 + (i * valsPerFiducial);
                 int id = (int) poseArray[currentIndex];
+                if (!Aiming.isReefTag(id)) {
+                    nonReefTagSeen = true;
+                }
                 double distance = poseArray[currentIndex + 4];
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
                 distancesToTags[i] = distance;
             }
             backVisibleTagsPub.set(visibleTagPositions, timestamp);
             backtoTagDistancePub.set(distancesToTags, timestamp);
+
+            if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
+                /* Add the vision measurement to the pose estimator */
+                this.addVisionMeasurement(
+                        botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.BACK_STD_DEVS);
+            }
         });
+    }
+
+    /**
+     * Update the setting for adding vision measurements.
+     * @param targetingReef Whether the reef is targeted. If so, only vision measurements from reef tags will be used.
+     */
+    public void updateVisionTarget(boolean targetingReef) {
+        m_targetingReef = targetingReef;
     }
 }

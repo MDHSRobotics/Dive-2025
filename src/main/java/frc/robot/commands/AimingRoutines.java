@@ -170,83 +170,53 @@ public class AimingRoutines {
      */
     public Command orientToFaceReefWall() {
         return Commands.sequence(
-                m_drivetrain
-                        .applyResettableRequest(() -> {
-                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            if (alliance == Alliance.Blue) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
-                            } else if (alliance == Alliance.Red) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                            }
-                            return driveFacingPosition
-                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble());
-                        })
-                        .until(driveFacingPosition::motionIsFinished),
-                m_drivetrain
-                        .startRun(
-                                () -> {
-                                    driveFacingAngle.resetProfile();
-                                    m_drivetrain.setControl(driveFacingAngle
+                        m_drivetrain.runOnce(() -> m_drivetrain.updateVisionTarget(true)),
+                        m_drivetrain
+                                .applyResettableRequest(() -> {
+                                    Alliance alliance =
+                                            DriverStation.getAlliance().orElseThrow();
+                                    if (alliance == Alliance.Blue) {
+                                        driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
+                                    } else if (alliance == Alliance.Red) {
+                                        driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                                    }
+                                    return driveFacingPosition
                                             .withVelocityX(m_velocityXSupplier.getAsDouble())
                                             .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                            .withTargetDirection(Aiming.nearestRotation(
-                                                    m_drivetrain.getState().Pose.getRotation(),
-                                                    FieldConstants.REEF_WALL_ROTATIONS))
-                                            .withDeadband(m_deadbandSupplier.getAsDouble()));
-                                },
-                                () -> m_drivetrain.setControl(driveFacingAngle
-                                        .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                        .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                        .withDeadband(m_deadbandSupplier.getAsDouble())))
-                        .until(() -> Aiming.isReefTag((int) apriltagID.get())),
-                m_drivetrain.applyResettableRequest(() -> {
-                    int id = (int) apriltagID.get();
-                    if (Aiming.isReefTag(id)) {
-                        driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
-                    }
-                    return driveFacingAngle
-                            .withVelocityX(m_velocityXSupplier.getAsDouble())
-                            .withVelocityY(m_velocityYSupplier.getAsDouble())
-                            .withDeadband(m_deadbandSupplier.getAsDouble());
-                }));
-    }
-
-    /*
-     * This lengthy sequence is for locking on to a tree. Here is the explanation:
-     * Once the driver presses this button, the robot will rotate to face the center of the reef.
-     * The point of this is to give the camera a chance to see the correct tag without requiring the driver to rotate manually.
-     * If a reef tag is in view or enters view when the movement is finished, the robot will start aiming at an offset from the tag using tx.
-     * The offset is to the left if the operator has selected the left tree,
-     * or to the right if the operator has selected the right tree.
-     * (They can change their selection any time.)
-     * If the robot loses sight of all reef tags, it will finish rotating based on the last known tx value,
-     * and then stop rotating unless a tag returns in view.
-     * This is to provide the driver a chance to drive forwards/backwards/left/right to align the robot to a branch themself.
-     */
-    public Command orientToFaceTree() {
-        return Commands.sequence(
-                m_drivetrain
-                        .applyResettableRequest(() -> {
-                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            if (alliance == Alliance.Blue) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
-                            } else if (alliance == Alliance.Red) {
-                                driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                                            .withDeadband(m_deadbandSupplier.getAsDouble());
+                                })
+                                .until(driveFacingPosition::motionIsFinished),
+                        m_drivetrain
+                                .startRun(
+                                        () -> {
+                                            driveFacingAngle.resetProfile();
+                                            m_drivetrain.setControl(driveFacingAngle
+                                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                                    .withTargetDirection(Aiming.nearestRotation(
+                                                            m_drivetrain
+                                                                    .getState()
+                                                                    .Pose
+                                                                    .getRotation(),
+                                                            FieldConstants.REEF_WALL_ROTATIONS))
+                                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                        },
+                                        () -> m_drivetrain.setControl(driveFacingAngle
+                                                .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                                .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                                .withDeadband(m_deadbandSupplier.getAsDouble())))
+                                .until(() -> Aiming.isReefTag((int) apriltagID.get())),
+                        m_drivetrain.applyResettableRequest(() -> {
+                            int id = (int) apriltagID.get();
+                            if (Aiming.isReefTag(id)) {
+                                driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
                             }
-                            return driveFacingPosition
+                            return driveFacingAngle
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
                                     .withDeadband(m_deadbandSupplier.getAsDouble());
-                        })
-                        .until(() ->
-                                driveFacingPosition.motionIsFinished() && Aiming.isReefTag((int) apriltagID.get())),
-                // Face the selected tree
-                m_drivetrain.applyResettableRequest(() -> driveFacingVisionTarget
-                        .withVelocityX(m_velocityXSupplier.getAsDouble())
-                        .withVelocityY(m_velocityYSupplier.getAsDouble())
-                        .withDeadband(m_deadbandSupplier.getAsDouble())));
+                        }))
+                .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
     /**
@@ -255,20 +225,42 @@ public class AimingRoutines {
      */
     public Command driveToTree() {
         return Commands.sequence(
-                m_drivetrain.defer(() -> {
-                    SwerveDriveState currentState = m_drivetrain.getState();
-                    Pose2d currentPose = m_drivetrain.getState().Pose;
-                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                    Pose2d treePose;
-                    if (alliance == Alliance.Blue) {
-                        treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
-                    } else {
-                        treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
-                    }
-                    return generatePath(currentState, treePose, ON_THE_FLY_CONSTRAINTS, false);
-                }),
-                m_drivetrain.startRun(
+                        m_drivetrain.defer(() -> {
+                            m_drivetrain.updateVisionTarget(true);
+                            SwerveDriveState currentState = m_drivetrain.getState();
+                            Pose2d currentPose = m_drivetrain.getState().Pose;
+                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                            Pose2d treePose;
+                            if (alliance == Alliance.Blue) {
+                                treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
+                            } else {
+                                treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+                            }
+                            return generatePath(currentState, treePose, ON_THE_FLY_CONSTRAINTS, false);
+                        }),
+                        m_drivetrain.startRun(
+                                () -> {
+                                    driveToPosition.resetProfile();
+                                    Pose2d currentPose = m_drivetrain.getState().Pose;
+                                    Alliance alliance =
+                                            DriverStation.getAlliance().orElseThrow();
+                                    Pose2d treePose;
+                                    if (alliance == Alliance.Blue) {
+                                        treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
+                                    } else {
+                                        treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+                                    }
+                                    m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
+                                },
+                                () -> m_drivetrain.setControl(driveToPosition)))
+                .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
+    }
+
+    public Command driveToTreeSimple() {
+        return m_drivetrain
+                .startRun(
                         () -> {
+                            m_drivetrain.updateVisionTarget(true);
                             driveToPosition.resetProfile();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
@@ -280,24 +272,8 @@ public class AimingRoutines {
                             }
                             m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
                         },
-                        () -> m_drivetrain.setControl(driveToPosition)));
-    }
-
-    public Command driveToTreeSimple() {
-        return m_drivetrain.startRun(
-                () -> {
-                    driveToPosition.resetProfile();
-                    Pose2d currentPose = m_drivetrain.getState().Pose;
-                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                    Pose2d treePose;
-                    if (alliance == Alliance.Blue) {
-                        treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
-                    } else {
-                        treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
-                    }
-                    m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
-                },
-                () -> m_drivetrain.setControl(driveToPosition));
+                        () -> m_drivetrain.setControl(driveToPosition))
+                .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
     public Command driveToCoralStation() {
