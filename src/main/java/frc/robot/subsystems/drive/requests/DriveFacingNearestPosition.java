@@ -53,8 +53,8 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
     /**
      * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
-    public void resetProfile() {
-        this.driveFacingPosition.resetProfile();
+    public void resetRequest() {
+        this.driveFacingPosition.resetRequest();
     }
 
     /**

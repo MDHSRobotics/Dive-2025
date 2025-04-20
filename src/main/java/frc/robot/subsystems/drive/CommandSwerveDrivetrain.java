@@ -289,7 +289,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @return Command to run
      */
     public Command applyResettableRequest(Supplier<ResettableSwerveRequest> requestSupplier) {
-        return this.startRun(() -> requestSupplier.get().resetProfile(), () -> this.setControl(requestSupplier.get()));
+        return this.startRun(() -> requestSupplier.get().resetRequest(), () -> this.setControl(requestSupplier.get()));
     }
 
     /**

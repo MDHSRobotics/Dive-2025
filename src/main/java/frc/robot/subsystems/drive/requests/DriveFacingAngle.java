@@ -122,7 +122,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
     /**
      * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
-    public void resetProfile() {
+    public void resetRequest() {
         this.resetRequested = true;
         this.motionIsFinished = false;
     }

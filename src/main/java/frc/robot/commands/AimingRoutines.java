@@ -184,7 +184,7 @@ public class AimingRoutines {
                         m_drivetrain
                                 .startRun(
                                         () -> {
-                                            driveFacingAngle.resetProfile();
+                                            driveFacingAngle.resetRequest();
                                             m_drivetrain.setControl(driveFacingAngle
                                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
@@ -235,7 +235,7 @@ public class AimingRoutines {
                         }),
                         m_drivetrain.startRun(
                                 () -> {
-                                    driveToPosition.resetProfile();
+                                    driveToPosition.resetRequest();
                                     Pose2d currentPose = m_drivetrain.getState().Pose;
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElseThrow();
@@ -256,7 +256,7 @@ public class AimingRoutines {
                 .startRun(
                         () -> {
                             m_drivetrain.updateVisionTarget(true);
-                            driveToPosition.resetProfile();
+                            driveToPosition.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             Pose2d treePose;
@@ -287,7 +287,7 @@ public class AimingRoutines {
                 }),
                 m_drivetrain.startRun(
                         () -> {
-                            driveToPosition.resetProfile();
+                            driveToPosition.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             Pose2d coralStationPose;
