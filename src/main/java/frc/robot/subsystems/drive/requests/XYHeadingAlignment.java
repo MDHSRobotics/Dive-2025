@@ -20,6 +20,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.units.measure.*;
 import frc.robot.subsystems.drive.DriveTelemetry;
@@ -109,12 +110,23 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
 
     private boolean resetRequested = false;
 
-    // Optional NetworkTables logging
-    private final StructPublisher<Pose2d> goalPositionPub;
-    private final StructPublisher<Pose2d> setpointPositionPub;
-    private final StructPublisher<ChassisSpeeds> setpointVelocityPub;
-    private final StructPublisher<ChassisSpeeds> errorCorrectionVelocityPub;
-    private final StructPublisher<ChassisSpeeds> appliedVelocityPub;
+    // NetworkTables logging
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTable table = inst.getTable("Swerve Requests").getSubTable("X Y Heading Alignment");
+    private final StructPublisher<Pose2d> goalPositionPub =
+            table.getSubTable("Goal").getStructTopic("Position", Pose2d.struct).publish();
+
+    private final NetworkTable setpointTable = table.getSubTable("Setpoint");
+    private final StructPublisher<Pose2d> setpointPositionPub =
+            setpointTable.getStructTopic("Position", Pose2d.struct).publish();
+    private final StructPublisher<ChassisSpeeds> setpointVelocityPub =
+            setpointTable.getStructTopic("Velocity", ChassisSpeeds.struct).publish();
+
+    private final StructPublisher<ChassisSpeeds> errorCorrectionVelocityPub = table.getStructTopic(
+                    "Error Correction Velocity", ChassisSpeeds.struct)
+            .publish();
+    private final StructPublisher<ChassisSpeeds> appliedVelocityPub =
+            table.getStructTopic("Applied Velocity", ChassisSpeeds.struct).publish();
 
     /**
      * Creates a new profiled request with the given constraints.
@@ -144,75 +156,8 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
         headingController.enableContinuousInput(-Math.PI, Math.PI);
         this.maxAngularVelocity = maxAngularVelocity;
 
-        // Make PID gains tunable from NetworkTables
-        // SmartDashboard.putData("X Controller", xController);
-        // SmartDashboard.putData("Y Controller", yController);
-        // SmartDashboard.putData("Heading Controller", headingController);
-
         setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
         this.updatePeriod = updatePeriod;
-
-        goalPositionPub = null;
-        setpointPositionPub = null;
-        setpointVelocityPub = null;
-        errorCorrectionVelocityPub = null;
-        appliedVelocityPub = null;
-    }
-
-    /**
-     * Creates a new profiled request with the given constraints,
-     * and logs data to "X Y Heading Alignment"
-     *
-     * @param kTranslationP The P gain for the translation controller in meters per second output per meter error.
-     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
-     * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
-     * @param linearConstraints Constraints for the X and Y trapezoid profiles
-     * @param robotConfig The PathPlanner config for the robot
-     * @param maxSteerVelocityRadsPerSec The maximum rotation velocity of a swerve module, in radians per second
-     * @param updatePeriod The amount of time between robot updates in seconds.
-     * @param loggingPath The NetworkTable to log data into.
-     */
-    public XYHeadingAlignment(
-            double kTranslationP,
-            double kRotationP,
-            double maxAngularVelocity,
-            TrapezoidProfile.Constraints linearConstraints,
-            RobotConfig robotConfig,
-            double maxSteerVelocityRadsPerSec,
-            double updatePeriod,
-            NetworkTable loggingPath) {
-        xProfile = new TrapezoidProfile(linearConstraints);
-        xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
-        yProfile = new TrapezoidProfile(linearConstraints);
-        yController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
-
-        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
-        headingController.enableContinuousInput(-Math.PI, Math.PI);
-        this.maxAngularVelocity = maxAngularVelocity;
-
-        // Make PID gains tunable from NetworkTables
-        // SmartDashboard.putData("X Controller", xController);
-        // SmartDashboard.putData("Y Controller", yController);
-        // SmartDashboard.putData("Heading Controller", headingController);
-
-        setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
-        this.updatePeriod = updatePeriod;
-
-        NetworkTable motionTable = loggingPath.getSubTable("X Y Heading Alignment");
-        NetworkTable goalTable = motionTable.getSubTable("Goal");
-        this.goalPositionPub =
-                goalTable.getStructTopic("Position", Pose2d.struct).publish();
-        NetworkTable setpointTable = motionTable.getSubTable("Setpoint");
-        this.setpointPositionPub =
-                setpointTable.getStructTopic("Position", Pose2d.struct).publish();
-        this.setpointVelocityPub =
-                setpointTable.getStructTopic("Velocity", ChassisSpeeds.struct).publish();
-        this.errorCorrectionVelocityPub = motionTable
-                .getStructTopic("Error Correction Velocity", ChassisSpeeds.struct)
-                .publish();
-        this.appliedVelocityPub = motionTable
-                .getStructTopic("Applied Velocity", ChassisSpeeds.struct)
-                .publish();
     }
 
     /**

@@ -54,22 +54,18 @@ public class AimingRoutines {
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable cameraTable = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
 
-    private final NetworkTable loggingTable = inst.getTable("Swerve Requests");
-
-    private final DriveFacingAngle driveFacingAngle = new DriveFacingAngle(
-                    ROTATION_PID.kP, MAX_ANGULAR_RATE, loggingTable)
+    private final DriveFacingAngle driveFacingAngle = new DriveFacingAngle(ROTATION_PID.kP, MAX_ANGULAR_RATE)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(
-                    ROTATION_PID.kP, MAX_ANGULAR_RATE, loggingTable)
+    private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(ROTATION_PID.kP, MAX_ANGULAR_RATE)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     private final DriveWithVisualServoing driveFacingVisionTarget = new DriveWithVisualServoing(
-                    ROTATION_PID.kP, MAX_ANGULAR_RATE, cameraTable, loggingTable)
+                    ROTATION_PID.kP, MAX_ANGULAR_RATE, cameraTable)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
@@ -81,8 +77,7 @@ public class AimingRoutines {
                     LINEAR_MOTION_CONSTRAINTS,
                     PATHPLANNER_CONFIG,
                     MAX_STEER_VELOCITY,
-                    Constants.UPDATE_PERIOD,
-                    loggingTable)
+                    Constants.UPDATE_PERIOD)
             .withHeadingTolerance(HEADING_TOLERANCE)
             .withLinearTolerance(LINEAR_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
