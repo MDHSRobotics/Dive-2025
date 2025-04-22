@@ -71,17 +71,19 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         Rotation2d currentAngle = parameters.currentPose.getRotation();
+
+        if (resetRequested) {
+            this.targetDirection = currentAngle;
+            txValue.set(null);
+            this.resetRequested = false;
+        }
+
         Double tx = txValue.getAndSet(null);
         // If tx has updated, update the target direction.
         if (tx != null) {
             // You need to subtract instead of adding because the current angle is counterclockwise, but tx is
             // clockwise.
             this.targetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
-        }
-
-        if (resetRequested) {
-            txValue.set(null);
-            this.resetRequested = false;
         }
 
         return driveFacingAngle.withTargetDirection(this.targetDirection).apply(parameters, modulesToApply);

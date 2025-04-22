@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.units.measure.*;
@@ -26,7 +25,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
     /**
      * The desired positions to face.
      */
-    private List<Pose2d> targetPositions = List.of(new Pose2d());
+    private List<Translation2d> targetPositions = List.of(new Translation2d());
 
     private final DriveFacingPosition driveFacingPosition;
 
@@ -44,8 +43,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Translation2d targetPosition =
-                parameters.currentPose.nearest(targetPositions).getTranslation();
+        Translation2d targetPosition = parameters.currentPose.getTranslation().nearest(targetPositions);
 
         return driveFacingPosition.withTargetPosition(targetPosition).apply(parameters, modulesToApply);
     }
@@ -124,7 +122,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @param newTargetPositions Parameter to modify
      * @return this object
      */
-    public DriveFacingNearestPosition withTargetPositions(List<Pose2d> newTargetPositions) {
+    public DriveFacingNearestPosition withTargetPositions(List<Translation2d> newTargetPositions) {
         this.targetPositions = newTargetPositions;
         return this;
     }
