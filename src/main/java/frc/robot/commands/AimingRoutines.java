@@ -185,16 +185,9 @@ public class AimingRoutines {
                                 .startRun(
                                         () -> {
                                             driveFacingAngle.resetRequest();
-                                            m_drivetrain.setControl(driveFacingAngle
-                                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                                    .withTargetDirection(Aiming.nearestRotation(
-                                                            m_drivetrain
-                                                                    .getState()
-                                                                    .Pose
-                                                                    .getRotation(),
-                                                            FieldConstants.REEF_WALL_ROTATIONS))
-                                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                            driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
+                                                    m_drivetrain.getState().Pose.getRotation(),
+                                                    FieldConstants.REEF_WALL_ROTATIONS));
                                         },
                                         () -> m_drivetrain.setControl(driveFacingAngle
                                                 .withVelocityX(m_velocityXSupplier.getAsDouble())
@@ -245,7 +238,7 @@ public class AimingRoutines {
                                     } else {
                                         treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                                     }
-                                    m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
+                                    driveToPosition.withTargetPose(treePose);
                                 },
                                 () -> m_drivetrain.setControl(driveToPosition)))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
@@ -265,7 +258,7 @@ public class AimingRoutines {
                             } else {
                                 treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
-                            m_drivetrain.setControl(driveToPosition.withTargetPose(treePose));
+                            driveToPosition.withTargetPose(treePose);
                         },
                         () -> m_drivetrain.setControl(driveToPosition))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
@@ -296,7 +289,7 @@ public class AimingRoutines {
                             } else {
                                 coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                             }
-                            m_drivetrain.setControl(driveToPosition.withTargetPose(coralStationPose));
+                            driveToPosition.withTargetPose(coralStationPose);
                         },
                         () -> m_drivetrain.setControl(driveToPosition)));
     }
