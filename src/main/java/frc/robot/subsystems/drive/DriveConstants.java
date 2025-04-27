@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -101,11 +100,8 @@ public class DriveConstants {
      */
     public static final PIDConstants ROTATION_PID = new PIDConstants(5.0, 0.0, 0.0);
 
-    public static final PPHolonomicDriveController DRIVE_CONTROLLER =
-            new PPHolonomicDriveController(TRANSLATION_PID, ROTATION_PID);
-
     /**
-     * Robot mass with battery.
+     * Robot mass with battery and bumpers.
      * Last measured value: 126 pounds-force, coverted to kg.
      */
     private static final Mass ROBOT_MASS = Kilograms.of(57.15264);

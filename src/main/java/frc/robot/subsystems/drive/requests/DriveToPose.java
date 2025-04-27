@@ -36,11 +36,14 @@ import frc.robot.subsystems.drive.DriveTelemetry;
  * The request is based on {@link com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle FieldCentricFacingAngle},
  * and makes some other improvements besides the motion profiles.
  * <p>
- * Important: You may not change the targetPose while the swerve request is in use.
- * <p>
  * This request currently supports drivetrains with 4 modules.
+ * <p>
+ * Side note: In the future, this could be improved with a more aggressive {@link edu.wpi.first.math.trajectory.ExponentialProfile exponential profile}
+ * because the {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator SwerveSetpointGenerator}
+ * ensures that the motion respects the robot's constraints.
+ * However, this would require accurate kV and kA gains from drive SysId, which are hard to get with <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels</a>.
  */
-public class XYHeadingAlignment implements ResettableSwerveRequest {
+public class DriveToPose implements ResettableSwerveRequest {
     /**
      * The robot-relative chassis speeds to apply to the drivetrain.
      */
@@ -55,28 +58,8 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      */
     private Pose2d targetPose = new Pose2d();
 
-    /**
-     * The center of rotation the robot should rotate around.
-     * This is (0,0) by default, which will rotate around the center of the robot.
-     */
-    private Translation2d centerOfRotation = new Translation2d();
-
-    /**
-     * The type of control request to use for the drive motor.
-     */
-    private SwerveModule.DriveRequestType driveRequestType = SwerveModule.DriveRequestType.OpenLoopVoltage;
-    /**
-     * The type of control request to use for the steer motor.
-     */
-    private SwerveModule.SteerRequestType steerRequestType = SwerveModule.SteerRequestType.Position;
-    /**
-     * Whether to desaturate wheel speeds before applying.
-     * For more information, see the documentation of {@link SwerveDriveKinematics#desaturateWheelSpeeds}.
-     */
-    private boolean desaturateWheelSpeeds = false;
-
     /** Must be robot-relative because the swerve setpoint generator outputs robot-relative wheel forces */
-    private final ApplyRobotSpeeds applyRobotSpeeds = new ApplyRobotSpeeds();
+    private final ApplyRobotSpeeds applyRobotSpeeds = new ApplyRobotSpeeds().withDesaturateWheelSpeeds(false);
 
     // X position profile and PID controller
     private final TrapezoidProfile xProfile;
@@ -139,7 +122,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param maxSteerVelocityRadsPerSec The maximum rotation velocity of a swerve module, in radians per second
      * @param updatePeriod The amount of time between robot updates in seconds.
      */
-    public XYHeadingAlignment(
+    public DriveToPose(
             double kTranslationP,
             double kRotationP,
             double maxAngularVelocity,
@@ -189,16 +172,19 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
             this.resetRequested = false;
         }
 
-        double time = parameters.timestamp - startingTimestamp;
-        TrapezoidProfile.State xSetpoint = xProfile.calculate(time, xStartingState, xGoal);
+        double timeSinceStart = parameters.timestamp - startingTimestamp;
+
+        TrapezoidProfile.State xSetpoint = xProfile.calculate(timeSinceStart, xStartingState, xGoal);
         double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
+        // Must check if at setpoint after making the calculation because the error gets stored in the controller.
         if (xController.atSetpoint()) {
             xCorrectionOutput = 0;
         }
         toApplyFieldSpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
 
-        TrapezoidProfile.State ySetpoint = yProfile.calculate(time, yStartingState, yGoal);
+        TrapezoidProfile.State ySetpoint = yProfile.calculate(timeSinceStart, yStartingState, yGoal);
         double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
+        // Must check if at setpoint after making the calculation because the error gets stored in the controller.
         if (yController.atSetpoint()) {
             yCorrectionOutput = 0;
         }
@@ -218,6 +204,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
         // The generator requires robot-relative speeds
         toApplyRobotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(toApplyFieldSpeeds, currentAngle);
 
+        // Improve the motion profile generated movement with a setpoint that respects the robot's constraints better.
         previousSwerveSetpoint =
                 setpointGenerator.generateSetpoint(previousSwerveSetpoint, toApplyRobotSpeeds, updatePeriod);
 
@@ -226,25 +213,22 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
         // Convert back to field-relative speeds for the sake of easier logging.
         toApplyFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(toApplyRobotSpeeds, currentAngle);
 
-        // If one of the publishers isn't null, all of them were initialized, so log data
-        if (this.goalPositionPub != null) {
-            long timestamp = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
+        // NetworkTables logging
+        long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
 
-            goalPositionPub.set(new Pose2d(xGoal.position, yGoal.position, targetDirection), timestamp);
-            setpointPositionPub.set(new Pose2d(xSetpoint.position, ySetpoint.position, targetDirection), timestamp);
-            setpointVelocityPub.set(
-                    new ChassisSpeeds(xSetpoint.velocity, ySetpoint.velocity, headingCorrectionOutput), timestamp);
-            errorCorrectionVelocityPub.set(
-                    new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput), timestamp);
-            appliedVelocityPub.set(toApplyFieldSpeeds, timestamp);
-        }
+        goalPositionPub.set(new Pose2d(xGoal.position, yGoal.position, targetDirection), timestampMicroseconds);
+        setpointPositionPub.set(
+                new Pose2d(xSetpoint.position, ySetpoint.position, targetDirection), timestampMicroseconds);
+        setpointVelocityPub.set(
+                new ChassisSpeeds(xSetpoint.velocity, ySetpoint.velocity, headingCorrectionOutput),
+                timestampMicroseconds);
+        errorCorrectionVelocityPub.set(
+                new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput),
+                timestampMicroseconds);
+        appliedVelocityPub.set(toApplyFieldSpeeds, timestampMicroseconds);
 
         return applyRobotSpeeds
                 .withSpeeds(toApplyRobotSpeeds)
-                .withCenterOfRotation(centerOfRotation)
-                .withDriveRequestType(driveRequestType)
-                .withSteerRequestType(steerRequestType)
-                .withDesaturateWheelSpeeds(desaturateWheelSpeeds)
                 .withWheelForceFeedforwardsX(
                         previousSwerveSetpoint.feedforwards().robotRelativeForcesXNewtons())
                 .withWheelForceFeedforwardsY(
@@ -262,14 +246,13 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
     /**
      * Modifies the TargetPose parameter and returns itself.
      * <p>
-     * The desired direction to face. 0 Degrees is defined as in the direction of
-     * the X axis. As a result, a TargetDirection of 90 degrees will point along
-     * the Y axis, or to the left.
+     * The desired position and direction to face.
+     * This is in blue alliance origin.
      *
      * @param newTargetPose Parameter to modify
      * @return this object
      */
-    public XYHeadingAlignment withTargetPose(Pose2d newTargetPose) {
+    public DriveToPose withTargetPose(Pose2d newTargetPose) {
         this.targetPose = newTargetPose;
         this.xGoal.position = newTargetPose.getX();
         this.yGoal.position = newTargetPose.getY();
@@ -285,8 +268,8 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param newCenterOfRotation Parameter to modify
      * @return this object
      */
-    public XYHeadingAlignment withCenterOfRotation(Translation2d newCenterOfRotation) {
-        this.centerOfRotation = newCenterOfRotation;
+    public DriveToPose withCenterOfRotation(Translation2d newCenterOfRotation) {
+        this.applyRobotSpeeds.withCenterOfRotation(newCenterOfRotation);
         return this;
     }
 
@@ -298,8 +281,8 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param newDriveRequestType Parameter to modify
      * @return this object
      */
-    public XYHeadingAlignment withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
-        this.driveRequestType = newDriveRequestType;
+    public DriveToPose withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
+        this.applyRobotSpeeds.withDriveRequestType(newDriveRequestType);
         return this;
     }
 
@@ -311,8 +294,8 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param newSteerRequestType Parameter to modify
      * @return this object
      */
-    public XYHeadingAlignment withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
-        this.steerRequestType = newSteerRequestType;
+    public DriveToPose withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
+        this.applyRobotSpeeds.withSteerRequestType(newSteerRequestType);
         return this;
     }
 
@@ -325,8 +308,8 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param newDesaturateWheelSpeeds Parameter to modify
      * @return this object
      */
-    public XYHeadingAlignment withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
-        this.desaturateWheelSpeeds = newDesaturateWheelSpeeds;
+    public DriveToPose withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
+        this.applyRobotSpeeds.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
         return this;
     }
 
@@ -338,7 +321,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public XYHeadingAlignment withTranslationalPIDGains(double kp, double ki, double kd) {
+    public DriveToPose withTranslationalPIDGains(double kp, double ki, double kd) {
         this.xController.setPID(kp, ki, kd);
         this.yController.setPID(kp, ki, kd);
         return this;
@@ -352,7 +335,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param kd The derivative coefficient.
      * @return this object
      */
-    public XYHeadingAlignment withRotationalPIDGains(double kp, double ki, double kd) {
+    public DriveToPose withRotationalPIDGains(double kp, double ki, double kd) {
         this.headingController.setPID(kp, ki, kd);
         return this;
     }
@@ -363,7 +346,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param toleranceAmount The maximum amount of degrees or radians the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public XYHeadingAlignment withHeadingTolerance(Angle toleranceAmount) {
+    public DriveToPose withHeadingTolerance(Angle toleranceAmount) {
         this.headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
@@ -374,7 +357,7 @@ public class XYHeadingAlignment implements ResettableSwerveRequest {
      * @param toleranceAmount The maximum amount of distance the robot can be from its goal when calling atSetpoint().
      * @return this object
      */
-    public XYHeadingAlignment withLinearTolerance(Distance toleranceAmount) {
+    public DriveToPose withLinearTolerance(Distance toleranceAmount) {
         this.xController.setTolerance(toleranceAmount.in(Meters));
         this.yController.setTolerance(toleranceAmount.in(Meters));
         return this;

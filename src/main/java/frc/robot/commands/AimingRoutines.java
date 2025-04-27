@@ -30,8 +30,7 @@ import frc.robot.RobotContainer.CageLocation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.requests.DriveFacingAngle;
 import frc.robot.subsystems.drive.requests.DriveFacingPosition;
-import frc.robot.subsystems.drive.requests.DriveWithVisualServoing;
-import frc.robot.subsystems.drive.requests.XYHeadingAlignment;
+import frc.robot.subsystems.drive.requests.DriveToPose;
 import frc.robot.util.Aiming;
 import java.util.List;
 import java.util.function.DoubleSupplier;
@@ -64,13 +63,7 @@ public class AimingRoutines {
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final DriveWithVisualServoing driveFacingVisionTarget = new DriveWithVisualServoing(
-                    ROTATION_PID.kP, MAX_ANGULAR_RATE, cameraTable)
-            .withTolerance(HEADING_TOLERANCE)
-            .withDriveRequestType(DriveRequestType.Velocity)
-            .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-
-    private final XYHeadingAlignment driveToPosition = new XYHeadingAlignment(
+    private final DriveToPose driveToPose = new DriveToPose(
                     TRANSLATION_PID.kP,
                     ROTATION_PID.kP,
                     MAX_ANGULAR_RATE,
@@ -228,7 +221,7 @@ public class AimingRoutines {
                         }),
                         m_drivetrain.startRun(
                                 () -> {
-                                    driveToPosition.resetRequest();
+                                    driveToPose.resetRequest();
                                     Pose2d currentPose = m_drivetrain.getState().Pose;
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElseThrow();
@@ -238,9 +231,9 @@ public class AimingRoutines {
                                     } else {
                                         treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                                     }
-                                    driveToPosition.withTargetPose(treePose);
+                                    driveToPose.withTargetPose(treePose);
                                 },
-                                () -> m_drivetrain.setControl(driveToPosition)))
+                                () -> m_drivetrain.setControl(driveToPose)))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
@@ -249,7 +242,7 @@ public class AimingRoutines {
                 .startRun(
                         () -> {
                             m_drivetrain.updateVisionTarget(true);
-                            driveToPosition.resetRequest();
+                            driveToPose.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             Pose2d treePose;
@@ -258,9 +251,9 @@ public class AimingRoutines {
                             } else {
                                 treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
-                            driveToPosition.withTargetPose(treePose);
+                            driveToPose.withTargetPose(treePose);
                         },
-                        () -> m_drivetrain.setControl(driveToPosition))
+                        () -> m_drivetrain.setControl(driveToPose))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
@@ -280,7 +273,7 @@ public class AimingRoutines {
                 }),
                 m_drivetrain.startRun(
                         () -> {
-                            driveToPosition.resetRequest();
+                            driveToPose.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             Pose2d coralStationPose;
@@ -289,9 +282,9 @@ public class AimingRoutines {
                             } else {
                                 coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                             }
-                            driveToPosition.withTargetPose(coralStationPose);
+                            driveToPose.withTargetPose(coralStationPose);
                         },
-                        () -> m_drivetrain.setControl(driveToPosition)));
+                        () -> m_drivetrain.setControl(driveToPose)));
     }
 
     /**

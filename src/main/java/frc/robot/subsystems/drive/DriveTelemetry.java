@@ -60,27 +60,27 @@ public class DriveTelemetry {
 
     /** Accept the swerve drive state and log it to NetworkTables and SignalLogger. */
     public void telemeterize(SwerveDriveState state) {
-        long timestamp = stateTimestampToNTTimestamp(state.Timestamp);
+        long timestampMicroseconds = stateTimestampToNTTimestamp(state.Timestamp);
 
         /* Send the robot orientation to the limelight for megatag2 */
         megatag2Orientation[0] = state.Pose.getRotation().getDegrees();
         megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
-        megatag2FrontUpdater.set(megatag2Orientation, timestamp);
-        megatag2BackUpdater.set(megatag2Orientation, timestamp);
+        megatag2FrontUpdater.set(megatag2Orientation, timestampMicroseconds);
+        megatag2BackUpdater.set(megatag2Orientation, timestampMicroseconds);
         // Flushing is ESSENTIAL for the limelight to receive accurate yaw and give accurate pose estimates.
         inst.flush();
 
         /* Telemeterize the swerve drive state */
-        drivePosePub.set(state.Pose, timestamp);
-        driveSpeedsPub.set(state.Speeds, timestamp);
-        driveModuleStatesPub.set(state.ModuleStates, timestamp);
-        driveModuleTargetsPub.set(state.ModuleTargets, timestamp);
-        driveModulePositionsPub.set(state.ModulePositions, timestamp);
-        driveOdometryFrequencyPub.set(1.0 / state.OdometryPeriod, timestamp);
-        driveOdometryPeriodPub.set(state.OdometryPeriod, timestamp);
+        drivePosePub.set(state.Pose, timestampMicroseconds);
+        driveSpeedsPub.set(state.Speeds, timestampMicroseconds);
+        driveModuleStatesPub.set(state.ModuleStates, timestampMicroseconds);
+        driveModuleTargetsPub.set(state.ModuleTargets, timestampMicroseconds);
+        driveModulePositionsPub.set(state.ModulePositions, timestampMicroseconds);
+        driveOdometryFrequencyPub.set(1.0 / state.OdometryPeriod, timestampMicroseconds);
+        driveOdometryPeriodPub.set(state.OdometryPeriod, timestampMicroseconds);
 
         double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
-        linearSpeedPub.set(linearSpeed, timestamp);
+        linearSpeedPub.set(linearSpeed, timestampMicroseconds);
     }
 
     /**

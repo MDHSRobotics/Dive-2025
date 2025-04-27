@@ -110,11 +110,11 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
         this.motionIsFinished = headingController.atSetpoint();
 
         // NetworkTables logging
-        long timestamp = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
+        long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
 
-        goalPositionPub.set(targetDirection.getRadians(), timestamp);
-        appliedVelocityPub.set(toApplyOmega, timestamp);
-        motionIsFinishedPub.set(motionIsFinished, timestamp);
+        goalPositionPub.set(targetDirection.getRadians(), timestampMicroseconds);
+        appliedVelocityPub.set(toApplyOmega, timestampMicroseconds);
+        motionIsFinishedPub.set(motionIsFinished, timestampMicroseconds);
 
         return fieldCentric.withRotationalRate(toApplyOmega).apply(parameters, modulesToApply);
     }

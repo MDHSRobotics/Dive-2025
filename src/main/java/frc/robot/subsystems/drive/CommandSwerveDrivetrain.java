@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -263,7 +264,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         .withSpeeds(speeds)
                         .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
-                DriveConstants.DRIVE_CONTROLLER,
+                new PPHolonomicDriveController(DriveConstants.TRANSLATION_PID, DriveConstants.ROTATION_PID),
                 DriveConstants.PATHPLANNER_CONFIG,
                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
                 () -> DriverStation.getAlliance().orElseThrow() == Alliance.Red,
@@ -382,14 +383,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
             /* Get timestamp */
-            long timestamp = value.getTime();
+            long timestampMicroseconds = value.getTime();
 
             /* Log pose estimate to AdvantageScope */
-            frontPoseEstimatePub.set(botPoseEstimate, timestamp);
+            frontPoseEstimatePub.set(botPoseEstimate, timestampMicroseconds);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
             double latency = poseArray[6];
-            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+            double adjustedTimestamp = (timestampMicroseconds / 1000000.0) - (latency / 1000.0);
 
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];
@@ -416,8 +417,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
                 distancesToTags[i] = distance;
             }
-            frontVisibleTagsPub.set(visibleTagPositions, timestamp);
-            frontToTagDistancePub.set(distancesToTags, timestamp);
+            frontVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
+            frontToTagDistancePub.set(distancesToTags, timestampMicroseconds);
 
             if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
                 /* Add the vision measurement to the pose estimator */
@@ -452,14 +453,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Pose2d botPoseEstimate = new Pose2d(botPose, botRotation);
 
             /* Get timestamp */
-            long timestamp = value.getTime();
+            long timestampMicroseconds = value.getTime();
 
             /* Log pose estimate to AdvantageScope */
-            backPoseEstimatePub.set(botPoseEstimate, timestamp);
+            backPoseEstimatePub.set(botPoseEstimate, timestampMicroseconds);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
             double latency = poseArray[6];
-            double adjustedTimestamp = (timestamp / 1000000.0) - (latency / 1000.0);
+            double adjustedTimestamp = (timestampMicroseconds / 1000000.0) - (latency / 1000.0);
 
             /* Log which apriltags are currently visible */
             int tagCount = (int) poseArray[7];
@@ -486,8 +487,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
                 distancesToTags[i] = distance;
             }
-            backVisibleTagsPub.set(visibleTagPositions, timestamp);
-            backtoTagDistancePub.set(distancesToTags, timestamp);
+            backVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
+            backtoTagDistancePub.set(distancesToTags, timestampMicroseconds);
 
             if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
                 /* Add the vision measurement to the pose estimator */
