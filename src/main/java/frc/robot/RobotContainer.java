@@ -80,11 +80,10 @@ public class RobotContainer {
 
     /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> testAutoChooser;
-    private final SendableChooser<CageLocation> cageChooser = new SendableChooser<CageLocation>();
     private final AutoCreator autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
-    private final AimingRoutines aimingRoutines = new AimingRoutines(
-            m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband, cageChooser::getSelected);
+    private final AimingRoutines aimingRoutines =
+            new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -103,11 +102,6 @@ public class RobotContainer {
         testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTreeSimple());
         // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
         SmartDashboard.putData("Select your test auto:", testAutoChooser);
-
-        cageChooser.addOption("Left", CageLocation.LEFT);
-        cageChooser.addOption("Middle", CageLocation.MIDDLE);
-        cageChooser.addOption("Right", CageLocation.RIGHT);
-        SmartDashboard.putData("Select your cage:", cageChooser);
 
         autoCreator.sendAutoChoosers();
     }

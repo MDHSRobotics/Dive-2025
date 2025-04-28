@@ -414,7 +414,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     nonReefTagSeen = true;
                 }
                 double distance = poseArray[currentIndex + 4];
-                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+                visibleTagPositions[i] =
+                        FieldConstants.APRILTAGS.getTagPose(id).orElseThrow().getTranslation();
                 distancesToTags[i] = distance;
             }
             frontVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
@@ -484,7 +485,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     nonReefTagSeen = true;
                 }
                 double distance = poseArray[currentIndex + 4];
-                visibleTagPositions[i] = FieldConstants.APRILTAG_POSES[id];
+                visibleTagPositions[i] =
+                        FieldConstants.APRILTAGS.getTagPose(id).orElseThrow().getTranslation();
                 distancesToTags[i] = distance;
             }
             backVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);

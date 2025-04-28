@@ -4,11 +4,12 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
 import com.pathplanner.lib.util.FlippingUtil;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -117,77 +118,52 @@ public final class Constants {
     public static class FieldConstants {
         private FieldConstants() {}
 
-        /**
-         * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
-         * <p>
-         * These were taken from <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">the FRC field layout</a>.
-         * <p>
-         * Index into the array with the id number starting from 1.
-         */
-        public static final Translation3d[] APRILTAG_POSES = {
-            new Translation3d(),
-            new Translation3d(Inches.of(657.37), Inches.of(25.80), Inches.of(58.50)),
-            new Translation3d(Inches.of(657.37), Inches.of(291.20), Inches.of(58.50)),
-            new Translation3d(Inches.of(455.15), Inches.of(317.15), Inches.of(51.25)),
-            new Translation3d(Inches.of(365.20), Inches.of(241.64), Inches.of(573.54)),
-            new Translation3d(Inches.of(365.20), Inches.of(75.39), Inches.of(73.54)),
-            new Translation3d(Inches.of(530.49), Inches.of(130.17), Inches.of(12.13)),
-            new Translation3d(Inches.of(546.87), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(530.49), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(497.77), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(481.39), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(497.77), Inches.of(130.17), Inches.of(12.13)),
-            new Translation3d(Inches.of(33.51), Inches.of(25.80), Inches.of(58.50)),
-            new Translation3d(Inches.of(33.51), Inches.of(291.20), Inches.of(58.50)),
-            new Translation3d(Inches.of(325.68), Inches.of(241.64), Inches.of(73.54)),
-            new Translation3d(Inches.of(325.68), Inches.of(75.39), Inches.of(73.54)),
-            new Translation3d(Inches.of(235.73), Inches.of(-0.15), Inches.of(51.25)),
-            new Translation3d(Inches.of(160.39), Inches.of(130.17), Inches.of(12.13)),
-            new Translation3d(Inches.of(144.00), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(160.39), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(193.10), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(209.49), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(193.10), Inches.of(130.17), Inches.of(12.13))
-        };
+        public static final AprilTagFieldLayout APRILTAGS =
+                AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
         /**
          * Rotations of the Apriltags for aligning perpendicular to them.
          * <p>
-         * These rotations correspond to the Z-Rotation on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a>
-         * plus 180 degrees.
+         * These rotations correspond to the Z-Rotation of the tags plus 180 degrees.
          * <p>
          * Index into the array with the id number starting from 1.
          */
         public static final Rotation2d[] APRILTAG_ROTATIONS = {
             Rotation2d.kZero,
-            new Rotation2d(Degrees.of(126).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(234).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(270).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(120).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(54).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(306).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(90).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(120).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
+            APRILTAGS.getTagPose(1).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(2).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(3).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(4).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(5).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(6).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(7).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(8).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(9).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(10).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(11).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(12).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(13).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(14).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(15).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(16).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(17).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(18).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(19).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(20).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(21).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(22).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
         };
 
         public static final Translation2d BLUE_REEF_CENTER = new Translation2d(
-                (APRILTAG_POSES[21].getX() + APRILTAG_POSES[18].getX()) / 2.0, APRILTAG_POSES[21].getY());
+                (APRILTAGS.getTagPose(21).orElseThrow().getX()
+                                + APRILTAGS.getTagPose(18).orElseThrow().getX())
+                        / 2.0,
+                APRILTAGS.getTagPose(21).orElseThrow().getY());
         public static final Translation2d RED_REEF_CENTER = new Translation2d(
-                (APRILTAG_POSES[7].getX() + APRILTAG_POSES[10].getX()) / 2.0, APRILTAG_POSES[7].getY());
+                (APRILTAGS.getTagPose(7).orElseThrow().getX()
+                                + APRILTAGS.getTagPose(10).orElseThrow().getX())
+                        / 2.0,
+                APRILTAGS.getTagPose(7).orElseThrow().getY());
 
         /**
          * The distance from a reef apriltag to either of its two trees in meters.
@@ -208,62 +184,98 @@ public final class Constants {
          */
         private static final Translation2d[] BLUE_REEF_TREE_POSITIONS = new Translation2d[] {
             // A
-            APRILTAG_POSES[18]
+            APRILTAGS
+                    .getTagPose(18)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[18].plus(Rotation2d.kCCW_90deg))),
             // B
-            APRILTAG_POSES[18]
+            APRILTAGS
+                    .getTagPose(18)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[18].plus(Rotation2d.kCW_90deg))),
             // C
-            APRILTAG_POSES[17]
+            APRILTAGS
+                    .getTagPose(17)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[17].plus(Rotation2d.kCCW_90deg))),
             // D
-            APRILTAG_POSES[17]
+            APRILTAGS
+                    .getTagPose(17)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[17].plus(Rotation2d.kCW_90deg))),
             // E
-            APRILTAG_POSES[22]
+            APRILTAGS
+                    .getTagPose(22)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[22].plus(Rotation2d.kCCW_90deg))),
             // F
-            APRILTAG_POSES[22]
+            APRILTAGS
+                    .getTagPose(22)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[22].plus(Rotation2d.kCW_90deg))),
             // G
-            APRILTAG_POSES[21]
+            APRILTAGS
+                    .getTagPose(21)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[21].plus(Rotation2d.kCCW_90deg))),
             // H
-            APRILTAG_POSES[21]
+            APRILTAGS
+                    .getTagPose(21)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[21].plus(Rotation2d.kCW_90deg))),
             // I
-            APRILTAG_POSES[20]
+            APRILTAGS
+                    .getTagPose(20)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[20].plus(Rotation2d.kCCW_90deg))),
             // J
-            APRILTAG_POSES[20]
+            APRILTAGS
+                    .getTagPose(20)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[20].plus(Rotation2d.kCW_90deg))),
             // K
-            APRILTAG_POSES[19]
+            APRILTAGS
+                    .getTagPose(19)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[19].plus(Rotation2d.kCCW_90deg))),
             // L
-            APRILTAG_POSES[19]
+            APRILTAGS
+                    .getTagPose(19)
+                    .orElseThrow()
+                    .getTranslation()
                     .toTranslation2d()
                     .plus(new Translation2d(
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[19].plus(Rotation2d.kCW_90deg))),
@@ -414,13 +426,21 @@ public final class Constants {
 
         public static final List<Pose2d> BLUE_CORAL_STATION_POSES = List.of(
                 new Pose2d(
-                        new Translation2d(APRILTAG_POSES[13].getX(), APRILTAG_POSES[13].getY())
+                        APRILTAGS
+                                .getTagPose(13)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
                                 .plus(new Translation2d(
                                         CORAL_STATION_TO_ROBOT_DISTANCE,
                                         APRILTAG_ROTATIONS[13].plus(Rotation2d.k180deg))),
                         APRILTAG_ROTATIONS[13]),
                 new Pose2d(
-                        new Translation2d(APRILTAG_POSES[12].getX(), APRILTAG_POSES[12].getY())
+                        APRILTAGS
+                                .getTagPose(12)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
                                 .plus(new Translation2d(
                                         CORAL_STATION_TO_ROBOT_DISTANCE,
                                         APRILTAG_ROTATIONS[12].plus(Rotation2d.k180deg))),
@@ -428,13 +448,21 @@ public final class Constants {
 
         public static final List<Pose2d> RED_CORAL_STATION_POSES = List.of(
                 new Pose2d(
-                        new Translation2d(APRILTAG_POSES[1].getX(), APRILTAG_POSES[1].getY())
+                        APRILTAGS
+                                .getTagPose(1)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
                                 .plus(new Translation2d(
                                         CORAL_STATION_TO_ROBOT_DISTANCE,
                                         APRILTAG_ROTATIONS[1].plus(Rotation2d.k180deg))),
                         APRILTAG_ROTATIONS[1]),
                 new Pose2d(
-                        new Translation2d(APRILTAG_POSES[2].getX(), APRILTAG_POSES[2].getY())
+                        APRILTAGS
+                                .getTagPose(2)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
                                 .plus(new Translation2d(
                                         CORAL_STATION_TO_ROBOT_DISTANCE,
                                         APRILTAG_ROTATIONS[2].plus(Rotation2d.k180deg))),

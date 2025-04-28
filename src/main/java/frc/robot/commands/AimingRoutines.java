@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import static edu.wpi.first.units.Units.Meters;
 import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
@@ -8,7 +7,6 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.GoalEndState;
-import com.pathplanner.lib.path.IdealStartingState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
@@ -16,6 +14,7 @@ import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -26,7 +25,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.Constants.FieldConstants;
 import frc.robot.Constants.VisionConstants;
-import frc.robot.RobotContainer.CageLocation;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.requests.DriveFacingAngle;
 import frc.robot.subsystems.drive.requests.DriveFacingPosition;
@@ -34,7 +32,6 @@ import frc.robot.subsystems.drive.requests.DriveToPose;
 import frc.robot.util.Aiming;
 import java.util.List;
 import java.util.function.DoubleSupplier;
-import java.util.function.Supplier;
 
 /**
  * This class provides instanced command factories for swerve drive aiming.
@@ -47,8 +44,6 @@ public class AimingRoutines {
     private final DoubleSupplier m_velocityXSupplier;
     private final DoubleSupplier m_velocityYSupplier;
     private final DoubleSupplier m_deadbandSupplier;
-
-    private final Supplier<CageLocation> m_cageSupplier;
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
     private final NetworkTable cameraTable = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
@@ -95,13 +90,11 @@ public class AimingRoutines {
             CommandSwerveDrivetrain drivetrain,
             DoubleSupplier velocityXSupplier,
             DoubleSupplier velocityYSupplier,
-            DoubleSupplier deadbandSupplier,
-            Supplier<CageLocation> cageSupplier) {
+            DoubleSupplier deadbandSupplier) {
         m_drivetrain = drivetrain;
         m_velocityXSupplier = velocityXSupplier;
         m_velocityYSupplier = velocityYSupplier;
         m_deadbandSupplier = deadbandSupplier;
-        m_cageSupplier = cageSupplier;
     }
 
     public Command alignWithCoralStation(boolean leftStation) {
@@ -288,105 +281,6 @@ public class AimingRoutines {
     }
 
     /**
-     * If the robot is on it's alliance's side, it will drive in front of the cage, then forwards/behind the cage, then to the cage's center.
-     * If the robot is on the opposing alliance's side, it will drive behind the cage, then forwards/in front of the cage, then to the cage's center.
-     */
-    public Command driveIntoCage() {
-        return Commands.either(
-                Commands.sequence(
-                        driveNearCageCommand(true, true, false),
-                        driveNearCageCommand(false, false, false),
-                        driveIntoCageCommand(false)),
-                Commands.sequence(
-                        driveNearCageCommand(true, false, true),
-                        driveNearCageCommand(false, true, true),
-                        driveIntoCageCommand(true)),
-                () -> {
-                    Translation2d robotPosition = m_drivetrain.getState().Pose.getTranslation();
-                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                    return (alliance == Alliance.Blue
-                                    && robotPosition.getX() < FieldConstants.BARGE_CENTER_X_DISTANCE.in(Meters))
-                            || (alliance == Alliance.Red
-                                    && robotPosition.getX() > FieldConstants.BARGE_CENTER_X_DISTANCE.in(Meters));
-                });
-    }
-
-    /**
-     * Creates a command that drives up to the cage with PathPlanner.
-     * @param driveFast True if you want to drive at full speed, false if you want to be slow (like when catching the cage)
-     * @param inFront True if you want to drive before the cage, false if you want to drive past it (according to driver station perspective).
-     * @param facingLeft True if you want the robot to face left, false if you want it to face right (according to driver station perspective).
-     * @return A deferred command that is not created until it is executed.
-     */
-    private Command driveNearCageCommand(boolean driveFast, boolean inFront, boolean facingLeft) {
-        return m_drivetrain.defer(() -> {
-            CageLocation cage = m_cageSupplier.get();
-
-            Translation2d cagePosition;
-            Translation2d targetPosition;
-            Rotation2d targetRotation;
-
-            if (cage == CageLocation.LEFT) {
-                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(2);
-            } else if (cage == CageLocation.MIDDLE) {
-                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(1);
-            } else {
-                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(0);
-            }
-            if (inFront) {
-                targetPosition = cagePosition.minus(FieldConstants.BARGE_TAPE_DISTANCE);
-            } else {
-                targetPosition = cagePosition.plus(FieldConstants.BARGE_TAPE_DISTANCE);
-            }
-            if (facingLeft) {
-                targetRotation = Rotation2d.kCCW_90deg;
-            } else {
-                targetRotation = Rotation2d.kCW_90deg;
-            }
-
-            PathConstraints pathConstraints;
-            if (driveFast == true) {
-                pathConstraints = ON_THE_FLY_CONSTRAINTS;
-            } else {
-                pathConstraints = CAGE_CONSTRAINTS;
-            }
-
-            return generatePath(
-                    m_drivetrain.getState(), new Pose2d(targetPosition, targetRotation), pathConstraints, true);
-        });
-    }
-
-    /**
-     * Creates a command that drives into the cage with PathPlanner.
-     * @param facingLeft True if you want the robot to face left, false if you want it to face right (according to driver station perspective).
-     * @return A deferred command that is not created until it is executed.
-     */
-    private Command driveIntoCageCommand(boolean facingLeft) {
-        return m_drivetrain.defer(() -> {
-            CageLocation cage = m_cageSupplier.get();
-
-            Translation2d cagePosition;
-            Rotation2d targetRotation;
-
-            if (cage == CageLocation.LEFT) {
-                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(2);
-            } else if (cage == CageLocation.MIDDLE) {
-                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(1);
-            } else {
-                cagePosition = FieldConstants.BLUE_CAGE_POSITIONS.get(0);
-            }
-            if (facingLeft) {
-                targetRotation = Rotation2d.kCCW_90deg;
-            } else {
-                targetRotation = Rotation2d.kCW_90deg;
-            }
-
-            return generatePath(
-                    m_drivetrain.getState(), new Pose2d(cagePosition, targetRotation), CAGE_CONSTRAINTS, true);
-        });
-    }
-
-    /**
      * Generates a path-following command that drives the robot to a target position and rotation.
      * <p>
      * The driver must make sure to NEVER be driving straight away from the target when this method is called,
@@ -404,9 +298,7 @@ public class AimingRoutines {
             Pose2d targetPose,
             PathConstraints pathConstraints,
             boolean allowTargetFlipping) {
-        Rotation2d currentDirectionOfTravel =
-                new Rotation2d(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond);
-
+        // Save the target position and rotation for potential flipping
         Translation2d targetPosition = targetPose.getTranslation();
         Rotation2d targetRotation = targetPose.getRotation();
 
@@ -415,23 +307,34 @@ public class AimingRoutines {
             targetRotation = FlippingUtil.flipFieldRotation(targetRotation);
         }
 
+        // In simulation, the robot has a chance of being perfectly still, which would require us to use the direction
+        // to the target instead.
+        Rotation2d directionOfTravel;
+        if (currentState.Speeds.vxMetersPerSecond == 0.0 && currentState.Speeds.vyMetersPerSecond == 0.0) {
+            Translation2d directionToTarget = targetPosition.minus(currentState.Pose.getTranslation());
+            directionOfTravel = new Rotation2d(directionToTarget.getX(), directionToTarget.getY());
+        } else {
+            // You need to convert the robot-relative speeds to field-relative speeds to find the actual direction of
+            // travel.
+            ChassisSpeeds currentFieldSpeeds =
+                    ChassisSpeeds.fromRobotRelativeSpeeds(currentState.Speeds, currentState.Pose.getRotation());
+            directionOfTravel =
+                    new Rotation2d(currentFieldSpeeds.vxMetersPerSecond, currentFieldSpeeds.vyMetersPerSecond);
+        }
+
         // Create a list of waypoints from poses. Each pose represents one waypoint.
-        // The rotation component of the pose should be the direction of travel. Do not use holonomic rotation.
+        // The rotation component of the pose should be the direction of travel for the first waypoint, and the end
+        // robot rotation for the last waypoint.
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-                new Pose2d(currentState.Pose.getX(), currentState.Pose.getY(), currentDirectionOfTravel),
+                new Pose2d(currentState.Pose.getX(), currentState.Pose.getY(), directionOfTravel),
                 new Pose2d(targetPosition.getX(), targetPosition.getY(), targetRotation));
 
-        IdealStartingState startingState = new IdealStartingState(
-                Math.hypot(currentState.Speeds.vxMetersPerSecond, currentState.Speeds.vyMetersPerSecond),
-                currentState.Pose.getRotation());
-
+        // DO NOT enter an ideal starting state for on-the-fly paths.
+        // PathPlanner should generate the trajectory when AutoBuilder creates the command.
+        // AutoBuilder will do a much better job because it has more information about the robot.
         PathPlannerPath path =
-                new PathPlannerPath(waypoints, pathConstraints, startingState, new GoalEndState(0, targetRotation));
+                new PathPlannerPath(waypoints, pathConstraints, null, new GoalEndState(0, targetRotation));
         path.preventFlipping = true;
-
-        // System.out.println("Target x: " + Units.metersToInches(treePose.getX()) + "\nTarget y: "
-        //         + Units.metersToInches(treePose.getY()) + "\nTarget direction: "
-        //         + treePose.getRotation().getDegrees());
 
         return AutoBuilder.followPath(path);
     }
