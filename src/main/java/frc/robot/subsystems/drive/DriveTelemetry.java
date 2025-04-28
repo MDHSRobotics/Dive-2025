@@ -41,7 +41,7 @@ public class DriveTelemetry {
             .getStructTopic("Pose", Pose2d.struct)
             .publish();
     private final StructPublisher<ChassisSpeeds> driveSpeedsPub =
-            driveStateTable.getStructTopic("Speeds", ChassisSpeeds.struct).publish();
+            driveStateTable.getStructTopic("Field Speeds", ChassisSpeeds.struct).publish();
     private final StructArrayPublisher<SwerveModuleState> driveModuleStatesPub = driveStateTable
             .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
             .publish();
@@ -72,7 +72,8 @@ public class DriveTelemetry {
 
         /* Telemeterize the swerve drive state */
         drivePosePub.set(state.Pose, timestampMicroseconds);
-        driveSpeedsPub.set(state.Speeds, timestampMicroseconds);
+        driveSpeedsPub.set(
+                ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation()), timestampMicroseconds);
         driveModuleStatesPub.set(state.ModuleStates, timestampMicroseconds);
         driveModuleTargetsPub.set(state.ModuleTargets, timestampMicroseconds);
         driveModulePositionsPub.set(state.ModulePositions, timestampMicroseconds);

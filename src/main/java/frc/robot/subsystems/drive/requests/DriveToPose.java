@@ -95,7 +95,7 @@ public class DriveToPose implements ResettableSwerveRequest {
 
     // NetworkTables logging
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Swerve Requests").getSubTable("X Y Heading Alignment");
+    private final NetworkTable table = inst.getTable("Swerve Requests").getSubTable("Drive to Pose");
     private final StructPublisher<Pose2d> goalPositionPub =
             table.getSubTable("Goal").getStructTopic("Position", Pose2d.struct).publish();
 
