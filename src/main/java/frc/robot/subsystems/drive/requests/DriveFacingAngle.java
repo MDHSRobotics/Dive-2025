@@ -35,32 +35,32 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * As a result, a TargetDirection of 90 degrees will point along
      * the Y axis, or to the left.
      */
-    private Rotation2d targetDirection = new Rotation2d();
+    private Rotation2d m_targetDirection = new Rotation2d();
 
     /**
      * The perspective to use when determing which direction is forward for aiming.
      * By default, this swerve request considers the angle to be in <a
      *     href="https://docs.wpilib.org/en/stable/docs/software/basic-programming/coordinate-system.html#always-blue-origin">the blue coordinate system.</a>
      */
-    private ForwardPerspectiveValue aimingPerspective = ForwardPerspectiveValue.BlueAlliance;
+    private ForwardPerspectiveValue m_aimingPerspective = ForwardPerspectiveValue.BlueAlliance;
 
-    private final FieldCentric fieldCentric = new FieldCentric();
+    private final FieldCentric m_fieldCentric = new FieldCentric();
 
-    public final PhoenixPIDController headingController;
-    private final double maxAngularVelocity;
+    public final PhoenixPIDController m_headingController;
+    private final double m_maxAngularVelocity;
 
-    private boolean resetRequested = false;
-    private boolean motionIsFinished = false;
+    private boolean m_resetRequested = false;
+    private boolean m_motionIsFinished = false;
 
     // NetworkTables logging
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Swerve Requests").getSubTable("Drive Facing Angle");
-    public final DoublePublisher goalPositionPub =
-            table.getSubTable("Goal").getDoubleTopic("Position (radians)").publish();
-    public final DoublePublisher appliedVelocityPub =
-            table.getDoubleTopic("Applied Velocity (rads per sec)").publish();
-    public final BooleanPublisher motionIsFinishedPub =
-            table.getBooleanTopic("Motion is Finished").publish();
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    private final NetworkTable m_table = m_inst.getTable("Swerve Requests").getSubTable("Drive Facing Angle");
+    public final DoublePublisher m_goalPositionPub =
+            m_table.getSubTable("Goal").getDoubleTopic("Position (radians)").publish();
+    public final DoublePublisher m_appliedVelocityPub =
+            m_table.getDoubleTopic("Applied Velocity (rads per sec)").publish();
+    public final BooleanPublisher m_motionIsFinishedPub =
+            m_table.getBooleanTopic("Motion is Finished").publish();
 
     /**
      * Creates a new request with the given gains.
@@ -69,62 +69,62 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      */
     public DriveFacingAngle(double kRotationP, double maxAngularVelocity) {
-        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
-        headingController.enableContinuousInput(-Math.PI, Math.PI);
-        this.maxAngularVelocity = maxAngularVelocity;
+        m_headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
+        m_headingController.enableContinuousInput(-Math.PI, Math.PI);
+        m_maxAngularVelocity = maxAngularVelocity;
     }
 
     /**
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Rotation2d fakeTargetDirection = targetDirection;
+        Rotation2d fakeTargetDirection = m_targetDirection;
 
-        if (resetRequested) {
-            headingController.reset();
-            this.resetRequested = false;
+        if (m_resetRequested) {
+            m_headingController.reset();
+            m_resetRequested = false;
         }
 
         /* If the user requested a target direction according to the operator perspective, rotate our target direction by the angle */
-        if (aimingPerspective == ForwardPerspectiveValue.OperatorPerspective) {
-            fakeTargetDirection = targetDirection.rotateBy(parameters.operatorForwardDirection);
+        if (m_aimingPerspective == ForwardPerspectiveValue.OperatorPerspective) {
+            fakeTargetDirection = m_targetDirection.rotateBy(parameters.operatorForwardDirection);
         }
 
-        double toApplyOmega = headingController.calculate(
+        double toApplyOmega = m_headingController.calculate(
                 parameters.currentPose.getRotation().getRadians(),
                 fakeTargetDirection.getRadians(),
                 parameters.timestamp);
 
-        if (maxAngularVelocity > 0.0) {
-            if (toApplyOmega > maxAngularVelocity) {
-                toApplyOmega = maxAngularVelocity;
-            } else if (toApplyOmega < -maxAngularVelocity) {
-                toApplyOmega = -maxAngularVelocity;
+        if (m_maxAngularVelocity > 0.0) {
+            if (toApplyOmega > m_maxAngularVelocity) {
+                toApplyOmega = m_maxAngularVelocity;
+            } else if (toApplyOmega < -m_maxAngularVelocity) {
+                toApplyOmega = -m_maxAngularVelocity;
             }
         }
 
-        if (headingController.atSetpoint()) {
+        if (m_headingController.atSetpoint()) {
             toApplyOmega = 0;
         }
 
-        this.motionIsFinished = headingController.atSetpoint();
+        m_motionIsFinished = m_headingController.atSetpoint();
 
         // NetworkTables logging
         long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
 
-        goalPositionPub.set(targetDirection.getRadians(), timestampMicroseconds);
-        appliedVelocityPub.set(toApplyOmega, timestampMicroseconds);
-        motionIsFinishedPub.set(motionIsFinished, timestampMicroseconds);
+        m_goalPositionPub.set(m_targetDirection.getRadians(), timestampMicroseconds);
+        m_appliedVelocityPub.set(toApplyOmega, timestampMicroseconds);
+        m_motionIsFinishedPub.set(m_motionIsFinished, timestampMicroseconds);
 
-        return fieldCentric.withRotationalRate(toApplyOmega).apply(parameters, modulesToApply);
+        return m_fieldCentric.withRotationalRate(toApplyOmega).apply(parameters, modulesToApply);
     }
 
     /**
      * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
     public void resetRequest() {
-        this.resetRequested = true;
-        this.motionIsFinished = false;
+        m_resetRequested = true;
+        m_motionIsFinished = false;
     }
 
     /**
@@ -137,7 +137,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withVelocityX(double newVelocityX) {
-        this.fieldCentric.withVelocityX(newVelocityX);
+        m_fieldCentric.withVelocityX(newVelocityX);
         return this;
     }
 
@@ -151,7 +151,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withVelocityX(LinearVelocity newVelocityX) {
-        this.fieldCentric.withVelocityX(newVelocityX);
+        m_fieldCentric.withVelocityX(newVelocityX);
         return this;
     }
 
@@ -166,7 +166,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withVelocityY(double newVelocityY) {
-        this.fieldCentric.withVelocityY(newVelocityY);
+        m_fieldCentric.withVelocityY(newVelocityY);
         return this;
     }
 
@@ -181,7 +181,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withVelocityY(LinearVelocity newVelocityY) {
-        this.fieldCentric.withVelocityY(newVelocityY);
+        m_fieldCentric.withVelocityY(newVelocityY);
         return this;
     }
 
@@ -196,7 +196,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withTargetDirection(Rotation2d newTargetDirection) {
-        this.targetDirection = newTargetDirection;
+        m_targetDirection = newTargetDirection;
         return this;
     }
 
@@ -209,7 +209,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withDeadband(double newDeadband) {
-        this.fieldCentric.withDeadband(newDeadband);
+        m_fieldCentric.withDeadband(newDeadband);
         return this;
     }
 
@@ -222,7 +222,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withDeadband(LinearVelocity newDeadband) {
-        this.fieldCentric.withDeadband(newDeadband);
+        m_fieldCentric.withDeadband(newDeadband);
         return this;
     }
 
@@ -236,7 +236,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withCenterOfRotation(Translation2d newCenterOfRotation) {
-        this.fieldCentric.withCenterOfRotation(newCenterOfRotation);
+        m_fieldCentric.withCenterOfRotation(newCenterOfRotation);
         return this;
     }
 
@@ -249,7 +249,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
-        this.fieldCentric.withDriveRequestType(newDriveRequestType);
+        m_fieldCentric.withDriveRequestType(newDriveRequestType);
         return this;
     }
 
@@ -262,7 +262,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
-        this.fieldCentric.withSteerRequestType(newSteerRequestType);
+        m_fieldCentric.withSteerRequestType(newSteerRequestType);
         return this;
     }
 
@@ -276,7 +276,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
-        this.fieldCentric.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
+        m_fieldCentric.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
         return this;
     }
 
@@ -289,7 +289,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
-        this.fieldCentric.withForwardPerspective(newDrivingPerspective);
+        m_fieldCentric.withForwardPerspective(newDrivingPerspective);
         return this;
     }
 
@@ -302,7 +302,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withAimingPerspective(ForwardPerspectiveValue newAimingPerspective) {
-        this.aimingPerspective = newAimingPerspective;
+        m_aimingPerspective = newAimingPerspective;
         return this;
     }
 
@@ -315,7 +315,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withPIDGains(double kp, double ki, double kd) {
-        this.headingController.setPID(kp, ki, kd);
+        m_headingController.setPID(kp, ki, kd);
         return this;
     }
 
@@ -326,7 +326,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingAngle withTolerance(Angle toleranceAmount) {
-        this.headingController.setTolerance(toleranceAmount.in(Radians));
+        m_headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
 
@@ -335,6 +335,6 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
      * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.DriveFacingAngle#withTolerance(Angle) withTolerance()}
      */
     public boolean motionIsFinished() {
-        return this.motionIsFinished;
+        return m_motionIsFinished;
     }
 }

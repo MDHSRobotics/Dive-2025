@@ -82,9 +82,9 @@ public class Elevator extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final AbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
 
-    private final SysIdRoutine m_armRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(Volts.of(0.25).per(Second), Volts.of(1), null),
-            new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
+    // private final SysIdRoutine m_armRoutine = new SysIdRoutine(
+    //         new SysIdRoutine.Config(Volts.of(0.25).per(Second), Volts.of(1), null),
+    //         new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
 
     private final ArmFeedforward m_armFeedforward = new ArmFeedforward(ARM_K_S, ARM_K_G, ARM_K_V, ARM_K_A);
     private final TrapezoidProfile m_armProfile =
@@ -101,24 +101,25 @@ public class Elevator extends SubsystemBase {
 
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Elevator");
-    private final DoubleEntry flywheelSpeedEntry =
-            table.getDoubleTopic("Flywheel Speed").getEntry(1);
-    private final DoublePublisher armGoalPub =
-            table.getDoubleTopic("Arm Goal Position").publish();
-    private final DoublePublisher elevatorGoalPub =
-            table.getDoubleTopic("Elevator Goal Position").publish();
-    private final DoubleEntry pGainEntry =
-            table.getDoubleTopic("Arm P Gain").getEntry(ARM_K_P, PubSubOption.excludeSelf(true));
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    private final NetworkTable m_table = m_inst.getTable("Elevator");
+    private final DoubleEntry m_flywheelSpeedEntry =
+            m_table.getDoubleTopic("Flywheel Speed").getEntry(1);
+    private final DoublePublisher m_armGoalPub =
+            m_table.getDoubleTopic("Arm Goal Position").publish();
+    private final DoublePublisher m_elevatorGoalPub =
+            m_table.getDoubleTopic("Elevator Goal Position").publish();
+    private final DoubleEntry m_pGainEntry =
+            m_table.getDoubleTopic("Arm P Gain").getEntry(ARM_K_P, PubSubOption.excludeSelf(true));
 
     private double m_prevVelocity = 0;
-    private final DoublePublisher armAccelPub = table.getDoubleTopic("Accel").publish(PubSubOption.sendAll(true));
+    private final DoublePublisher m_armAccelPub =
+            m_table.getDoubleTopic("Accel").publish(PubSubOption.sendAll(true));
 
-    private final DoublePublisher currentPositionSetpointPub =
-            table.getDoubleTopic("Current Setpoint Position").publish();
-    private final DoublePublisher currentVelocitySetpointPub =
-            table.getDoubleTopic("Current Setpoint Velocity").publish();
+    private final DoublePublisher m_currentPositionSetpointPub =
+            m_table.getDoubleTopic("Current Setpoint Position").publish();
+    private final DoublePublisher m_currentVelocitySetpointPub =
+            m_table.getDoubleTopic("Current Setpoint Velocity").publish();
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -186,10 +187,10 @@ public class Elevator extends SubsystemBase {
         m_flywheelsMotor.configure(flywheelsConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // You need to publish a value for the entry to appear in NetworkTables
-        flywheelSpeedEntry.set(1);
+        m_flywheelSpeedEntry.set(1);
 
-        pGainEntry.set(ARM_K_P);
-        inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+        m_pGainEntry.set(ARM_K_P);
+        m_inst.addListener(m_pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             SparkFlexConfig tempConfig = new SparkFlexConfig();
             tempConfig.closedLoop.p(event.valueData.value.getDouble());
             m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
@@ -200,7 +201,7 @@ public class Elevator extends SubsystemBase {
     public void periodic() {
         double armVelocity = m_armEncoder.getVelocity();
         double armAccel = (armVelocity - m_prevVelocity) / 0.02;
-        armAccelPub.set(armAccel);
+        m_armAccelPub.set(armAccel);
         m_prevVelocity = armVelocity;
     }
 
@@ -222,7 +223,7 @@ public class Elevator extends SubsystemBase {
         }
         m_elevatorPosition.withPosition(position);
         m_elevatorMotor.setControl(m_elevatorPosition);
-        elevatorGoalPub.set(position);
+        m_elevatorGoalPub.set(position);
     }
 
     private void setArmPosition(ElevatorArmPositions armPosition) {
@@ -242,7 +243,7 @@ public class Elevator extends SubsystemBase {
             DriverStation.reportWarning("Attempted to set the elevator arm to a null position!", true);
             return;
         }
-        armGoalPub.set(m_armPosition);
+        m_armGoalPub.set(m_armPosition);
         m_armGoal.position = m_armPosition;
         m_armStartingSetpoint.position = m_armEncoder.getPosition();
         m_armStartingSetpoint.velocity = m_armEncoder.getVelocity();
@@ -259,8 +260,8 @@ public class Elevator extends SubsystemBase {
         m_armController.setReference(
                 nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
         m_armCurrentSetpoint = nextArmSetpoint;
-        currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
-        currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
+        m_currentPositionSetpointPub.set(m_armCurrentSetpoint.position);
+        m_currentVelocitySetpointPub.set(m_armCurrentSetpoint.velocity);
     }
 
     private boolean wheelsAreStopped() {

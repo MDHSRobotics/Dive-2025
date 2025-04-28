@@ -25,9 +25,9 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
     /**
      * The desired positions to face.
      */
-    private List<Translation2d> targetPositions = List.of(new Translation2d());
+    private List<Translation2d> m_targetPositions = List.of(new Translation2d());
 
-    private final DriveFacingPosition driveFacingPosition;
+    private final DriveFacingPosition m_driveFacingPosition;
 
     /**
      * Creates a new request with the given gains.
@@ -36,23 +36,23 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      */
     public DriveFacingNearestPosition(double kRotationP, double maxAngularVelocity) {
-        this.driveFacingPosition = new DriveFacingPosition(kRotationP, maxAngularVelocity);
+        m_driveFacingPosition = new DriveFacingPosition(kRotationP, maxAngularVelocity);
     }
 
     /**
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Translation2d targetPosition = parameters.currentPose.getTranslation().nearest(targetPositions);
+        Translation2d targetPosition = parameters.currentPose.getTranslation().nearest(m_targetPositions);
 
-        return driveFacingPosition.withTargetPosition(targetPosition).apply(parameters, modulesToApply);
+        return m_driveFacingPosition.withTargetPosition(targetPosition).apply(parameters, modulesToApply);
     }
 
     /**
      * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
     public void resetRequest() {
-        this.driveFacingPosition.resetRequest();
+        m_driveFacingPosition.resetRequest();
     }
 
     /**
@@ -65,7 +65,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withVelocityX(double newVelocityX) {
-        this.driveFacingPosition.withVelocityX(newVelocityX);
+        m_driveFacingPosition.withVelocityX(newVelocityX);
         return this;
     }
 
@@ -79,7 +79,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withVelocityX(LinearVelocity newVelocityX) {
-        this.driveFacingPosition.withVelocityX(newVelocityX);
+        m_driveFacingPosition.withVelocityX(newVelocityX);
         return this;
     }
 
@@ -94,7 +94,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withVelocityY(double newVelocityY) {
-        this.driveFacingPosition.withVelocityY(newVelocityY);
+        m_driveFacingPosition.withVelocityY(newVelocityY);
         return this;
     }
 
@@ -109,7 +109,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withVelocityY(LinearVelocity newVelocityY) {
-        this.driveFacingPosition.withVelocityY(newVelocityY);
+        m_driveFacingPosition.withVelocityY(newVelocityY);
         return this;
     }
 
@@ -123,7 +123,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withTargetPositions(List<Translation2d> newTargetPositions) {
-        this.targetPositions = newTargetPositions;
+        m_targetPositions = newTargetPositions;
         return this;
     }
 
@@ -136,7 +136,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withDeadband(double newDeadband) {
-        this.driveFacingPosition.withDeadband(newDeadband);
+        m_driveFacingPosition.withDeadband(newDeadband);
         return this;
     }
 
@@ -149,7 +149,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withDeadband(LinearVelocity newDeadband) {
-        this.driveFacingPosition.withDeadband(newDeadband);
+        m_driveFacingPosition.withDeadband(newDeadband);
         return this;
     }
 
@@ -163,7 +163,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withCenterOfRotation(Translation2d newCenterOfRotation) {
-        this.driveFacingPosition.withCenterOfRotation(newCenterOfRotation);
+        m_driveFacingPosition.withCenterOfRotation(newCenterOfRotation);
         return this;
     }
 
@@ -176,7 +176,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
-        this.driveFacingPosition.withDriveRequestType(newDriveRequestType);
+        m_driveFacingPosition.withDriveRequestType(newDriveRequestType);
         return this;
     }
 
@@ -189,7 +189,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
-        this.driveFacingPosition.withSteerRequestType(newSteerRequestType);
+        m_driveFacingPosition.withSteerRequestType(newSteerRequestType);
         return this;
     }
 
@@ -203,7 +203,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
-        this.driveFacingPosition.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
+        m_driveFacingPosition.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
         return this;
     }
 
@@ -216,7 +216,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
-        this.driveFacingPosition.withDrivingPerspective(newDrivingPerspective);
+        m_driveFacingPosition.withDrivingPerspective(newDrivingPerspective);
         return this;
     }
 
@@ -229,7 +229,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withPIDGains(double kp, double ki, double kd) {
-        this.driveFacingPosition.withPIDGains(kp, ki, kd);
+        m_driveFacingPosition.withPIDGains(kp, ki, kd);
         return this;
     }
 
@@ -240,7 +240,7 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveFacingNearestPosition withTolerance(Angle toleranceAmount) {
-        this.driveFacingPosition.withTolerance(toleranceAmount);
+        m_driveFacingPosition.withTolerance(toleranceAmount);
         return this;
     }
 
@@ -249,6 +249,6 @@ public class DriveFacingNearestPosition implements ResettableSwerveRequest {
      * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.DriveFacingNearestPosition#withTolerance(Angle) withTolerance()}
      */
     public boolean motionIsFinished() {
-        return this.driveFacingPosition.motionIsFinished();
+        return m_driveFacingPosition.motionIsFinished();
     }
 }

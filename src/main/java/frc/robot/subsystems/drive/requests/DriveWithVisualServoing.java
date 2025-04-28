@@ -37,14 +37,14 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * The target direction for the swerve request.
      * This field is not modifiable outside of this class because it is determined by tx.
      */
-    private Rotation2d targetDirection = new Rotation2d();
+    private Rotation2d m_targetDirection = new Rotation2d();
 
-    private final DriveFacingAngle driveFacingAngle;
+    private final DriveFacingAngle m_driveFacingAngle;
 
-    private boolean resetRequested = false;
+    private boolean m_resetRequested = false;
 
-    private final DoubleSubscriber txSub;
-    private final AtomicReference<Double> txValue = new AtomicReference<Double>(0.0);
+    private final DoubleSubscriber m_txSub;
+    private final AtomicReference<Double> m_txValue = new AtomicReference<Double>(0.0);
 
     /**
      * Creates a new profiled request with the given gains and camera.
@@ -54,16 +54,16 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @param cameraTable The NetworkTable for the limelight.
      */
     public DriveWithVisualServoing(double kRotationP, double maxAngularVelocity, NetworkTable cameraTable) {
-        this.driveFacingAngle = new DriveFacingAngle(kRotationP, maxAngularVelocity);
+        m_driveFacingAngle = new DriveFacingAngle(kRotationP, maxAngularVelocity);
 
-        this.txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
+        m_txSub = cameraTable.getDoubleTopic("tx").subscribe(0);
 
         cameraTable
                 .getInstance()
                 .addListener(
-                        txSub,
+                        m_txSub,
                         EnumSet.of(NetworkTableEvent.Kind.kValueAll),
-                        event -> txValue.set(event.valueData.value.getDouble()));
+                        event -> m_txValue.set(event.valueData.value.getDouble()));
     }
 
     /**
@@ -72,29 +72,29 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         Rotation2d currentAngle = parameters.currentPose.getRotation();
 
-        if (resetRequested) {
-            this.targetDirection = currentAngle;
-            txValue.set(null);
-            this.resetRequested = false;
+        if (m_resetRequested) {
+            m_targetDirection = currentAngle;
+            m_txValue.set(null);
+            m_resetRequested = false;
         }
 
-        Double tx = txValue.getAndSet(null);
+        Double tx = m_txValue.getAndSet(null);
         // If tx has updated, update the target direction.
         if (tx != null) {
             // You need to subtract instead of adding because the current angle is counterclockwise, but tx is
             // clockwise.
-            this.targetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
+            m_targetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
         }
 
-        return driveFacingAngle.withTargetDirection(this.targetDirection).apply(parameters, modulesToApply);
+        return m_driveFacingAngle.withTargetDirection(m_targetDirection).apply(parameters, modulesToApply);
     }
 
     /**
      * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
     public void resetRequest() {
-        this.resetRequested = true;
-        this.driveFacingAngle.resetRequest();
+        m_resetRequested = true;
+        m_driveFacingAngle.resetRequest();
     }
 
     /**
@@ -107,7 +107,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withVelocityX(double newVelocityX) {
-        this.driveFacingAngle.withVelocityX(newVelocityX);
+        m_driveFacingAngle.withVelocityX(newVelocityX);
         return this;
     }
 
@@ -121,7 +121,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withVelocityX(LinearVelocity newVelocityX) {
-        this.driveFacingAngle.withVelocityX(newVelocityX);
+        m_driveFacingAngle.withVelocityX(newVelocityX);
         return this;
     }
 
@@ -136,7 +136,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withVelocityY(double newVelocityY) {
-        this.driveFacingAngle.withVelocityY(newVelocityY);
+        m_driveFacingAngle.withVelocityY(newVelocityY);
         return this;
     }
 
@@ -151,7 +151,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withVelocityY(LinearVelocity newVelocityY) {
-        this.driveFacingAngle.withVelocityY(newVelocityY);
+        m_driveFacingAngle.withVelocityY(newVelocityY);
         return this;
     }
 
@@ -164,7 +164,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withDeadband(double newDeadband) {
-        this.driveFacingAngle.withDeadband(newDeadband);
+        m_driveFacingAngle.withDeadband(newDeadband);
         return this;
     }
 
@@ -177,7 +177,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withDeadband(LinearVelocity newDeadband) {
-        this.driveFacingAngle.withDeadband(newDeadband);
+        m_driveFacingAngle.withDeadband(newDeadband);
         return this;
     }
 
@@ -191,7 +191,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withCenterOfRotation(Translation2d newCenterOfRotation) {
-        this.driveFacingAngle.withCenterOfRotation(newCenterOfRotation);
+        m_driveFacingAngle.withCenterOfRotation(newCenterOfRotation);
         return this;
     }
 
@@ -204,7 +204,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
-        this.driveFacingAngle.withDriveRequestType(newDriveRequestType);
+        m_driveFacingAngle.withDriveRequestType(newDriveRequestType);
         return this;
     }
 
@@ -217,7 +217,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
-        this.driveFacingAngle.withSteerRequestType(newSteerRequestType);
+        m_driveFacingAngle.withSteerRequestType(newSteerRequestType);
         return this;
     }
 
@@ -231,7 +231,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
-        this.driveFacingAngle.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
+        m_driveFacingAngle.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
         return this;
     }
 
@@ -244,7 +244,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withDrivingPerspective(ForwardPerspectiveValue newDrivingPerspective) {
-        this.driveFacingAngle.withDrivingPerspective(newDrivingPerspective);
+        m_driveFacingAngle.withDrivingPerspective(newDrivingPerspective);
         return this;
     }
 
@@ -257,7 +257,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withPIDGains(double kp, double ki, double kd) {
-        this.driveFacingAngle.withPIDGains(kp, ki, kd);
+        m_driveFacingAngle.withPIDGains(kp, ki, kd);
         return this;
     }
 
@@ -268,7 +268,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveWithVisualServoing withTolerance(Angle toleranceAmount) {
-        this.driveFacingAngle.withTolerance(toleranceAmount);
+        m_driveFacingAngle.withTolerance(toleranceAmount);
         return this;
     }
 
@@ -277,6 +277,6 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * based on the tolerance set using {@link frc.robot.subsystems.drive.requests.DriveFacingAngle#withTolerance(Angle) withTolerance()}
      */
     public boolean motionIsFinished() {
-        return this.driveFacingAngle.motionIsFinished();
+        return m_driveFacingAngle.motionIsFinished();
     }
 }

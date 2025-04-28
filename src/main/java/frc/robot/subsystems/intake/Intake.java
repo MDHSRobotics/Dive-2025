@@ -41,12 +41,12 @@ public class Intake extends SubsystemBase {
 
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
 
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Intake");
-    private final DoubleEntry flyheelSpeedEntry =
-            table.getDoubleTopic("Flywheel Speed").getEntry(1);
-    private final DoublePublisher targetPositionPub =
-            table.getDoubleTopic("Target Position (radians)").publish();
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    private final NetworkTable m_table = m_inst.getTable("Intake");
+    private final DoubleEntry m_flywheelSpeedEntry =
+            m_table.getDoubleTopic("Flywheel Speed").getEntry(1);
+    private final DoublePublisher m_targetPositionPub =
+            m_table.getDoubleTopic("Target Position (radians)").publish();
     // private final DoubleEntry pGainEntry =
     //         table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
 
@@ -99,7 +99,7 @@ public class Intake extends SubsystemBase {
         m_flywheelRightMotor.configure(flywheelConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // You need to publish a value for the entry to appear in NetworkTables
-        flyheelSpeedEntry.set(1);
+        m_flywheelSpeedEntry.set(1);
 
         // pGainEntry.set(K_P);
         // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
@@ -128,7 +128,7 @@ public class Intake extends SubsystemBase {
     }
 
     public Command wheelsBackwardsCommand() {
-        return this.runOnce(() -> m_flywheelLeftMotor.set(flyheelSpeedEntry.get() * -0.25))
+        return this.runOnce(() -> m_flywheelLeftMotor.set(m_flywheelSpeedEntry.get() * -0.25))
                 .andThen(Commands.idle(this))
                 .finallyDo(m_flywheelLeftMotor::stopMotor);
     }
@@ -156,7 +156,7 @@ public class Intake extends SubsystemBase {
                         position = PROCESSOR_POSITION;
                     }
                     m_armController.setReference(position, ControlType.kPosition);
-                    targetPositionPub.set(position);
+                    m_targetPositionPub.set(position);
                 })
                 .andThen(Commands.idle(this));
     }

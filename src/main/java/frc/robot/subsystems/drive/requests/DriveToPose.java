@@ -47,69 +47,70 @@ public class DriveToPose implements ResettableSwerveRequest {
     /**
      * The robot-relative chassis speeds to apply to the drivetrain.
      */
-    private ChassisSpeeds toApplyRobotSpeeds = new ChassisSpeeds();
+    private ChassisSpeeds m_toApplyRobotSpeeds = new ChassisSpeeds();
     /**
      * The field-relative chassis speeds to log to NetworkTables.
      */
-    private ChassisSpeeds toApplyFieldSpeeds = new ChassisSpeeds();
+    private ChassisSpeeds m_toApplyFieldSpeeds = new ChassisSpeeds();
     /**
      * The desired pose to reach.
      * This pose has the blue alliance origin.
      */
-    private Pose2d targetPose = new Pose2d();
+    private Pose2d m_targetPose = new Pose2d();
 
     /** Must be robot-relative because the swerve setpoint generator outputs robot-relative wheel forces */
-    private final ApplyRobotSpeeds applyRobotSpeeds = new ApplyRobotSpeeds().withDesaturateWheelSpeeds(false);
+    private final ApplyRobotSpeeds m_applyRobotSpeeds = new ApplyRobotSpeeds().withDesaturateWheelSpeeds(false);
 
     // X position profile and PID controller
-    private final TrapezoidProfile xProfile;
-    private final TrapezoidProfile.State xStartingState = new TrapezoidProfile.State();
-    private final TrapezoidProfile.State xGoal = new TrapezoidProfile.State();
-    private final PhoenixPIDController xController;
+    private final TrapezoidProfile m_xProfile;
+    private final TrapezoidProfile.State m_xStartingState = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State m_xGoal = new TrapezoidProfile.State();
+    private final PhoenixPIDController m_xController;
 
     // Y position profile and PID controller
-    private final TrapezoidProfile yProfile;
-    private final TrapezoidProfile.State yStartingState = new TrapezoidProfile.State();
-    private final TrapezoidProfile.State yGoal = new TrapezoidProfile.State();
-    private final PhoenixPIDController yController;
+    private final TrapezoidProfile m_yProfile;
+    private final TrapezoidProfile.State m_yStartingState = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State m_yGoal = new TrapezoidProfile.State();
+    private final PhoenixPIDController m_yController;
 
     // Rotation PID controller
-    private final PhoenixPIDController headingController;
-    private final double maxAngularVelocity;
+    private final PhoenixPIDController m_headingController;
+    private final double m_maxAngularVelocity;
 
     /**
      * The timestamp for the start of this request, in the timebase of {@link Utils#getCurrentTimeSeconds()}.
      * This is used for the trapezoid profiles.
      */
-    private double startingTimestamp = 0;
+    private double m_profileStartingTimestamp = 0;
 
-    private final SwerveSetpointGenerator setpointGenerator;
-    private SwerveModuleState[] startingModuleStates = new SwerveModuleState[4];
-    private SwerveSetpoint previousSwerveSetpoint;
+    private final SwerveSetpointGenerator m_setpointGenerator;
+    private SwerveModuleState[] m_startingModuleStates = new SwerveModuleState[4];
+    private SwerveSetpoint m_previousSwerveSetpoint;
     /**
      * The update period for the {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator swerve setpoint generator} in seconds.
      */
-    private final double updatePeriod;
+    private final double m_updatePeriod;
 
-    private boolean resetRequested = false;
+    private boolean m_resetRequested = false;
 
     // NetworkTables logging
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable table = inst.getTable("Swerve Requests").getSubTable("Drive to Pose");
-    private final StructPublisher<Pose2d> goalPositionPub =
-            table.getSubTable("Goal").getStructTopic("Position", Pose2d.struct).publish();
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    private final NetworkTable m_table = m_inst.getTable("Swerve Requests").getSubTable("Drive to Pose");
+    private final StructPublisher<Pose2d> m_goalPositionPub = m_table.getSubTable("Goal")
+            .getStructTopic("Position", Pose2d.struct)
+            .publish();
 
-    private final NetworkTable setpointTable = table.getSubTable("Setpoint");
-    private final StructPublisher<Pose2d> setpointPositionPub =
-            setpointTable.getStructTopic("Position", Pose2d.struct).publish();
-    private final StructPublisher<ChassisSpeeds> setpointVelocityPub =
-            setpointTable.getStructTopic("Velocity", ChassisSpeeds.struct).publish();
+    private final NetworkTable m_setpointTable = m_table.getSubTable("Setpoint");
+    private final StructPublisher<Pose2d> m_setpointPositionPub =
+            m_setpointTable.getStructTopic("Position", Pose2d.struct).publish();
+    private final StructPublisher<ChassisSpeeds> m_setpointVelocityPub =
+            m_setpointTable.getStructTopic("Velocity", ChassisSpeeds.struct).publish();
 
-    private final StructPublisher<ChassisSpeeds> errorCorrectionVelocityPub = table.getStructTopic(
+    private final StructPublisher<ChassisSpeeds> m_errorCorrectionVelocityPub = m_table.getStructTopic(
                     "Error Correction Velocity", ChassisSpeeds.struct)
             .publish();
-    private final StructPublisher<ChassisSpeeds> appliedVelocityPub =
-            table.getStructTopic("Applied Velocity", ChassisSpeeds.struct).publish();
+    private final StructPublisher<ChassisSpeeds> m_appliedVelocityPub =
+            m_table.getStructTopic("Applied Velocity", ChassisSpeeds.struct).publish();
 
     /**
      * Creates a new profiled request with the given constraints.
@@ -130,17 +131,17 @@ public class DriveToPose implements ResettableSwerveRequest {
             RobotConfig robotConfig,
             double maxSteerVelocityRadsPerSec,
             double updatePeriod) {
-        xProfile = new TrapezoidProfile(linearConstraints);
-        xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
-        yProfile = new TrapezoidProfile(linearConstraints);
-        yController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
+        m_xProfile = new TrapezoidProfile(linearConstraints);
+        m_xController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
+        m_yProfile = new TrapezoidProfile(linearConstraints);
+        m_yController = new PhoenixPIDController(kTranslationP, 0.0, 0.0);
 
-        headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
-        headingController.enableContinuousInput(-Math.PI, Math.PI);
-        this.maxAngularVelocity = maxAngularVelocity;
+        m_headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
+        m_headingController.enableContinuousInput(-Math.PI, Math.PI);
+        m_maxAngularVelocity = maxAngularVelocity;
 
-        setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
-        this.updatePeriod = updatePeriod;
+        m_setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
+        m_updatePeriod = updatePeriod;
     }
 
     /**
@@ -151,88 +152,90 @@ public class DriveToPose implements ResettableSwerveRequest {
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
         Pose2d currentPose = parameters.currentPose;
         Rotation2d currentAngle = parameters.currentPose.getRotation();
-        Rotation2d targetDirection = targetPose.getRotation();
+        Rotation2d targetDirection = m_targetPose.getRotation();
 
-        if (resetRequested) {
-            xStartingState.position = currentPose.getX();
-            xStartingState.velocity = parameters.currentChassisSpeed.vxMetersPerSecond;
-            yStartingState.position = currentPose.getY();
-            yStartingState.velocity = parameters.currentChassisSpeed.vyMetersPerSecond;
-            startingTimestamp = parameters.timestamp;
+        if (m_resetRequested) {
+            m_xStartingState.position = currentPose.getX();
+            m_xStartingState.velocity = parameters.currentChassisSpeed.vxMetersPerSecond;
+            m_yStartingState.position = currentPose.getY();
+            m_yStartingState.velocity = parameters.currentChassisSpeed.vyMetersPerSecond;
+            m_profileStartingTimestamp = parameters.timestamp;
 
             for (int i = 0; i < 4; ++i) {
-                startingModuleStates[i] = modulesToApply[i].getCurrentState();
+                m_startingModuleStates[i] = modulesToApply[i].getCurrentState();
             }
-            previousSwerveSetpoint = new SwerveSetpoint(
-                    parameters.currentChassisSpeed, startingModuleStates, DriveFeedforwards.zeros(4));
+            m_previousSwerveSetpoint = new SwerveSetpoint(
+                    parameters.currentChassisSpeed, m_startingModuleStates, DriveFeedforwards.zeros(4));
 
-            xController.reset();
-            yController.reset();
-            headingController.reset();
-            this.resetRequested = false;
+            m_xController.reset();
+            m_yController.reset();
+            m_headingController.reset();
+            m_resetRequested = false;
         }
 
-        double timeSinceStart = parameters.timestamp - startingTimestamp;
+        double timeSinceStart = parameters.timestamp - m_profileStartingTimestamp;
 
-        TrapezoidProfile.State xSetpoint = xProfile.calculate(timeSinceStart, xStartingState, xGoal);
-        double xCorrectionOutput = xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
+        TrapezoidProfile.State xSetpoint = m_xProfile.calculate(timeSinceStart, m_xStartingState, m_xGoal);
+        double xCorrectionOutput =
+                m_xController.calculate(currentPose.getX(), xSetpoint.position, parameters.timestamp);
         // Must check if at setpoint after making the calculation because the error gets stored in the controller.
-        if (xController.atSetpoint()) {
+        if (m_xController.atSetpoint()) {
             xCorrectionOutput = 0;
         }
-        toApplyFieldSpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
+        m_toApplyFieldSpeeds.vxMetersPerSecond = xSetpoint.velocity + xCorrectionOutput;
 
-        TrapezoidProfile.State ySetpoint = yProfile.calculate(timeSinceStart, yStartingState, yGoal);
-        double yCorrectionOutput = yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
+        TrapezoidProfile.State ySetpoint = m_yProfile.calculate(timeSinceStart, m_yStartingState, m_yGoal);
+        double yCorrectionOutput =
+                m_yController.calculate(currentPose.getY(), ySetpoint.position, parameters.timestamp);
         // Must check if at setpoint after making the calculation because the error gets stored in the controller.
-        if (yController.atSetpoint()) {
+        if (m_yController.atSetpoint()) {
             yCorrectionOutput = 0;
         }
-        toApplyFieldSpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
+        m_toApplyFieldSpeeds.vyMetersPerSecond = ySetpoint.velocity + yCorrectionOutput;
 
         // Calculate the extra angular velocity necessary to get the robot to the correct angle.
-        double headingCorrectionOutput = headingController.calculate(
+        double headingCorrectionOutput = m_headingController.calculate(
                 currentAngle.getRadians(), targetDirection.getRadians(), parameters.timestamp);
 
-        if (headingController.atSetpoint()) {
+        if (m_headingController.atSetpoint()) {
             headingCorrectionOutput = 0;
         }
 
-        toApplyFieldSpeeds.omegaRadiansPerSecond =
-                MathUtil.clamp(headingCorrectionOutput, -maxAngularVelocity, maxAngularVelocity);
+        m_toApplyFieldSpeeds.omegaRadiansPerSecond =
+                MathUtil.clamp(headingCorrectionOutput, -m_maxAngularVelocity, m_maxAngularVelocity);
 
         // The generator requires robot-relative speeds
-        toApplyRobotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(toApplyFieldSpeeds, currentAngle);
+        m_toApplyRobotSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(m_toApplyFieldSpeeds, currentAngle);
 
         // Improve the motion profile generated movement with a setpoint that respects the robot's constraints better.
-        previousSwerveSetpoint =
-                setpointGenerator.generateSetpoint(previousSwerveSetpoint, toApplyRobotSpeeds, updatePeriod);
+        m_previousSwerveSetpoint =
+                m_setpointGenerator.generateSetpoint(m_previousSwerveSetpoint, m_toApplyRobotSpeeds, m_updatePeriod);
 
-        toApplyRobotSpeeds = previousSwerveSetpoint.robotRelativeSpeeds();
+        m_toApplyRobotSpeeds = m_previousSwerveSetpoint.robotRelativeSpeeds();
 
         // Convert back to field-relative speeds for the sake of easier logging.
-        toApplyFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(toApplyRobotSpeeds, currentAngle);
+        m_toApplyFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(m_toApplyRobotSpeeds, currentAngle);
 
         // NetworkTables logging
         long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
 
-        goalPositionPub.set(new Pose2d(xGoal.position, yGoal.position, targetDirection), timestampMicroseconds);
-        setpointPositionPub.set(
+        m_goalPositionPub.set(new Pose2d(m_xGoal.position, m_yGoal.position, targetDirection), timestampMicroseconds);
+        m_setpointPositionPub.set(
                 new Pose2d(xSetpoint.position, ySetpoint.position, targetDirection), timestampMicroseconds);
-        setpointVelocityPub.set(
+        m_setpointVelocityPub.set(
                 new ChassisSpeeds(xSetpoint.velocity, ySetpoint.velocity, headingCorrectionOutput),
                 timestampMicroseconds);
-        errorCorrectionVelocityPub.set(
+        m_errorCorrectionVelocityPub.set(
                 new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput),
                 timestampMicroseconds);
-        appliedVelocityPub.set(toApplyFieldSpeeds, timestampMicroseconds);
+        m_appliedVelocityPub.set(m_toApplyFieldSpeeds, timestampMicroseconds);
 
-        return applyRobotSpeeds
-                .withSpeeds(toApplyRobotSpeeds)
+        return m_applyRobotSpeeds
+                .withSpeeds(m_toApplyRobotSpeeds)
                 .withWheelForceFeedforwardsX(
-                        previousSwerveSetpoint.feedforwards().robotRelativeForcesXNewtons())
+                        m_previousSwerveSetpoint.feedforwards().robotRelativeForcesXNewtons())
                 .withWheelForceFeedforwardsY(
-                        previousSwerveSetpoint.feedforwards().robotRelativeForcesYNewtons())
+                        m_previousSwerveSetpoint.feedforwards().robotRelativeForcesYNewtons())
                 .apply(parameters, modulesToApply);
     }
 
@@ -240,7 +243,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * Tells the swerve request to reset the profile used for the target direction next time it is used.
      */
     public void resetRequest() {
-        this.resetRequested = true;
+        m_resetRequested = true;
     }
 
     /**
@@ -253,9 +256,9 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withTargetPose(Pose2d newTargetPose) {
-        this.targetPose = newTargetPose;
-        this.xGoal.position = newTargetPose.getX();
-        this.yGoal.position = newTargetPose.getY();
+        m_targetPose = newTargetPose;
+        m_xGoal.position = newTargetPose.getX();
+        m_yGoal.position = newTargetPose.getY();
         return this;
     }
 
@@ -269,7 +272,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withCenterOfRotation(Translation2d newCenterOfRotation) {
-        this.applyRobotSpeeds.withCenterOfRotation(newCenterOfRotation);
+        m_applyRobotSpeeds.withCenterOfRotation(newCenterOfRotation);
         return this;
     }
 
@@ -282,7 +285,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withDriveRequestType(SwerveModule.DriveRequestType newDriveRequestType) {
-        this.applyRobotSpeeds.withDriveRequestType(newDriveRequestType);
+        m_applyRobotSpeeds.withDriveRequestType(newDriveRequestType);
         return this;
     }
 
@@ -295,7 +298,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
-        this.applyRobotSpeeds.withSteerRequestType(newSteerRequestType);
+        m_applyRobotSpeeds.withSteerRequestType(newSteerRequestType);
         return this;
     }
 
@@ -309,7 +312,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
-        this.applyRobotSpeeds.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
+        m_applyRobotSpeeds.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
         return this;
     }
 
@@ -322,8 +325,8 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withTranslationalPIDGains(double kp, double ki, double kd) {
-        this.xController.setPID(kp, ki, kd);
-        this.yController.setPID(kp, ki, kd);
+        m_xController.setPID(kp, ki, kd);
+        m_yController.setPID(kp, ki, kd);
         return this;
     }
 
@@ -336,7 +339,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withRotationalPIDGains(double kp, double ki, double kd) {
-        this.headingController.setPID(kp, ki, kd);
+        m_headingController.setPID(kp, ki, kd);
         return this;
     }
 
@@ -347,7 +350,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withHeadingTolerance(Angle toleranceAmount) {
-        this.headingController.setTolerance(toleranceAmount.in(Radians));
+        m_headingController.setTolerance(toleranceAmount.in(Radians));
         return this;
     }
 
@@ -358,8 +361,8 @@ public class DriveToPose implements ResettableSwerveRequest {
      * @return this object
      */
     public DriveToPose withLinearTolerance(Distance toleranceAmount) {
-        this.xController.setTolerance(toleranceAmount.in(Meters));
-        this.yController.setTolerance(toleranceAmount.in(Meters));
+        m_xController.setTolerance(toleranceAmount.in(Meters));
+        m_yController.setTolerance(toleranceAmount.in(Meters));
         return this;
     }
 }

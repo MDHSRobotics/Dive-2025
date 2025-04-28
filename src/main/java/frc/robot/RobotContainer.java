@@ -37,18 +37,6 @@ import frc.robot.util.AutoCreator;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-    private enum RobotSpeeds {
-        MAX_SPEED,
-        HALF_SPEED,
-        QUARTER_SPEED
-    }
-
-    public enum CageLocation {
-        LEFT,
-        MIDDLE,
-        RIGHT
-    }
-
     // The robot's subsystems and commands are defined here...
     private final CommandSwerveDrivetrain m_drivetrain = TunerConstants.createDrivetrain();
     private final Climb m_climb = new Climb();
@@ -57,32 +45,30 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
-    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+    private final SwerveRequest.FieldCentric m_drive = new SwerveRequest.FieldCentric()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-    private final SwerveRequest.SwerveDriveBrake brake = new SwerveRequest.SwerveDriveBrake()
+    private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
-
-    // private final SwerveRequest.SysIdSwerveRotation angularConstraintsCharacterizer =
-    //         new SwerveRequest.SysIdSwerveRotation().withRotationalRate(DriveConstants.MAX_ANGULAR_RATE);
 
     /* Controllers */
-    private final CommandPS4Controller driverController =
+    private final CommandPS4Controller m_driverController =
             new CommandPS4Controller(ControllerConstants.DRIVER_CONTROLLER_PORT);
-    private final CommandXboxController operatorController =
+    private final CommandXboxController m_operatorController =
             new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
 
     /* Robot States */
-    private RobotSpeeds m_robotSpeed = RobotSpeeds.MAX_SPEED;
+    /** Current driving speed percentage from 0.0 to 1.0. */
+    private double m_robotSpeed = 1.0;
 
-    private final DriveTelemetry driveTelemetry = new DriveTelemetry();
+    private final DriveTelemetry m_driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
-    private final SendableChooser<Command> testAutoChooser;
-    private final AutoCreator autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
+    private final SendableChooser<Command> m_testAutoChooser;
+    private final AutoCreator m_autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
-    private final AimingRoutines aimingRoutines =
+    private final AimingRoutines m_aimingRoutines =
             new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -93,21 +79,21 @@ public class RobotContainer {
         configureDriverControls();
         configureOperatorControls();
 
-        m_drivetrain.registerTelemetry(driveTelemetry::telemeterize);
+        m_drivetrain.registerTelemetry(m_driveTelemetry::telemeterize);
 
-        testAutoChooser = AutoBuilder.buildAutoChooser();
+        m_testAutoChooser = AutoBuilder.buildAutoChooser();
         // testAutoChooser.addOption(
         //         "Drive Wheel Radius Characterization",
         //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        testAutoChooser.addOption("Drive to nearest tree", aimingRoutines.driveToTreeSimple());
+        m_testAutoChooser.addOption("Drive to nearest tree", m_aimingRoutines.driveToTreeSimple());
         // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
-        SmartDashboard.putData("Select your test auto:", testAutoChooser);
+        SmartDashboard.putData("Select your test auto:", m_testAutoChooser);
 
-        autoCreator.sendAutoChoosers();
+        m_autoCreator.sendAutoChoosers();
     }
 
     private void setDefaultCommands() {
-        m_drivetrain.setDefaultCommand(m_drivetrain.applyRequest(() -> drive.withVelocityX(getVelocityX())
+        m_drivetrain.setDefaultCommand(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
                 .withVelocityY(getVelocityY())
                 .withRotationalRate(getRotationalRate())
                 .withDeadband(getDeadband())
@@ -132,30 +118,30 @@ public class RobotContainer {
      */
     private void configureDriverControls() {
         // Half Speed
-        driverController.L2().onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.HALF_SPEED));
-        driverController.L2().onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
+        m_driverController.L2().onTrue(Commands.runOnce(() -> m_robotSpeed = 0.5));
+        m_driverController.L2().onFalse(Commands.runOnce(() -> m_robotSpeed = 1.0));
 
         // Quarter Speed
-        driverController.R2().onTrue(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.QUARTER_SPEED));
-        driverController.R2().onFalse(Commands.runOnce(() -> m_robotSpeed = RobotSpeeds.MAX_SPEED));
+        m_driverController.R2().onTrue(Commands.runOnce(() -> m_robotSpeed = 0.25));
+        m_driverController.R2().onFalse(Commands.runOnce(() -> m_robotSpeed = 1.0));
         // Select left station
-        driverController.L1().whileTrue(aimingRoutines.alignWithCoralStation(true));
+        m_driverController.L1().whileTrue(m_aimingRoutines.alignWithCoralStation(true));
         // Select right station
-        driverController.R1().whileTrue(aimingRoutines.alignWithCoralStation(false));
+        m_driverController.R1().whileTrue(m_aimingRoutines.alignWithCoralStation(false));
 
         // Reset robot orientation
-        driverController
+        m_driverController
                 .touchpad()
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
-        driverController.circle().whileTrue(aimingRoutines.orientToFaceReefWall());
-        driverController.triangle().whileTrue(aimingRoutines.driveToCoralStation());
-        driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> brake));
-        driverController.square().whileTrue(aimingRoutines.driveToTree());
+        m_driverController.circle().whileTrue(m_aimingRoutines.orientToFaceReefWall());
+        m_driverController.triangle().whileTrue(m_aimingRoutines.driveToCoralStation());
+        m_driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> m_brake));
+        m_driverController.square().whileTrue(m_aimingRoutines.driveToTree());
 
-        driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
-        driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
+        m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
+        m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -188,48 +174,48 @@ public class RobotContainer {
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        operatorController
+        m_operatorController
                 .leftStick()
-                .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -operatorController.getLeftY()));
-        operatorController
+                .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -m_operatorController.getLeftY()));
+        m_operatorController
                 .rightStick()
-                .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -operatorController.getRightY()));
+                .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -m_operatorController.getRightY()));
 
-        operatorController.b().whileTrue(m_elevator.ejectCoralCommand());
-        operatorController.a().whileTrue(m_elevator.intakeCoralCommand());
-        operatorController
+        m_operatorController.b().whileTrue(m_elevator.ejectCoralCommand());
+        m_operatorController.a().whileTrue(m_elevator.intakeCoralCommand());
+        m_operatorController
                 .leftBumper()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
-        operatorController
+        m_operatorController
                 .rightBumper()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
-        operatorController
+        m_operatorController
                 .leftTrigger()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
-        operatorController
+        m_operatorController
                 .rightTrigger()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
 
-        operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
-        operatorController
+        m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
+        m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        m_operatorController
                 .povLeft()
-                .and(operatorController.a())
+                .and(m_operatorController.a())
                 .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
-        operatorController
+        m_operatorController
                 .povLeft()
-                .and(operatorController.y())
+                .and(m_operatorController.y())
                 .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
 
-        operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
+        m_operatorController.x().whileTrue(m_intake.runWheelsCommand());
+        m_operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
 
-        operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
-        operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
+        m_operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        m_operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
 
         // operatorController
         //         .back()
@@ -259,7 +245,7 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return testAutoChooser.getSelected();
+        return m_testAutoChooser.getSelected();
         // return autoCreator.getAutonomousCommand();
     }
 
@@ -268,13 +254,7 @@ public class RobotContainer {
      * X is defined as forward.
      */
     public double getVelocityX() {
-        double velocityX = DriveConstants.MAX_LINEAR_SPEED * -driverController.getLeftY();
-        if (m_robotSpeed == RobotSpeeds.HALF_SPEED) {
-            velocityX *= 0.5;
-        } else if (m_robotSpeed == RobotSpeeds.QUARTER_SPEED) {
-            velocityX *= 0.25;
-        }
-        return velocityX;
+        return -m_driverController.getLeftY() * DriveConstants.MAX_LINEAR_SPEED * m_robotSpeed;
     }
 
     /**
@@ -282,13 +262,7 @@ public class RobotContainer {
      * Y is defined as left.
      */
     public double getVelocityY() {
-        double velocityY = DriveConstants.MAX_LINEAR_SPEED * -driverController.getLeftX();
-        if (m_robotSpeed == RobotSpeeds.HALF_SPEED) {
-            velocityY *= 0.5;
-        } else if (m_robotSpeed == RobotSpeeds.QUARTER_SPEED) {
-            velocityY *= 0.25;
-        }
-        return velocityY;
+        return -m_driverController.getLeftX() * DriveConstants.MAX_LINEAR_SPEED * m_robotSpeed;
     }
 
     /**
@@ -296,13 +270,7 @@ public class RobotContainer {
      * rotation is defined as counterclockwise.
      */
     public double getRotationalRate() {
-        double rotationalRate = DriveConstants.MAX_ANGULAR_RATE * -driverController.getRightX();
-        if (m_robotSpeed == RobotSpeeds.HALF_SPEED) {
-            rotationalRate *= 0.5;
-        } else if (m_robotSpeed == RobotSpeeds.QUARTER_SPEED) {
-            rotationalRate *= 0.25;
-        }
-        return rotationalRate;
+        return -m_driverController.getRightX() * DriveConstants.MAX_ANGULAR_RATE * m_robotSpeed;
     }
 
     /**
@@ -311,13 +279,7 @@ public class RobotContainer {
      * @return The linear deadband in meters per second.
      */
     public double getDeadband() {
-        double deadband = DriveConstants.MAX_LINEAR_SPEED * 0.1;
-        if (m_robotSpeed == RobotSpeeds.HALF_SPEED) {
-            deadband *= 0.5;
-        } else if (m_robotSpeed == RobotSpeeds.QUARTER_SPEED) {
-            deadband *= 0.25;
-        }
-        return deadband;
+        return DriveConstants.MAX_LINEAR_SPEED * 0.1 * m_robotSpeed;
     }
 
     /**
@@ -326,13 +288,7 @@ public class RobotContainer {
      * @return The rotational deadband in radians per second.
      */
     public double getRotationalDeadband() {
-        double rotationalDeadband = DriveConstants.MAX_ANGULAR_RATE * 0.1;
-        if (m_robotSpeed == RobotSpeeds.HALF_SPEED) {
-            rotationalDeadband *= 0.5;
-        } else if (m_robotSpeed == RobotSpeeds.QUARTER_SPEED) {
-            rotationalDeadband *= 0.25;
-        }
-        return rotationalDeadband;
+        return DriveConstants.MAX_ANGULAR_RATE * 0.1 * m_robotSpeed;
     }
 
     public void resetFieldPosition(Pose2d position) {

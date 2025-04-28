@@ -45,20 +45,20 @@ public class AimingRoutines {
     private final DoubleSupplier m_velocityYSupplier;
     private final DoubleSupplier m_deadbandSupplier;
 
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-    private final NetworkTable cameraTable = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    private final NetworkTable m_cameraTable = m_inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
 
-    private final DriveFacingAngle driveFacingAngle = new DriveFacingAngle(ROTATION_PID.kP, MAX_ANGULAR_RATE)
+    private final DriveFacingAngle m_driveFacingAngle = new DriveFacingAngle(ROTATION_PID.kP, MAX_ANGULAR_RATE)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final DriveFacingPosition driveFacingPosition = new DriveFacingPosition(ROTATION_PID.kP, MAX_ANGULAR_RATE)
+    private final DriveFacingPosition m_driveFacingPosition = new DriveFacingPosition(ROTATION_PID.kP, MAX_ANGULAR_RATE)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final DriveToPose driveToPose = new DriveToPose(
+    private final DriveToPose m_driveToPose = new DriveToPose(
                     TRANSLATION_PID.kP,
                     ROTATION_PID.kP,
                     MAX_ANGULAR_RATE,
@@ -76,8 +76,8 @@ public class AimingRoutines {
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">limelight NetworkTables API</a>
      * @see {@link frc.robot.util.LimelightHelpers#getFiducialID(String) LimelightHelpers equivalent}
      */
-    private final IntegerSubscriber apriltagID =
-            cameraTable.getIntegerTopic("tid").subscribe(0);
+    private final IntegerSubscriber m_apriltagIDSub =
+            m_cameraTable.getIntegerTopic("tid").subscribe(0);
 
     /**
      * Constructs an object that provides <a href="https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#non-static-command-factories">instanced command factories</a> for swerve drive aiming.
@@ -102,19 +102,19 @@ public class AimingRoutines {
             Alliance alliance = DriverStation.getAlliance().orElseThrow();
             if (leftStation) {
                 if (alliance == Alliance.Blue) {
-                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[13]);
+                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[13]);
                 } else if (alliance == Alliance.Red) {
-                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[1]);
+                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[1]);
                 }
             } else {
                 if (alliance == Alliance.Blue) {
-                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[12]);
+                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[12]);
                 } else if (alliance == Alliance.Red) {
-                    driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[2]);
+                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[2]);
                 }
             }
 
-            return driveFacingAngle
+            return m_driveFacingAngle
                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                     .withVelocityY(m_velocityYSupplier.getAsDouble())
                     .withDeadband(m_deadbandSupplier.getAsDouble());
@@ -125,12 +125,12 @@ public class AimingRoutines {
         return m_drivetrain.applyResettableRequest(() -> {
             Alliance alliance = DriverStation.getAlliance().orElseThrow();
             if (alliance == Alliance.Blue) {
-                driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
+                m_driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
             } else {
-                driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
+                m_driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
             }
 
-            return driveFacingAngle
+            return m_driveFacingAngle
                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                     .withVelocityY(m_velocityYSupplier.getAsDouble())
                     .withDeadband(m_deadbandSupplier.getAsDouble());
@@ -157,35 +157,35 @@ public class AimingRoutines {
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElseThrow();
                                     if (alliance == Alliance.Blue) {
-                                        driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
+                                        m_driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
                                     } else if (alliance == Alliance.Red) {
-                                        driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
+                                        m_driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
                                     }
-                                    return driveFacingPosition
+                                    return m_driveFacingPosition
                                             .withVelocityX(m_velocityXSupplier.getAsDouble())
                                             .withVelocityY(m_velocityYSupplier.getAsDouble())
                                             .withDeadband(m_deadbandSupplier.getAsDouble());
                                 })
-                                .until(driveFacingPosition::motionIsFinished),
+                                .until(m_driveFacingPosition::motionIsFinished),
                         m_drivetrain
                                 .startRun(
                                         () -> {
-                                            driveFacingAngle.resetRequest();
-                                            driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
+                                            m_driveFacingAngle.resetRequest();
+                                            m_driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
                                                     m_drivetrain.getState().Pose.getRotation(),
                                                     FieldConstants.REEF_WALL_ROTATIONS));
                                         },
-                                        () -> m_drivetrain.setControl(driveFacingAngle
+                                        () -> m_drivetrain.setControl(m_driveFacingAngle
                                                 .withVelocityX(m_velocityXSupplier.getAsDouble())
                                                 .withVelocityY(m_velocityYSupplier.getAsDouble())
                                                 .withDeadband(m_deadbandSupplier.getAsDouble())))
-                                .until(() -> Aiming.isReefTag((int) apriltagID.get())),
+                                .until(() -> Aiming.isReefTag((int) m_apriltagIDSub.get())),
                         m_drivetrain.applyResettableRequest(() -> {
-                            int id = (int) apriltagID.get();
+                            int id = (int) m_apriltagIDSub.get();
                             if (Aiming.isReefTag(id)) {
-                                driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
+                                m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
                             }
-                            return driveFacingAngle
+                            return m_driveFacingAngle
                                     .withVelocityX(m_velocityXSupplier.getAsDouble())
                                     .withVelocityY(m_velocityYSupplier.getAsDouble())
                                     .withDeadband(m_deadbandSupplier.getAsDouble());
@@ -214,7 +214,7 @@ public class AimingRoutines {
                         }),
                         m_drivetrain.startRun(
                                 () -> {
-                                    driveToPose.resetRequest();
+                                    m_driveToPose.resetRequest();
                                     Pose2d currentPose = m_drivetrain.getState().Pose;
                                     Alliance alliance =
                                             DriverStation.getAlliance().orElseThrow();
@@ -224,9 +224,9 @@ public class AimingRoutines {
                                     } else {
                                         treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                                     }
-                                    driveToPose.withTargetPose(treePose);
+                                    m_driveToPose.withTargetPose(treePose);
                                 },
-                                () -> m_drivetrain.setControl(driveToPose)))
+                                () -> m_drivetrain.setControl(m_driveToPose)))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
@@ -235,7 +235,7 @@ public class AimingRoutines {
                 .startRun(
                         () -> {
                             m_drivetrain.updateVisionTarget(true);
-                            driveToPose.resetRequest();
+                            m_driveToPose.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             Pose2d treePose;
@@ -244,9 +244,9 @@ public class AimingRoutines {
                             } else {
                                 treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
-                            driveToPose.withTargetPose(treePose);
+                            m_driveToPose.withTargetPose(treePose);
                         },
-                        () -> m_drivetrain.setControl(driveToPose))
+                        () -> m_drivetrain.setControl(m_driveToPose))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
@@ -266,7 +266,7 @@ public class AimingRoutines {
                 }),
                 m_drivetrain.startRun(
                         () -> {
-                            driveToPose.resetRequest();
+                            m_driveToPose.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             Pose2d coralStationPose;
@@ -275,9 +275,9 @@ public class AimingRoutines {
                             } else {
                                 coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                             }
-                            driveToPose.withTargetPose(coralStationPose);
+                            m_driveToPose.withTargetPose(coralStationPose);
                         },
-                        () -> m_drivetrain.setControl(driveToPose)));
+                        () -> m_drivetrain.setControl(m_driveToPose)));
     }
 
     /**

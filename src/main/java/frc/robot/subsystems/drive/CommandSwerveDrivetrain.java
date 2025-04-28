@@ -2,7 +2,6 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -65,64 +64,64 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private boolean m_hasAppliedOperatorPerspective = false;
 
     /** Swerve request to apply during robot-centric path following */
-    private final SwerveRequest.ApplyRobotSpeeds pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds()
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds()
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     /* Swerve requests to apply during SysId characterization */
-    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
-            new SwerveRequest.SysIdSwerveTranslation();
-    private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization =
-            new SwerveRequest.SysIdSwerveSteerGains();
-    private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
-            new SwerveRequest.SysIdSwerveRotation();
+    // private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
+    //         new SwerveRequest.SysIdSwerveTranslation();
+    // private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization =
+    //         new SwerveRequest.SysIdSwerveSteerGains();
+    // private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
+    //         new SwerveRequest.SysIdSwerveRotation();
     private final SwerveRequest.SysIdSwerveTranslation m_slipCurrentCharacterization =
             new SwerveRequest.SysIdSwerveTranslation();
 
     /** SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
-    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    null, // Use default ramp rate (1 V/s)
-                    Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
+    // private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+    //         new SysIdRoutine.Config(
+    //                 null, // Use default ramp rate (1 V/s)
+    //                 Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+    //                 null, // Use default timeout (10 s)
+    //                 // Log state with SignalLogger class
+    //                 state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+    //         new SysIdRoutine.Mechanism(
+    //                 output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
 
     /** SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
-    private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    null, // Use default ramp rate (1 V/s)
-                    Volts.of(7), // Use dynamic voltage of 7 V
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
-            new SysIdRoutine.Mechanism(volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
+    // private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
+    //         new SysIdRoutine.Config(
+    //                 null, // Use default ramp rate (1 V/s)
+    //                 Volts.of(7), // Use dynamic voltage of 7 V
+    //                 null, // Use default timeout (10 s)
+    //                 // Log state with SignalLogger class
+    //                 state -> SignalLogger.writeString("SysIdSteer_State", state.toString())),
+    //         new SysIdRoutine.Mechanism(volts -> setControl(m_steerCharacterization.withVolts(volts)), null, this));
 
     /**
      * SysId routine for characterizing rotation.
      * This is used to find PID gains for the FieldCentricFacingAngle HeadingController.
      * See the documentation of SwerveRequest.SysIdSwerveRotation for info on importing the log to SysId.
      */
-    private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    /* This is in radians per second², but SysId only supports "volts per second" */
-                    Volts.of(Math.PI / 6).per(Second),
-                    /* This is in radians per second, but SysId only supports "volts" */
-                    Volts.of(Math.PI),
-                    null, // Use default timeout (10 s)
-                    // Log state with SignalLogger class
-                    state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
-            new SysIdRoutine.Mechanism(
-                    output -> {
-                        /* output is actually radians per second, but SysId only supports "volts" */
-                        setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
-                        /* also log the requested output for SysId */
-                        SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
-                    },
-                    null,
-                    this));
+    // private final SysIdRoutine m_sysIdRoutineRotation = new SysIdRoutine(
+    //         new SysIdRoutine.Config(
+    //                 /* This is in radians per second², but SysId only supports "volts per second" */
+    //                 Volts.of(Math.PI / 6).per(Second),
+    //                 /* This is in radians per second, but SysId only supports "volts" */
+    //                 Volts.of(Math.PI),
+    //                 null, // Use default timeout (10 s)
+    //                 // Log state with SignalLogger class
+    //                 state -> SignalLogger.writeString("SysIdRotation_State", state.toString())),
+    //         new SysIdRoutine.Mechanism(
+    //                 output -> {
+    //                     /* output is actually radians per second, but SysId only supports "volts" */
+    //                     setControl(m_rotationCharacterization.withRotationalRate(output.in(Volts)));
+    //                     /* also log the requested output for SysId */
+    //                     SignalLogger.writeDouble("Rotational_Rate", output.in(Volts));
+    //                 },
+    //                 null,
+    //                 this));
 
     /** SysId routine for characterizing slip current.
      * You must log the data yourself while the test is running.
@@ -141,35 +140,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineSlipCurrent;
 
     /* NetworkTables logging */
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
     /**
      * This NetworkTable is used to display driving information to AdvantageScope.
      * Open <a href="https://docs.advantagescope.org/tab-reference/odometry">the AdvantageScope docs</a> to see what this looks like.
      */
-    private final NetworkTable stateTable = inst.getTable("DriveState");
+    private final NetworkTable m_stateTable = m_inst.getTable("DriveState");
 
-    private final NetworkTable poseTable = stateTable.getSubTable("Poses");
+    private final NetworkTable m_poseTable = m_stateTable.getSubTable("Poses");
     /** Logs the front bot pose estimate to AdvantageScope. */
-    private final StructPublisher<Pose2d> frontPoseEstimatePub =
-            poseTable.getStructTopic("Front Pose Estimate", Pose2d.struct).publish();
+    private final StructPublisher<Pose2d> m_frontPoseEstimatePub =
+            m_poseTable.getStructTopic("Front Pose Estimate", Pose2d.struct).publish();
 
-    private final StructPublisher<Pose2d> backPoseEstimatePub =
-            poseTable.getStructTopic("Back Pose Estimate", Pose2d.struct).publish();
+    private final StructPublisher<Pose2d> m_backPoseEstimatePub =
+            m_poseTable.getStructTopic("Back Pose Estimate", Pose2d.struct).publish();
 
-    private final NetworkTable tagsTable = stateTable.getSubTable("Apriltags");
+    private final NetworkTable m_tagsTable = m_stateTable.getSubTable("Apriltags");
     /** Logs the tags that are currently visible from the front to AdvantageScope. */
-    private final StructArrayPublisher<Translation3d> frontVisibleTagsPub = tagsTable
+    private final StructArrayPublisher<Translation3d> m_frontVisibleTagsPub = m_tagsTable
             .getStructArrayTopic("Front Visible Tags", Translation3d.struct)
             .publish();
 
-    private final DoubleArrayPublisher frontToTagDistancePub =
-            tagsTable.getDoubleArrayTopic("Tag Distance to Front Camera").publish();
+    private final DoubleArrayPublisher m_frontToTagDistancePub =
+            m_tagsTable.getDoubleArrayTopic("Tag Distance to Front Camera").publish();
 
-    private final StructArrayPublisher<Translation3d> backVisibleTagsPub = tagsTable
+    private final StructArrayPublisher<Translation3d> m_backVisibleTagsPub = m_tagsTable
             .getStructArrayTopic("Back Visible Tags", Translation3d.struct)
             .publish();
-    private final DoubleArrayPublisher backtoTagDistancePub =
-            tagsTable.getDoubleArrayTopic("Tag Distance to Back Camera").publish();
+    private final DoubleArrayPublisher m_backToTagDistancePub =
+            m_tagsTable.getDoubleArrayTopic("Tag Distance to Back Camera").publish();
 
     /**
      * Constructs a CTRE SwerveDrivetrain using the specified constants.
@@ -260,7 +259,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 this::resetPose, // Consumer for seeding pose against auto
                 () -> getState().Speeds, // Supplier of current robot speeds
                 // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                (speeds, feedforwards) -> setControl(pathApplyRobotSpeeds
+                (speeds, feedforwards) -> setControl(m_pathApplyRobotSpeeds
                         .withSpeeds(speeds)
                         .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
                         .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
@@ -358,17 +357,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">the limelight NetworkTables API</a> (look for botpose_orb_wpiblue)
      */
     private void registerPoseEstimateListeners() {
-        DoubleArraySubscriber frontPoseEstimateSub = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+        DoubleArraySubscriber frontPoseEstimateSub = m_inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
                 .subscribe(null);
 
-        inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+        m_inst.addListener(frontPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             NetworkTableValue value = event.valueData.value;
             double[] poseArray = value.getDoubleArray();
             // If there is no data available, don't use the data.
             if (poseArray.length < 11) {
-                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                m_frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                m_frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
@@ -376,7 +375,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
             // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
             if (botPose.equals(Translation2d.kZero)) {
-                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                m_frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
                 return;
             }
             Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
@@ -386,7 +385,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             long timestampMicroseconds = value.getTime();
 
             /* Log pose estimate to AdvantageScope */
-            frontPoseEstimatePub.set(botPoseEstimate, timestampMicroseconds);
+            m_frontPoseEstimatePub.set(botPoseEstimate, timestampMicroseconds);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
             double latency = poseArray[6];
@@ -399,8 +398,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
-                frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                m_frontVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                m_frontToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
@@ -418,8 +417,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         FieldConstants.APRILTAGS.getTagPose(id).orElseThrow().getTranslation();
                 distancesToTags[i] = distance;
             }
-            frontVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
-            frontToTagDistancePub.set(distancesToTags, timestampMicroseconds);
+            m_frontVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
+            m_frontToTagDistancePub.set(distancesToTags, timestampMicroseconds);
 
             if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
                 /* Add the vision measurement to the pose estimator */
@@ -428,17 +427,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
         });
 
-        DoubleArraySubscriber backPoseEstimateSub = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
+        DoubleArraySubscriber backPoseEstimateSub = m_inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
                 .getDoubleArrayTopic("botpose_orb_wpiblue")
                 .subscribe(null);
 
-        inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
+        m_inst.addListener(backPoseEstimateSub, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
             NetworkTableValue value = event.valueData.value;
             double[] poseArray = value.getDoubleArray();
             // If there is no data available, don't use the data.
             if (poseArray.length < 11) {
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                m_backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                m_backToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
@@ -446,8 +445,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             Translation2d botPose = new Translation2d(poseArray[0], poseArray[1]);
             // Whenever the robot doesn't see any tags, it will send a pose of (0,0,0), so don't use the data.
             if (botPose.equals(Translation2d.kZero)) {
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                m_backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                m_backToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
             Rotation2d botRotation = Rotation2d.fromDegrees(poseArray[5]);
@@ -457,7 +456,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             long timestampMicroseconds = value.getTime();
 
             /* Log pose estimate to AdvantageScope */
-            backPoseEstimatePub.set(botPoseEstimate, timestampMicroseconds);
+            m_backPoseEstimatePub.set(botPoseEstimate, timestampMicroseconds);
 
             // Convert timestamp from microseconds to seconds and adjust for latency
             double latency = poseArray[6];
@@ -470,8 +469,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
             // If there is no more data available, stop logging
             if (poseArray.length != expectedTotalVals || tagCount == 0) {
-                backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
-                backtoTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
+                m_backVisibleTagsPub.set(FieldConstants.NO_VISIBLE_TAGS);
+                m_backToTagDistancePub.set(FieldConstants.NO_TAG_DISTANCES);
                 return;
             }
 
@@ -489,8 +488,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                         FieldConstants.APRILTAGS.getTagPose(id).orElseThrow().getTranslation();
                 distancesToTags[i] = distance;
             }
-            backVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
-            backtoTagDistancePub.set(distancesToTags, timestampMicroseconds);
+            m_backVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
+            m_backToTagDistancePub.set(distancesToTags, timestampMicroseconds);
 
             if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
                 /* Add the vision measurement to the pose estimator */
