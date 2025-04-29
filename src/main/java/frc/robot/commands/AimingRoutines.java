@@ -287,8 +287,11 @@ public class AimingRoutines {
                                     m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11);
                                 }
                             }
-                            return generatePath(
-                                    m_drivetrain.getState(), m_currentTargetPose, ON_THE_FLY_CONSTRAINTS, true);
+                            // Flip from blue target to red target if on red alliance
+                            if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
+                                m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
+                            }
+                            return generatePath(m_drivetrain.getState(), m_currentTargetPose, ON_THE_FLY_CONSTRAINTS);
                         }),
                         positionCorrectionCommand())
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
@@ -312,7 +315,7 @@ public class AimingRoutines {
                                 m_currentTargetPose =
                                         currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
-                            return generatePath(currentState, m_currentTargetPose, ON_THE_FLY_CONSTRAINTS, false);
+                            return generatePath(currentState, m_currentTargetPose, ON_THE_FLY_CONSTRAINTS);
                         }),
                         positionCorrectionCommand())
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
@@ -354,7 +357,7 @@ public class AimingRoutines {
                     } else {
                         m_currentTargetPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                     }
-                    return generatePath(currentState, m_currentTargetPose, CORAL_STATION_CONSTRAINTS, false);
+                    return generatePath(currentState, m_currentTargetPose, CORAL_STATION_CONSTRAINTS);
                 }),
                 positionCorrectionCommand());
     }
@@ -381,28 +384,15 @@ public class AimingRoutines {
      * @param currentState The current pose and speeds of the robot
      * @param targetPose The target position and rotation of the robot
      * @param pathConstraints The constraints to use while driving
-     * @param allowTargetFlipping Whether to flip targets when the alliance is red
      * @return The path following command
      */
     private static Command generatePath(
-            SwerveDriveState currentState,
-            Pose2d targetPose,
-            PathConstraints pathConstraints,
-            boolean allowTargetFlipping) {
-        // Save the target position and rotation for potential flipping
-        Translation2d targetPosition = targetPose.getTranslation();
-        Rotation2d targetRotation = targetPose.getRotation();
-
-        if (allowTargetFlipping && DriverStation.getAlliance().orElseThrow().equals(Alliance.Red)) {
-            targetPosition = FlippingUtil.flipFieldPosition(targetPosition);
-            targetRotation = FlippingUtil.flipFieldRotation(targetRotation);
-        }
-
+            SwerveDriveState currentState, Pose2d targetPose, PathConstraints pathConstraints) {
         // In simulation, the robot has a chance of being perfectly still, which would require us to use the direction
         // to the target instead.
         Rotation2d directionOfTravel;
         if (currentState.Speeds.vxMetersPerSecond == 0.0 && currentState.Speeds.vyMetersPerSecond == 0.0) {
-            Translation2d directionToTarget = targetPosition.minus(currentState.Pose.getTranslation());
+            Translation2d directionToTarget = targetPose.getTranslation().minus(currentState.Pose.getTranslation());
             directionOfTravel = new Rotation2d(directionToTarget.getX(), directionToTarget.getY());
         } else {
             // You need to convert the robot-relative speeds to field-relative speeds to find the actual direction of
@@ -417,14 +407,13 @@ public class AimingRoutines {
         // The rotation component of the pose should be the direction of travel for the first waypoint, and the end
         // robot rotation for the last waypoint.
         List<Waypoint> waypoints = PathPlannerPath.waypointsFromPoses(
-                new Pose2d(currentState.Pose.getX(), currentState.Pose.getY(), directionOfTravel),
-                new Pose2d(targetPosition.getX(), targetPosition.getY(), targetRotation));
+                new Pose2d(currentState.Pose.getX(), currentState.Pose.getY(), directionOfTravel), targetPose);
 
         // DO NOT enter an ideal starting state for on-the-fly paths.
         // PathPlanner should generate the trajectory when AutoBuilder creates the command.
         // AutoBuilder will do a much better job because it has more information about the robot.
         PathPlannerPath path =
-                new PathPlannerPath(waypoints, pathConstraints, null, new GoalEndState(0, targetRotation));
+                new PathPlannerPath(waypoints, pathConstraints, null, new GoalEndState(0, targetPose.getRotation()));
         path.preventFlipping = true;
 
         return AutoBuilder.followPath(path);
