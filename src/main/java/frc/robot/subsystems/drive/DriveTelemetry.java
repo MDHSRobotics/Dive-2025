@@ -3,15 +3,11 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.VisionConstants;
@@ -40,22 +36,22 @@ public class DriveTelemetry {
             .getSubTable("Poses")
             .getStructTopic("Pose", Pose2d.struct)
             .publish();
-    private final StructPublisher<ChassisSpeeds> m_speedsPub = m_driveStateTable
-            .getStructTopic("Field Speeds", ChassisSpeeds.struct)
-            .publish();
-    private final StructArrayPublisher<SwerveModuleState> m_moduleStatesPub = m_driveStateTable
-            .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
-            .publish();
-    private final StructArrayPublisher<SwerveModuleState> m_moduleTargetsPub = m_driveStateTable
-            .getStructArrayTopic("ModuleTargets", SwerveModuleState.struct)
-            .publish();
-    private final StructArrayPublisher<SwerveModulePosition> m_modulePositionsPub = m_driveStateTable
-            .getStructArrayTopic("ModulePositions", SwerveModulePosition.struct)
-            .publish();
+    // private final StructPublisher<ChassisSpeeds> m_speedsPub = m_driveStateTable
+    //         .getStructTopic("Field Speeds", ChassisSpeeds.struct)
+    //         .publish();
+    // private final StructArrayPublisher<SwerveModuleState> m_moduleStatesPub = m_driveStateTable
+    //         .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
+    //         .publish();
+    // private final StructArrayPublisher<SwerveModuleState> m_moduleTargetsPub = m_driveStateTable
+    //         .getStructArrayTopic("ModuleTargets", SwerveModuleState.struct)
+    //         .publish();
+    // private final StructArrayPublisher<SwerveModulePosition> m_modulePositionsPub = m_driveStateTable
+    //         .getStructArrayTopic("ModulePositions", SwerveModulePosition.struct)
+    //         .publish();
     private final DoublePublisher m_odometryFrequencyPub =
             m_driveStateTable.getDoubleTopic("OdometryFrequency").publish();
-    private final DoublePublisher m_odometryPeriodPub =
-            m_driveStateTable.getDoubleTopic("OdometryPeriod").publish();
+    // private final DoublePublisher m_odometryPeriodPub =
+    //         m_driveStateTable.getDoubleTopic("OdometryPeriod").publish();
     private final DoublePublisher m_linearSpeedPub =
             m_driveStateTable.getDoubleTopic("Linear Speed").publish();
 
@@ -73,13 +69,14 @@ public class DriveTelemetry {
 
         /* Telemeterize the swerve drive state */
         m_drivePosePub.set(state.Pose, timestampMicroseconds);
-        m_speedsPub.set(
-                ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation()), timestampMicroseconds);
-        m_moduleStatesPub.set(state.ModuleStates, timestampMicroseconds);
-        m_moduleTargetsPub.set(state.ModuleTargets, timestampMicroseconds);
-        m_modulePositionsPub.set(state.ModulePositions, timestampMicroseconds);
+        // m_speedsPub.set(
+        //         ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation()),
+        // timestampMicroseconds);
+        // m_moduleStatesPub.set(state.ModuleStates, timestampMicroseconds);
+        // m_moduleTargetsPub.set(state.ModuleTargets, timestampMicroseconds);
+        // m_modulePositionsPub.set(state.ModulePositions, timestampMicroseconds);
         m_odometryFrequencyPub.set(1.0 / state.OdometryPeriod, timestampMicroseconds);
-        m_odometryPeriodPub.set(state.OdometryPeriod, timestampMicroseconds);
+        // m_odometryPeriodPub.set(state.OdometryPeriod, timestampMicroseconds);
 
         double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
         m_linearSpeedPub.set(linearSpeed, timestampMicroseconds);

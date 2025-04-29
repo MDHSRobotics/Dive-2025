@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.subsystems.climb.Climb;
@@ -62,14 +63,25 @@ public class RobotContainer {
     /** Current driving speed percentage from 0.0 to 1.0. */
     private double m_robotSpeed = 1.0;
 
+    // Auto alignment begins when the operator pushes the right stick at least 80% in any direction.
+    private final Trigger m_autoAlignmentRequested =
+            new Trigger(() -> Math.hypot(m_operatorController.getRightX(), -m_operatorController.getRightY()) > 0.8);
+
     private final DriveTelemetry m_driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
     private final SendableChooser<Command> m_testAutoChooser;
     private final AutoCreator m_autoCreator = new AutoCreator(this::resetFieldPosition, m_elevator);
 
-    private final AimingRoutines m_aimingRoutines =
-            new AimingRoutines(m_drivetrain, this::getVelocityX, this::getVelocityY, this::getDeadband);
+    private final AimingRoutines m_aimingRoutines = new AimingRoutines(
+            m_drivetrain,
+            this::getVelocityX,
+            this::getVelocityY,
+            this::getDeadband,
+            m_operatorController::getLeftY,
+            m_operatorController::getLeftX,
+            m_operatorController::getRightY,
+            m_operatorController::getRightX);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
@@ -85,7 +97,7 @@ public class RobotContainer {
         // testAutoChooser.addOption(
         //         "Drive Wheel Radius Characterization",
         //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        m_testAutoChooser.addOption("Drive to nearest tree", m_aimingRoutines.driveToTreeSimple());
+        m_testAutoChooser.addOption("Drive to nearest tree", m_aimingRoutines.driveToNearestTreeSimple());
         // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
         SmartDashboard.putData("Select your test auto:", m_testAutoChooser);
 
@@ -107,12 +119,14 @@ public class RobotContainer {
     /**
      * Use this method to define trigger->command mappings that don't involve controller inputs.
      */
-    private void configureTriggers() {}
+    private void configureTriggers() {
+        m_autoAlignmentRequested.onTrue(m_aimingRoutines.driveToTree());
+    }
 
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+wheels&xButton=Drive+to+tree&yButton=Face+processor&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=Face+reef+wall&leftTrigger=Slow+Mode&rightTrigger=Super+Slow+Mode&dpadLeft=&rightStick=Rotate&dpadDown=Climb&dpadUp=Raise+climb
+     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftStick=Drive&aButton=Lock+wheels&xButton=Re-enable+manual+driving&yButton=Face+processor&leftBumper=Face+Left+Coral+Station&backButton=Reset+robot+orientation&rightBumper=Face+Right+Coral+Station&bButton=Face+reef+wall&leftTrigger=Slow+Mode&rightTrigger=Super+Slow+Mode&dpadLeft=&rightStick=Rotate&dpadDown=Climb&dpadUp=Raise+climb
      * ">this controller map</a>
      * to update and view the current controls.
      */
@@ -136,9 +150,14 @@ public class RobotContainer {
                         m_drivetrain.getState().Pose.getRotation())));
 
         m_driverController.circle().whileTrue(m_aimingRoutines.orientToFaceReefWall());
-        m_driverController.triangle().whileTrue(m_aimingRoutines.driveToCoralStation());
+        m_driverController.triangle().whileTrue(m_aimingRoutines.driveToNearestCoralStation());
         m_driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> m_brake));
-        m_driverController.square().whileTrue(m_aimingRoutines.driveToTree());
+        // Press once to begin driving normally again
+        m_driverController.square().whileTrue(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
+                .withVelocityY(getVelocityY())
+                .withRotationalRate(getRotationalRate())
+                .withDeadband(getDeadband())
+                .withRotationalDeadband(getRotationalDeadband())));
 
         m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
         m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
@@ -169,18 +188,11 @@ public class RobotContainer {
     /**
      * Use this method to define controller input->command mappings.
      * please use <a href="
-     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Elevator+and+arm+to+L2&leftTrigger=Elevator+and+arm+to+L1&leftBumper=Elevator+and+arm+to+coral+station&rightBumper=Elevator+and+arm+to+L3&aButton=Intake+coral&bButton=Eject+coral&xButton=Intake+algae&yButton=Eject+algae&dpadUp=Intake+to+on-coral+algae&dpadDown=Intake+to+ground+algae&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=Manual+catcher+control&rightStickClick=Manual+intake+control&leftStick=Raise%2Flower+elevator&rightStick=Raise%2Flower+arm
+     * https://www.padcrafter.com/index.php?templates=Operator+Controller&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&rightTrigger=Elevator+and+arm+to+L2&leftTrigger=Elevator+and+arm+to+L1&leftBumper=Elevator+and+arm+to+coral+station&rightBumper=Elevator+and+arm+to+L3&aButton=Intake+coral&bButton=Eject+coral&xButton=Intake+algae&yButton=Eject+algae&dpadUp=Intake+to+on-coral+algae&dpadDown=Intake+to+ground+algae&dpadLeft=Remove+algae+from+reef&dpadRight=Intake+to+processor&startButton=Stow+intake&backButton=Stow+catcher&leftStickClick=&rightStickClick=&leftStick=Select+reef+side&rightStick=Select+left%2Fright+tree+and+enable+auto+align
      * ">this controller map</a>
      * to update and view the current controls.
      */
     private void configureOperatorControls() {
-        m_operatorController
-                .leftStick()
-                .toggleOnTrue(m_elevator.setElevatorPowerCommand(() -> -m_operatorController.getLeftY()));
-        m_operatorController
-                .rightStick()
-                .toggleOnTrue(m_elevator.setArmPowerCommand(() -> -m_operatorController.getRightY()));
-
         m_operatorController.b().whileTrue(m_elevator.ejectCoralCommand());
         m_operatorController.a().whileTrue(m_elevator.intakeCoralCommand());
         m_operatorController

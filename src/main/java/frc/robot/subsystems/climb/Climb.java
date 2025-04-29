@@ -13,8 +13,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -54,8 +52,8 @@ public class Climb extends SubsystemBase {
     // private final SparkClosedLoopController m_backController = m_backHookMotor.getClosedLoopController();
     // private final SparkClosedLoopController m_frontController = m_frontHookMotor.getClosedLoopController();
 
-    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
-    private final NetworkTable m_table = m_inst.getTable("Climb");
+    // private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    // private final NetworkTable m_table = m_inst.getTable("Climb");
     // private final DoublePublisher targetPositionPub =
     //         table.getDoubleTopic("Target Position (radians)").publish();
     // private final DoubleEntry pGainEntry =

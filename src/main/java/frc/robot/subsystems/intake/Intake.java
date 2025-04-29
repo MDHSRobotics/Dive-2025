@@ -14,7 +14,6 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.networktables.DoubleEntry;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -108,10 +107,6 @@ public class Intake extends SubsystemBase {
         //     m_armMotor.configureAsync(tempConfig, ResetMode.kNoResetSafeParameters,
         // PersistMode.kNoPersistParameters);
         // });
-    }
-
-    private boolean wheelsAreStopped() {
-        return MathUtil.isNear(0, m_flywheelEncoder.getVelocity(), 0.001);
     }
 
     public Command disableMotorsCommand() {

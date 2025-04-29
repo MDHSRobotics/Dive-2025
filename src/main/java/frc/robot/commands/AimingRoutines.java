@@ -11,6 +11,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
 import com.pathplanner.lib.util.FlippingUtil;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -45,9 +46,17 @@ public class AimingRoutines {
     private final DoubleSupplier m_velocityYSupplier;
     private final DoubleSupplier m_deadbandSupplier;
 
+    // Joystick suppliers
+    private final DoubleSupplier m_leftYSupplier;
+    private final DoubleSupplier m_leftXSupplier;
+    private final DoubleSupplier m_rightYSupplier;
+    private final DoubleSupplier m_rightXSupplier;
+
+    // NetworkTables
     private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
     private final NetworkTable m_cameraTable = m_inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
 
+    // Swerve requests
     private final DriveFacingAngle m_driveFacingAngle = new DriveFacingAngle(ROTATION_PID.kP, MAX_ANGULAR_RATE)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
@@ -72,6 +81,12 @@ public class AimingRoutines {
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     /**
+     * The current target by whichever command is running.
+     * You don't need to worry about multiple commands accessing this because only one command can run at a time.
+     */
+    private Pose2d m_currentTargetPose;
+
+    /**
      * Gets the ID of the primary in-view apriltag.
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">limelight NetworkTables API</a>
      * @see {@link frc.robot.util.LimelightHelpers#getFiducialID(String) LimelightHelpers equivalent}
@@ -85,16 +100,28 @@ public class AimingRoutines {
      * @param velocityXSupplier A method reference or lambda that returns X velocity.
      * @param velocityYSupplierA method reference or lambda that returns Y velocity.
      * @param deadbandSupplier A method reference or lambda that returns deadband.
+     * @param leftYSupplier A method reference or lambda that returns a left joystick's Y value.
+     * @param leftXSupplier A method reference or lambda that returns a left joystick's X value.
+     * @param rightYSupplier A method reference or lambda that returns a right joystick's Y value.
+     * @param rightXSupplier A method reference or lambda that returns a right joystick's X value.
      */
     public AimingRoutines(
             CommandSwerveDrivetrain drivetrain,
             DoubleSupplier velocityXSupplier,
             DoubleSupplier velocityYSupplier,
-            DoubleSupplier deadbandSupplier) {
+            DoubleSupplier deadbandSupplier,
+            DoubleSupplier leftYSupplier,
+            DoubleSupplier leftXSupplier,
+            DoubleSupplier rightYSupplier,
+            DoubleSupplier rightXSupplier) {
         m_drivetrain = drivetrain;
         m_velocityXSupplier = velocityXSupplier;
         m_velocityYSupplier = velocityYSupplier;
         m_deadbandSupplier = deadbandSupplier;
+        m_leftYSupplier = leftYSupplier;
+        m_leftXSupplier = leftXSupplier;
+        m_rightYSupplier = rightYSupplier;
+        m_rightXSupplier = rightXSupplier;
     }
 
     public Command alignWithCoralStation(boolean leftStation) {
@@ -194,43 +221,108 @@ public class AimingRoutines {
     }
 
     /**
+     * This command will generate a path to the tree selected by the joysticks and follow it.
+     * Once it finishes following the path, it will attempt to correct any inaccuracies in its position until interrupted.
+     * See "diagrams/Tree_Selection.jpeg" and "diagrams/Useful_angles_in_radians.png" in the project files for more info.
+     */
+    public Command driveToTree() {
+        return Commands.sequence(
+                        m_drivetrain.defer(() -> {
+                            m_drivetrain.updateVisionTarget(true);
+                            // Get the left joystick angle in the range of 0 to 2*PI
+                            final double leftStickAngleRadians = MathUtil.inputModulus(
+                                    Math.atan2(-m_leftYSupplier.getAsDouble(), m_leftXSupplier.getAsDouble()),
+                                    0.0,
+                                    2.0 * Math.PI);
+
+                            // Get the right joystick angle in the range of 0 to 2*PI
+                            final double rightStickAngleRadians = MathUtil.inputModulus(
+                                    Math.atan2(-m_rightYSupplier.getAsDouble(), m_rightXSupplier.getAsDouble()),
+                                    0.0,
+                                    2.0 * Math.PI);
+
+                            // Whether or not the joystick chose the left tree
+                            final boolean leftTreeSelected = (rightStickAngleRadians >= Math.PI / 2.0)
+                                    && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
+
+                            if (leftStickAngleRadians >= Math.PI / 3.0
+                                    && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // Bottom reef side
+                                if (leftTreeSelected) {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0);
+                                } else {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1);
+                                }
+                            } else if (leftStickAngleRadians >= 2.0 * Math.PI / 3.0
+                                    && leftStickAngleRadians < Math.PI) { // Bottom right reef side
+                                if (leftTreeSelected) {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2);
+                                } else {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3);
+                                }
+                            } else if (leftStickAngleRadians >= Math.PI
+                                    && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // Top right reef side
+                                if (leftTreeSelected) {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4);
+                                } else {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5);
+                                }
+                            } else if (leftStickAngleRadians >= 4.0 * Math.PI / 3.0
+                                    && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // Top reef side
+                                if (leftTreeSelected) {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6);
+                                } else {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7);
+                                }
+                            } else if (leftStickAngleRadians >= 5.0 * Math.PI / 3.0
+                                    && leftStickAngleRadians < 2.0 * Math.PI) { // Top left reef side
+                                if (leftTreeSelected) {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8);
+                                } else {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9);
+                                }
+                            } else { // Bottom left reef side
+                                if (leftTreeSelected) {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10);
+                                } else {
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11);
+                                }
+                            }
+                            return generatePath(
+                                    m_drivetrain.getState(), m_currentTargetPose, ON_THE_FLY_CONSTRAINTS, true);
+                        }),
+                        positionCorrectionCommand())
+                .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
+    }
+
+    /**
      * This command will generate a path to the nearest tree and follow it.
      * Once it finishes following the path, it will attempt to correct any inaccuracies in its position until interrupted.
      */
-    public Command driveToTree() {
+    public Command driveToNearestTree() {
         return Commands.sequence(
                         m_drivetrain.defer(() -> {
                             m_drivetrain.updateVisionTarget(true);
                             SwerveDriveState currentState = m_drivetrain.getState();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            Pose2d treePose;
                             if (alliance == Alliance.Blue) {
-                                treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
+                                m_currentTargetPose =
+                                        currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
                             } else {
-                                treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+                                m_currentTargetPose =
+                                        currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
-                            return generatePath(currentState, treePose, ON_THE_FLY_CONSTRAINTS, false);
+                            return generatePath(currentState, m_currentTargetPose, ON_THE_FLY_CONSTRAINTS, false);
                         }),
-                        m_drivetrain.startRun(
-                                () -> {
-                                    m_driveToPose.resetRequest();
-                                    Pose2d currentPose = m_drivetrain.getState().Pose;
-                                    Alliance alliance =
-                                            DriverStation.getAlliance().orElseThrow();
-                                    Pose2d treePose;
-                                    if (alliance == Alliance.Blue) {
-                                        treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
-                                    } else {
-                                        treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
-                                    }
-                                    m_driveToPose.withTargetPose(treePose);
-                                },
-                                () -> m_drivetrain.setControl(m_driveToPose)))
+                        positionCorrectionCommand())
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
-    public Command driveToTreeSimple() {
+    /**
+     * An alternative to {@link frc.robot.commands.AimingRoutines#driveToNearestTree() driveToNearestTree()}
+     * that is not as smooth and may hit the reef wall, but does not have any startup lag.
+     */
+    public Command driveToNearestTreeSimple() {
         return m_drivetrain
                 .startRun(
                         () -> {
@@ -238,46 +330,45 @@ public class AimingRoutines {
                             m_driveToPose.resetRequest();
                             Pose2d currentPose = m_drivetrain.getState().Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            Pose2d treePose;
                             if (alliance == Alliance.Blue) {
-                                treePose = currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
+                                m_currentTargetPose =
+                                        currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
                             } else {
-                                treePose = currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
+                                m_currentTargetPose =
+                                        currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
-                            m_driveToPose.withTargetPose(treePose);
+                            m_driveToPose.withTargetPose(m_currentTargetPose);
                         },
                         () -> m_drivetrain.setControl(m_driveToPose))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
-    public Command driveToCoralStation() {
+    public Command driveToNearestCoralStation() {
         return Commands.sequence(
                 m_drivetrain.defer(() -> {
                     SwerveDriveState currentState = m_drivetrain.getState();
                     Pose2d currentPose = m_drivetrain.getState().Pose;
                     Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                    Pose2d coralStationPose;
                     if (alliance == Alliance.Blue) {
-                        coralStationPose = currentPose.nearest(FieldConstants.BLUE_CORAL_STATION_POSES);
+                        m_currentTargetPose = currentPose.nearest(FieldConstants.BLUE_CORAL_STATION_POSES);
                     } else {
-                        coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
+                        m_currentTargetPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                     }
-                    return generatePath(currentState, coralStationPose, CORAL_STATION_CONSTRAINTS, false);
+                    return generatePath(currentState, m_currentTargetPose, CORAL_STATION_CONSTRAINTS, false);
                 }),
-                m_drivetrain.startRun(
-                        () -> {
-                            m_driveToPose.resetRequest();
-                            Pose2d currentPose = m_drivetrain.getState().Pose;
-                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            Pose2d coralStationPose;
-                            if (alliance == Alliance.Blue) {
-                                coralStationPose = currentPose.nearest(FieldConstants.BLUE_CORAL_STATION_POSES);
-                            } else {
-                                coralStationPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
-                            }
-                            m_driveToPose.withTargetPose(coralStationPose);
-                        },
-                        () -> m_drivetrain.setControl(m_driveToPose)));
+                positionCorrectionCommand());
+    }
+
+    /**
+     * @return A command that attempts to get closer to the currently set target pose.
+     */
+    private Command positionCorrectionCommand() {
+        return m_drivetrain.startRun(
+                () -> {
+                    m_driveToPose.resetRequest();
+                    m_driveToPose.withTargetPose(m_currentTargetPose);
+                },
+                () -> m_drivetrain.setControl(m_driveToPose));
     }
 
     /**
@@ -285,7 +376,7 @@ public class AimingRoutines {
      * <p>
      * The driver must make sure to NEVER be driving straight away from the target when this method is called,
      * or else it will generate a path that does not respect the robot's momentum.
-     * See "gifs/Backwards_Curve_With_Initial_Velocity.gif" for a visualization of this situation.
+     * See "diagrams/Backwards_Curve_With_Initial_Velocity.gif" for a visualization of this situation.
      *
      * @param currentState The current pose and speeds of the robot
      * @param targetPose The target position and rotation of the robot
