@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -85,6 +86,14 @@ public class AimingRoutines {
      * You don't need to worry about multiple commands accessing this because only one command can run at a time.
      */
     private Pose2d m_currentTargetPose;
+
+    /**
+     * Logs the target pose to NetworkTables.
+     * Use this whenever you calculate a new target pose.
+     */
+    private final StructPublisher<Pose2d> m_targetPosePub = m_inst.getTable("DriveState")
+            .getStructTopic("Target Pose", Pose2d.struct)
+            .publish();
 
     /**
      * Gets the ID of the primary in-view apriltag.
@@ -291,6 +300,7 @@ public class AimingRoutines {
                             if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
                                 m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
                             }
+                            m_targetPosePub.set(m_currentTargetPose);
                             return generatePath(m_drivetrain.getState(), m_currentTargetPose, ON_THE_FLY_CONSTRAINTS);
                         }),
                         positionCorrectionCommand())
@@ -315,6 +325,7 @@ public class AimingRoutines {
                                 m_currentTargetPose =
                                         currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
+                            m_targetPosePub.set(m_currentTargetPose);
                             return generatePath(currentState, m_currentTargetPose, ON_THE_FLY_CONSTRAINTS);
                         }),
                         positionCorrectionCommand())
@@ -341,6 +352,7 @@ public class AimingRoutines {
                                         currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
                             }
                             m_driveToPose.withTargetPose(m_currentTargetPose);
+                            m_targetPosePub.set(m_currentTargetPose);
                         },
                         () -> m_drivetrain.setControl(m_driveToPose))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
@@ -357,14 +369,13 @@ public class AimingRoutines {
                     } else {
                         m_currentTargetPose = currentPose.nearest(FieldConstants.RED_CORAL_STATION_POSES);
                     }
+                    m_targetPosePub.set(m_currentTargetPose);
                     return generatePath(currentState, m_currentTargetPose, CORAL_STATION_CONSTRAINTS);
                 }),
                 positionCorrectionCommand());
     }
 
-    /**
-     * @return A command that attempts to get closer to the currently set target pose.
-     */
+    /** A command that attempts to get closer to the currently set target pose. */
     private Command positionCorrectionCommand() {
         return m_drivetrain.startRun(
                 () -> {
@@ -393,7 +404,7 @@ public class AimingRoutines {
         Rotation2d directionOfTravel;
         if (currentState.Speeds.vxMetersPerSecond == 0.0 && currentState.Speeds.vyMetersPerSecond == 0.0) {
             Translation2d directionToTarget = targetPose.getTranslation().minus(currentState.Pose.getTranslation());
-            directionOfTravel = new Rotation2d(directionToTarget.getX(), directionToTarget.getY());
+            directionOfTravel = directionToTarget.getAngle();
         } else {
             // You need to convert the robot-relative speeds to field-relative speeds to find the actual direction of
             // travel.

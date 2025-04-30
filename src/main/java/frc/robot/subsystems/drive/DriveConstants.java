@@ -171,6 +171,8 @@ public class DriveConstants {
     /**
      * The maximum angular velocity of the steer motor in radians per second.
      * <p>
+     * We limit the voltage here to 7 V because the highest observed voltage is currently about 8 V.
+     * <p>
      * Units: volts / volts per radian per second
      */
     public static final double MAX_STEER_VELOCITY = 7.0 / TunerConstants.steerGains.kV;
