@@ -2,8 +2,6 @@ package frc.robot.subsystems.elevator;
 
 import static edu.wpi.first.units.Units.*;
 
-import edu.wpi.first.units.measure.Distance;
-
 public class ElevatorConstants {
     private ElevatorConstants() {}
 
@@ -28,27 +26,9 @@ public class ElevatorConstants {
     public static final double ARM_MAX_LIMIT = 6.2;
 
     /**
-     * Gear reduction of the elevator motor.
-     */
-    private static final double ELEVATOR_GEAR_REDUCTION = 12.0;
-
-    /**
-     * The distance from the center of the hex bar to the outer edge of the elevator chain.
-     */
-    private static final Distance ELEVATOR_GEAR_RADIUS = Centimeters.of(2.65);
-
-    /**
      * The conversion of motor rotations to elevator chain rotations.
      */
-    public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = ELEVATOR_GEAR_REDUCTION;
-
-    /**
-     * The conversion of elevator chain rotations to elevator distance traveled.
-     * We don't account for the gear ratio here because it has already been accounted for.
-     * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/api-reference/device-specific/talonfx/closed-loop-requests.html#converting-from-meters">How we convert from rotations to meters</a>
-     */
-    public static final double ELEVATOR_ROTATIONS_TO_METERS_CONVERSION =
-            2.0 * Math.PI * ELEVATOR_GEAR_RADIUS.in(Meters);
+    public static final double ELEVATOR_SENSOR_TO_MECHANISM_RATIO = 12.0;
 
     /** Units: volts */
     public static final double ELEVATOR_K_G = 0.18397;

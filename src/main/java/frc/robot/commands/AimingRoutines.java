@@ -316,7 +316,7 @@ public class AimingRoutines {
                         m_drivetrain.defer(() -> {
                             m_drivetrain.updateVisionTarget(true);
                             SwerveDriveState currentState = m_drivetrain.getState();
-                            Pose2d currentPose = m_drivetrain.getState().Pose;
+                            Pose2d currentPose = currentState.Pose;
                             Alliance alliance = DriverStation.getAlliance().orElseThrow();
                             if (alliance == Alliance.Blue) {
                                 m_currentTargetPose =
