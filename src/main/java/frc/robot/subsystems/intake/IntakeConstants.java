@@ -66,7 +66,6 @@ public class IntakeConstants {
     /**
      * Proportional gain for the <a href="https://docs.revrobotics.com/revlib/spark/closed-loop#closed-loop-control-with-spark-motor-controllers">internal closed loop controller</a>
      * in duty cycle (percent out) per radian.
-     * This still needs to be tuned.
      */
     public static final double K_P = 0.25;
 

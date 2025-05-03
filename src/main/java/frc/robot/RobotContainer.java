@@ -153,7 +153,7 @@ public class RobotContainer {
         m_driverController.triangle().whileTrue(m_aimingRoutines.driveToNearestCoralStation());
         m_driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> m_brake));
         // Press once to begin driving normally again
-        m_driverController.square().whileTrue(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
+        m_driverController.square().onTrue(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
                 .withVelocityY(getVelocityY())
                 .withRotationalRate(getRotationalRate())
                 .withDeadband(getDeadband())
