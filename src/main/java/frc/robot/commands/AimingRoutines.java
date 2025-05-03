@@ -255,45 +255,45 @@ public class AimingRoutines {
                                     && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
 
                             if (leftStickAngleRadians >= Math.PI / 3.0
-                                    && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // Bottom reef side
+                                    && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // 1: Top reef side
                                 if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
                                 } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
                                 }
                             } else if (leftStickAngleRadians >= 2.0 * Math.PI / 3.0
-                                    && leftStickAngleRadians < Math.PI) { // Bottom right reef side
+                                    && leftStickAngleRadians < Math.PI) { // 2: Top left reef side
                                 if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
                                 } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
                                 }
                             } else if (leftStickAngleRadians >= Math.PI
-                                    && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // Top right reef side
+                                    && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // 3: Bottom left reef side
                                 if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
                                 } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
                                 }
                             } else if (leftStickAngleRadians >= 4.0 * Math.PI / 3.0
-                                    && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // Top reef side
+                                    && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // 4: Bottom reef side
                                 if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
                                 } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
                                 }
                             } else if (leftStickAngleRadians >= 5.0 * Math.PI / 3.0
-                                    && leftStickAngleRadians < 2.0 * Math.PI) { // Top left reef side
+                                    && leftStickAngleRadians < 2.0 * Math.PI) { // 5: Bottom right reef side
                                 if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
                                 } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
                                 }
-                            } else { // Bottom left reef side
+                            } else { // 6: Top right reef side
                                 if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
                                 } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11);
+                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
                                 }
                             }
                             // Flip from blue target to red target if on red alliance
