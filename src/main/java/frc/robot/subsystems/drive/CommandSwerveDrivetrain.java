@@ -15,8 +15,10 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoubleArraySubscriber;
 import edu.wpi.first.networktables.NetworkTable;
@@ -28,7 +30,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -52,9 +54,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     private volatile boolean m_targetingReef = false;
 
+    private MapleSimSwerveDrivetrain m_mapleSimSwerveDrivetrain = null;
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
-    private double m_lastSimTime;
 
     /* Blue alliance sees forward as 0 degrees (toward red alliance wall) */
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
@@ -155,6 +157,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final StructPublisher<Pose2d> m_backPoseEstimatePub =
             m_poseTable.getStructTopic("Back Pose Estimate", Pose2d.struct).publish();
 
+    private final NetworkTable m_speedsTable = m_stateTable.getSubTable("Speeds");
+    private final StructPublisher<ChassisSpeeds> m_appliedSpeedsPub = m_speedsTable
+            .getStructTopic("PathPlanner Applied Robot-relative Speeds", ChassisSpeeds.struct)
+            .publish();
+
     private final NetworkTable m_tagsTable = m_stateTable.getSubTable("Apriltags");
     /** Logs the tags that are currently visible from the front to AdvantageScope. */
     private final StructArrayPublisher<Translation3d> m_frontVisibleTagsPub = m_tagsTable
@@ -182,7 +189,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public CommandSwerveDrivetrain(
             SwerveDrivetrainConstants drivetrainConstants, SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, modules);
+        super(drivetrainConstants, MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -207,7 +214,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             SwerveDrivetrainConstants drivetrainConstants,
             double odometryUpdateFrequency,
             SwerveModuleConstants<?, ?, ?>... modules) {
-        super(drivetrainConstants, odometryUpdateFrequency, modules);
+        super(
+                drivetrainConstants,
+                odometryUpdateFrequency,
+                MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -245,7 +255,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 odometryUpdateFrequency,
                 odometryStandardDeviation,
                 visionStandardDeviation,
-                modules);
+                MapleSimSwerveDrivetrain.regulateModuleConstantsForSimulation(modules));
         if (Utils.isSimulation()) {
             startSimThread();
         }
@@ -259,14 +269,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 this::resetPose, // Consumer for seeding pose against auto
                 () -> getState().Speeds, // Supplier of current robot speeds
                 // Consumer of ChassisSpeeds and feedforwards to drive the robot
-                (speeds, feedforwards) -> setControl(m_pathApplyRobotSpeeds
-                        .withSpeeds(speeds)
-                        .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
-                        .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons())),
+                (speeds, feedforwards) -> {
+                    m_appliedSpeedsPub.set(speeds);
+                    setControl(m_pathApplyRobotSpeeds
+                            .withSpeeds(speeds)
+                            .withWheelForceFeedforwardsX(feedforwards.robotRelativeForcesXNewtons())
+                            .withWheelForceFeedforwardsY(feedforwards.robotRelativeForcesYNewtons()));
+                },
                 new PPHolonomicDriveController(DriveConstants.TRANSLATION_PID, DriveConstants.ROTATION_PID),
                 DriveConstants.PATHPLANNER_CONFIG,
                 // Assume the path needs to be flipped for Red vs Blue, this is normally the case
-                () -> DriverStation.getAlliance().orElseThrow() == Alliance.Red,
+                () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
                 this // Subsystem for requirements
                 );
     }
@@ -335,17 +348,24 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     private void startSimThread() {
-        m_lastSimTime = Utils.getCurrentTimeSeconds();
-
+        m_mapleSimSwerveDrivetrain = new MapleSimSwerveDrivetrain(
+                Seconds.of(kSimLoopPeriod),
+                // TODO: modify the following constants according to your robot
+                DriveConstants.ROBOT_MASS, // robot weight
+                DriveConstants.BUMPER_TO_BUMPER_X_DISTANCE, // bumper length
+                DriveConstants.BUMPER_TO_BUMPER_Y_DISTANCE, // bumper width
+                DCMotor.getKrakenX60(1), // drive motor type
+                DCMotor.getKrakenX60(1), // steer motor type
+                DriveConstants.WHEEL_COF, // wheel COF
+                getModuleLocations(),
+                getPigeon2(),
+                getModules(),
+                TunerConstants.FrontLeft,
+                TunerConstants.FrontRight,
+                TunerConstants.BackLeft,
+                TunerConstants.BackRight);
         /* Run simulation at a faster rate so PID gains behave more reasonably */
-        m_simNotifier = new Notifier(() -> {
-            final double currentTime = Utils.getCurrentTimeSeconds();
-            double deltaTime = currentTime - m_lastSimTime;
-            m_lastSimTime = currentTime;
-
-            /* use the measured time delta, get battery voltage from WPILib */
-            updateSimState(deltaTime, RobotController.getBatteryVoltage());
-        });
+        m_simNotifier = new Notifier(m_mapleSimSwerveDrivetrain::update);
         m_simNotifier.startPeriodic(kSimLoopPeriod);
     }
 
@@ -420,7 +440,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             m_frontVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
             m_frontToTagDistancePub.set(distancesToTags, timestampMicroseconds);
 
-            if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
+            if (!m_targetingReef || !nonReefTagSeen) {
                 /* Add the vision measurement to the pose estimator */
                 this.addVisionMeasurement(
                         botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.FRONT_STD_DEVS);
@@ -491,7 +511,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             m_backVisibleTagsPub.set(visibleTagPositions, timestampMicroseconds);
             m_backToTagDistancePub.set(distancesToTags, timestampMicroseconds);
 
-            if (!m_targetingReef || (m_targetingReef && !nonReefTagSeen)) {
+            if (!m_targetingReef || !nonReefTagSeen) {
                 /* Add the vision measurement to the pose estimator */
                 this.addVisionMeasurement(
                         botPoseEstimate, Utils.fpgaToCurrentTime(adjustedTimestamp), VisionConstants.BACK_STD_DEVS);
@@ -505,5 +525,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public void updateVisionTarget(boolean targetingReef) {
         m_targetingReef = targetingReef;
+    }
+
+    @Override
+    public void resetPose(Pose2d pose) {
+        if (m_mapleSimSwerveDrivetrain != null) {
+            m_mapleSimSwerveDrivetrain.m_mapleSimDrive.setSimulationWorldPose(pose);
+            Timer.delay(0.05);
+        }
+        super.resetPose(pose);
     }
 }

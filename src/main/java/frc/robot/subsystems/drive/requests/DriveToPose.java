@@ -49,7 +49,7 @@ public class DriveToPose implements ResettableSwerveRequest {
      */
     private ChassisSpeeds m_toApplyRobotSpeeds = new ChassisSpeeds();
     /**
-     * The field-relative chassis speeds to log to NetworkTables.
+     * The field-relative chassis speeds to accept field-relative X and Y velocities from the trapezoid profiles.
      */
     private ChassisSpeeds m_toApplyFieldSpeeds = new ChassisSpeeds();
     /**
@@ -109,8 +109,9 @@ public class DriveToPose implements ResettableSwerveRequest {
     private final StructPublisher<ChassisSpeeds> m_errorCorrectionVelocityPub = m_table.getStructTopic(
                     "Error Correction Velocity", ChassisSpeeds.struct)
             .publish();
-    private final StructPublisher<ChassisSpeeds> m_appliedVelocityPub =
-            m_table.getStructTopic("Applied Velocity", ChassisSpeeds.struct).publish();
+    private final StructPublisher<ChassisSpeeds> m_appliedSpeedsPub = m_table.getStructTopic(
+                    "Applied Robot-relative Speeds", ChassisSpeeds.struct)
+            .publish();
 
     /**
      * Creates a new profiled request with the given constraints.
@@ -213,9 +214,6 @@ public class DriveToPose implements ResettableSwerveRequest {
 
         m_toApplyRobotSpeeds = m_previousSwerveSetpoint.robotRelativeSpeeds();
 
-        // Convert back to field-relative speeds for the sake of easier logging.
-        m_toApplyFieldSpeeds = ChassisSpeeds.fromRobotRelativeSpeeds(m_toApplyRobotSpeeds, currentAngle);
-
         // NetworkTables logging
         long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
 
@@ -228,7 +226,7 @@ public class DriveToPose implements ResettableSwerveRequest {
         m_errorCorrectionVelocityPub.set(
                 new ChassisSpeeds(xCorrectionOutput, yCorrectionOutput, headingCorrectionOutput),
                 timestampMicroseconds);
-        m_appliedVelocityPub.set(m_toApplyFieldSpeeds, timestampMicroseconds);
+        m_appliedSpeedsPub.set(m_toApplyRobotSpeeds, timestampMicroseconds);
 
         return m_applyRobotSpeeds
                 .withSpeeds(m_toApplyRobotSpeeds)

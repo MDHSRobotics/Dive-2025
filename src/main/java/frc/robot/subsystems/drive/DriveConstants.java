@@ -28,9 +28,12 @@ public class DriveConstants {
     private DriveConstants() {}
 
     /**
-     * Distance between center to front bumper in meters
+     * Distance between center to front bumper
      */
-    public static final Distance CENTER_TO_BUMPER_LENGTH = Inches.of(18);
+    public static final Distance CENTER_TO_FRONT_BUMPER_LENGTH = Inches.of(18);
+
+    public static final Distance BUMPER_TO_BUMPER_X_DISTANCE = Inches.of(33);
+    public static final Distance BUMPER_TO_BUMPER_Y_DISTANCE = Inches.of(36);
 
     /**
      * Distance between front left module (cancoder) and front right module (cancoder)
@@ -104,7 +107,7 @@ public class DriveConstants {
      * Robot mass with battery and bumpers.
      * Last measured value: 126 pounds-force, coverted to kg.
      */
-    private static final Mass ROBOT_MASS = Kilograms.of(57.15264);
+    public static final Mass ROBOT_MASS = Kilograms.of(57.15264);
 
     /**
      * Angular acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveRotation a SysId routine}.
@@ -132,7 +135,7 @@ public class DriveConstants {
             * (K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared) / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared)));
 
     /** Wheel coefficient of friction for <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels.</a> */
-    private static final double WHEEL_COF = 1.0;
+    public static final double WHEEL_COF = 1.0;
 
     /** The swerve module config to be used for every module. */
     private static final ModuleConfig MODULE_CONFIG = new ModuleConfig(

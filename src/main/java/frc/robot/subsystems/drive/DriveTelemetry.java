@@ -3,6 +3,7 @@ package frc.robot.subsystems.drive;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
@@ -36,9 +37,10 @@ public class DriveTelemetry {
             .getSubTable("Poses")
             .getStructTopic("Pose", Pose2d.struct)
             .publish();
-    // private final StructPublisher<ChassisSpeeds> m_speedsPub = m_driveStateTable
-    //         .getStructTopic("Field Speeds", ChassisSpeeds.struct)
-    //         .publish();
+    private final StructPublisher<ChassisSpeeds> m_speedsPub = m_driveStateTable
+            .getSubTable("Speeds")
+            .getStructTopic("Actual Robot-relative Speeds", ChassisSpeeds.struct)
+            .publish();
     // private final StructArrayPublisher<SwerveModuleState> m_moduleStatesPub = m_driveStateTable
     //         .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
     //         .publish();
@@ -69,9 +71,7 @@ public class DriveTelemetry {
 
         /* Telemeterize the swerve drive state */
         m_drivePosePub.set(state.Pose, timestampMicroseconds);
-        // m_speedsPub.set(
-        //         ChassisSpeeds.fromRobotRelativeSpeeds(state.Speeds, state.Pose.getRotation()),
-        // timestampMicroseconds);
+        m_speedsPub.set(state.Speeds, timestampMicroseconds);
         // m_moduleStatesPub.set(state.ModuleStates, timestampMicroseconds);
         // m_moduleTargetsPub.set(state.ModuleTargets, timestampMicroseconds);
         // m_modulePositionsPub.set(state.ModulePositions, timestampMicroseconds);

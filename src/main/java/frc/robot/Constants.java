@@ -171,7 +171,8 @@ public final class Constants {
          */
         private static final double REEF_TAG_TO_TREE_DISTANCE = Inches.of(6.47).in(Meters);
         /** Distance from tree to center of robot in meters */
-        private static final double REEF_WALL_TO_ROBOT_DISTANCE = DriveConstants.CENTER_TO_BUMPER_LENGTH.in(Meters);
+        private static final double REEF_WALL_TO_ROBOT_DISTANCE =
+                DriveConstants.CENTER_TO_FRONT_BUMPER_LENGTH.in(Meters);
 
         private static final Rotation2d k60deg = Rotation2d.fromDegrees(60.0);
         private static final Rotation2d k120deg = Rotation2d.fromDegrees(120.0);
@@ -422,7 +423,7 @@ public final class Constants {
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE)));
 
         private static final double CORAL_STATION_TO_ROBOT_DISTANCE =
-                DriveConstants.CENTER_TO_BUMPER_LENGTH.plus(Inches.of(6)).in(Meters);
+                DriveConstants.CENTER_TO_FRONT_BUMPER_LENGTH.plus(Inches.of(6)).in(Meters);
 
         public static final List<Pose2d> BLUE_CORAL_STATION_POSES = List.of(
                 new Pose2d(
