@@ -13,6 +13,14 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.VisionConstants;
 
+/**
+ * IMPORTANT NOTE: Even while in simulation, the pose reported by this telemetry still represents a robot pose that
+ * <a href="https://shenzhen-robotics-alliance.github.io/maple-sim/simulation-details/#odometry-vision-simulation">
+ * accumulates odometry errors.
+ * </a>
+ * <p>
+ * If you want to see the robot's actual position in simulation, use the pose logged by {@link frc.robot.subsystems.drive.MapleSimSwerveDrivetrain Maple-sim}.
+ */
 public class DriveTelemetry {
     private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
     /**
