@@ -2,6 +2,7 @@ package frc.robot.subsystems.drive;
 
 import static edu.wpi.first.units.Units.*;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -71,8 +72,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
     /* Swerve requests to apply during SysId characterization */
-    // private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
-    //         new SwerveRequest.SysIdSwerveTranslation();
+    private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization =
+            new SwerveRequest.SysIdSwerveTranslation();
     // private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization =
     //         new SwerveRequest.SysIdSwerveSteerGains();
     // private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization =
@@ -81,15 +82,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             new SwerveRequest.SysIdSwerveTranslation();
 
     /** SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
-    // private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
-    //         new SysIdRoutine.Config(
-    //                 null, // Use default ramp rate (1 V/s)
-    //                 Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
-    //                 null, // Use default timeout (10 s)
-    //                 // Log state with SignalLogger class
-    //                 state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
-    //         new SysIdRoutine.Mechanism(
-    //                 output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
+    private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                    null, // Use default ramp rate (1 V/s)
+                    Volts.of(4), // Reduce dynamic step voltage to 4 V to prevent brownout
+                    null, // Use default timeout (10 s)
+                    // Log state with SignalLogger class
+                    state -> SignalLogger.writeString("SysIdTranslation_State", state.toString())),
+            new SysIdRoutine.Mechanism(
+                    output -> setControl(m_translationCharacterization.withVolts(output)), null, this));
 
     /** SysId routine for characterizing steer. This is used to find PID gains for the steer motors. */
     // private final SysIdRoutine m_sysIdRoutineSteer = new SysIdRoutine(
@@ -129,17 +130,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * You must log the data yourself while the test is running.
      * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html#preventing-wheel-slip">explanation on what to log</a>
      */
-    private final SysIdRoutine m_sysIdRoutineSlipCurrent = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                    Volts.of(0.1).per(Second),
-                    Volts.of(0), // Dynamic should not be used for this routine
-                    null, // Use default timeout (10 s)
-                    state -> {}), // You must log the data yourself.
-            new SysIdRoutine.Mechanism(
-                    output -> setControl(m_slipCurrentCharacterization.withVolts(output)), null, this));
+    // private final SysIdRoutine m_sysIdRoutineSlipCurrent = new SysIdRoutine(
+    //         new SysIdRoutine.Config(
+    //                 Volts.of(0.1).per(Second),
+    //                 Volts.of(0), // Dynamic should not be used for this routine
+    //                 null, // Use default timeout (10 s)
+    //                 state -> {}), // You must log the data yourself.
+    //         new SysIdRoutine.Mechanism(
+    //                 output -> setControl(m_slipCurrentCharacterization.withVolts(output)), null, this));
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineSlipCurrent;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
 
     /* NetworkTables logging */
     private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();

@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.subsystems.climb.Climb;
@@ -159,30 +160,30 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
 
-        m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
-        m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
+        // m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
+        // m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
          * Note that each routine should be run exactly once in a single log.
          * Comment out when finished.
          */
-        // driverController
-        //         .share()
-        //         .and(driverController.povUp())
-        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        // driverController
-        //         .share()
-        //         .and(driverController.povDown())
-        //         .whileTrue(m_elevator.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        // driverController
-        //         .options()
-        //         .and(driverController.povUp())
-        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        // driverController
-        //         .options()
-        //         .and(driverController.povDown())
-        //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        m_driverController
+                .share()
+                .and(m_driverController.povUp())
+                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        m_driverController
+                .share()
+                .and(m_driverController.povDown())
+                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        m_driverController
+                .options()
+                .and(m_driverController.povUp())
+                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        m_driverController
+                .options()
+                .and(m_driverController.povDown())
+                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
