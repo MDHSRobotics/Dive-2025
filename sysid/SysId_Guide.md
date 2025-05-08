@@ -67,6 +67,19 @@
 18. Comment out SignalLogger.stop() in testExit.
 
 
+## Swerve drive slip current:
+1. Go to CommandSwerveDrivetrain and create a SysId slip current routine. You should set the quasistatic ramp rate to something low, like 0.1 volts per second. You will not need to log the state in the routine, because you will view it live in AdvantageScope.
+2. Make sure you have a controller binding for quasistatic forward. Do not use quasistatic backward or dynamic.
+4. Deploy your robot code, and open AdvantageScope. Go to "Help", then "Show Preferences", then set "Live Source" to Phoenix Diagnostics.
+5. Get the ID of one of the front drive motors in TunerConstants, and find the motor in AdvantageScope.
+6. Open up a line graph and plot Velocity and StatorCurrent.
+7. Enable test mode and drive the robot up to a wall so the front is fully against the wall.
+8. Run quasistatic forward until the wheels stop whistling and start slipping. Then disable test mode.
+9. Press the pause button in AdvantageScope, and zoom in on the line graph to find when the velocity starts to rise and the stator current starts to drop. The maximum stator current is your slip current. 
+10. Save the value to "kSlipCurrent" in TunerConstants.
+11. Open AdvantageScope. Go to "Help", then "Show Preferences", then set "Live Source" back to NetworkTables 4.
+
+
 ## Other CTRE gains (like for an elevator):
 1. Write a sysid routine and sysid commands for the elevator. Use this as an example: https://github.com/MDHSRobotics/Dive-2025/blob/experiments/src/main/java/frc/robot/subsystems/elevator/Elevator.java
 2. Make sure you have controller bindings for quasistatic forward, quasistatic backward, dynamic forward and dynamic backward.
