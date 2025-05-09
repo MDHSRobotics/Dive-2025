@@ -130,17 +130,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * You must log the data yourself while the test is running.
      * @see <a href="https://pro.docs.ctr-electronics.com/en/stable/docs/hardware-reference/talonfx/improving-performance-with-current-limits.html#preventing-wheel-slip">explanation on what to log</a>
      */
-    // private final SysIdRoutine m_sysIdRoutineSlipCurrent = new SysIdRoutine(
-    //         new SysIdRoutine.Config(
-    //                 Volts.of(0.1).per(Second),
-    //                 Volts.of(0), // Dynamic should not be used for this routine
-    //                 null, // Use default timeout (10 s)
-    //                 state -> {}), // You must log the data yourself.
-    //         new SysIdRoutine.Mechanism(
-    //                 output -> setControl(m_slipCurrentCharacterization.withVolts(output)), null, this));
+    private final SysIdRoutine m_sysIdRoutineSlipCurrent = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                    Volts.of(0.1).per(Second),
+                    Volts.of(0), // Dynamic should not be used for this routine
+                    null, // Use default timeout (10 s)
+                    state -> {}), // You must log the data yourself.
+            new SysIdRoutine.Mechanism(
+                    output -> setControl(m_slipCurrentCharacterization.withVolts(output)), null, this));
 
     /* The SysId routine to test */
-    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineTranslation;
+    private SysIdRoutine m_sysIdRoutineToApply = m_sysIdRoutineSlipCurrent;
 
     /* NetworkTables logging */
     private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
