@@ -232,78 +232,31 @@ public class AimingRoutines {
     /**
      * This command will generate a path to the tree selected by the joysticks and follow it.
      * Once it finishes following the path, it will attempt to correct any inaccuracies in its position until interrupted.
-     * See "diagrams/Tree_Selection.jpeg" and "diagrams/Useful_angles_in_radians.png" in the project files for more info.
      */
     public Command driveToTree() {
         return Commands.sequence(
                         m_drivetrain.defer(() -> {
                             m_drivetrain.updateVisionTarget(true);
-                            // Get the left joystick angle in the range of 0 to 2*PI
-                            final double leftStickAngleRadians = MathUtil.inputModulus(
-                                    Math.atan2(-m_leftYSupplier.getAsDouble(), m_leftXSupplier.getAsDouble()),
-                                    0.0,
-                                    2.0 * Math.PI);
-
-                            // Get the right joystick angle in the range of 0 to 2*PI
-                            final double rightStickAngleRadians = MathUtil.inputModulus(
-                                    Math.atan2(-m_rightYSupplier.getAsDouble(), m_rightXSupplier.getAsDouble()),
-                                    0.0,
-                                    2.0 * Math.PI);
-
-                            // Whether or not the joystick chose the left tree
-                            final boolean leftTreeSelected = (rightStickAngleRadians >= Math.PI / 2.0)
-                                    && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
-
-                            if (leftStickAngleRadians >= Math.PI / 3.0
-                                    && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // 1: Top reef side
-                                if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
-                                } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
-                                }
-                            } else if (leftStickAngleRadians >= 2.0 * Math.PI / 3.0
-                                    && leftStickAngleRadians < Math.PI) { // 2: Top left reef side
-                                if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
-                                } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
-                                }
-                            } else if (leftStickAngleRadians >= Math.PI
-                                    && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // 3: Bottom left reef side
-                                if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
-                                } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
-                                }
-                            } else if (leftStickAngleRadians >= 4.0 * Math.PI / 3.0
-                                    && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // 4: Bottom reef side
-                                if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
-                                } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
-                                }
-                            } else if (leftStickAngleRadians >= 5.0 * Math.PI / 3.0
-                                    && leftStickAngleRadians < 2.0 * Math.PI) { // 5: Bottom right reef side
-                                if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
-                                } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
-                                }
-                            } else { // 6: Top right reef side
-                                if (leftTreeSelected) {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
-                                } else {
-                                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
-                                }
-                            }
-                            // Flip from blue target to red target if on red alliance
-                            if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
-                                m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
-                            }
-                            m_targetPosePub.set(m_currentTargetPose);
+                            calculateTargetPose();
                             return generatePath(m_drivetrain.getState(), m_currentTargetPose, ON_THE_FLY_CONSTRAINTS);
                         }),
                         positionCorrectionCommand())
+                .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
+    }
+
+    /**
+     * A version of driveToTree() that may be less smooth, but does not have as much startup lag.
+     */
+    public Command driveToTreeSimple() {
+        return m_drivetrain
+                .startRun(
+                        () -> {
+                            m_drivetrain.updateVisionTarget(true);
+                            m_driveToPose.resetRequest();
+                            calculateTargetPose();
+                            m_driveToPose.withTargetPose(m_currentTargetPose);
+                        },
+                        () -> m_drivetrain.setControl(m_driveToPose))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
@@ -332,32 +285,6 @@ public class AimingRoutines {
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
-    /**
-     * An alternative to {@link frc.robot.commands.AimingRoutines#driveToNearestTree() driveToNearestTree()}
-     * that is not as smooth and may hit the reef wall, but does not have any startup lag.
-     */
-    public Command driveToNearestTreeSimple() {
-        return m_drivetrain
-                .startRun(
-                        () -> {
-                            m_drivetrain.updateVisionTarget(true);
-                            m_driveToPose.resetRequest();
-                            Pose2d currentPose = m_drivetrain.getState().Pose;
-                            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-                            if (alliance == Alliance.Blue) {
-                                m_currentTargetPose =
-                                        currentPose.nearest(FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS);
-                            } else {
-                                m_currentTargetPose =
-                                        currentPose.nearest(FieldConstants.RED_REEF_TREE_AIMING_POSITIONS);
-                            }
-                            m_driveToPose.withTargetPose(m_currentTargetPose);
-                            m_targetPosePub.set(m_currentTargetPose);
-                        },
-                        () -> m_drivetrain.setControl(m_driveToPose))
-                .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
-    }
-
     public Command driveToNearestCoralStation() {
         return Commands.sequence(
                 m_drivetrain.defer(() -> {
@@ -383,6 +310,72 @@ public class AimingRoutines {
                     m_driveToPose.withTargetPose(m_currentTargetPose);
                 },
                 () -> m_drivetrain.setControl(m_driveToPose));
+    }
+
+    /**
+     * Calculates the target pose based on the angles of the given joysticks.
+     * See "diagrams/Tree_Selection.jpeg" and "diagrams/Useful_angles_in_radians.png" in the project files for more info on target selection.
+     */
+    private void calculateTargetPose() {
+        // Get the left joystick angle in the range of 0 to 2*PI
+        final double leftStickAngleRadians = MathUtil.inputModulus(
+                Math.atan2(-m_leftYSupplier.getAsDouble(), m_leftXSupplier.getAsDouble()), 0.0, 2.0 * Math.PI);
+
+        // Get the right joystick angle in the range of 0 to 2*PI
+        final double rightStickAngleRadians = MathUtil.inputModulus(
+                Math.atan2(-m_rightYSupplier.getAsDouble(), m_rightXSupplier.getAsDouble()), 0.0, 2.0 * Math.PI);
+
+        // Whether or not the joystick chose the left tree
+        final boolean leftTreeSelected =
+                (rightStickAngleRadians >= Math.PI / 2.0) && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
+
+        if (leftStickAngleRadians >= Math.PI / 3.0 && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // 1: Top reef side
+            if (leftTreeSelected) {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
+            } else {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
+            }
+        } else if (leftStickAngleRadians >= 2.0 * Math.PI / 3.0
+                && leftStickAngleRadians < Math.PI) { // 2: Top left reef side
+            if (leftTreeSelected) {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
+            } else {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
+            }
+        } else if (leftStickAngleRadians >= Math.PI
+                && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // 3: Bottom left reef side
+            if (leftTreeSelected) {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
+            } else {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
+            }
+        } else if (leftStickAngleRadians >= 4.0 * Math.PI / 3.0
+                && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // 4: Bottom reef side
+            if (leftTreeSelected) {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
+            } else {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
+            }
+        } else if (leftStickAngleRadians >= 5.0 * Math.PI / 3.0
+                && leftStickAngleRadians < 2.0 * Math.PI) { // 5: Bottom right reef side
+            if (leftTreeSelected) {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
+            } else {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
+            }
+        } else { // 6: Top right reef side
+            if (leftTreeSelected) {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
+            } else {
+                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
+            }
+        }
+        // Flip from blue target to red target if on red alliance
+        if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
+            m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
+        }
+        // Log to NetworkTables
+        m_targetPosePub.set(m_currentTargetPose);
     }
 
     /**

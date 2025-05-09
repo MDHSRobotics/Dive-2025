@@ -98,8 +98,6 @@ public class RobotContainer {
         // testAutoChooser.addOption(
         //         "Drive Wheel Radius Characterization",
         //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
-        m_testAutoChooser.addOption("Drive to nearest tree", m_aimingRoutines.driveToNearestTreeSimple());
-        // testAutoChooser.addOption("Drive into cage", aimingRoutines.driveIntoCage());
         SmartDashboard.putData("Select your test auto:", m_testAutoChooser);
 
         m_autoCreator.sendAutoChoosers();
