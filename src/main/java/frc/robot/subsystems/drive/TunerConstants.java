@@ -20,7 +20,7 @@ public class TunerConstants {
 
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
-    private static final Slot0Configs steerGains = new Slot0Configs()
+    public static final Slot0Configs steerGains = new Slot0Configs()
             .withKP(23.091)
             .withKI(0)
             .withKD(0.40491)
@@ -31,11 +31,11 @@ public class TunerConstants {
     // When using closed-loop control, the drive motor uses the control
     // output type specified by SwerveModuleConstants.DriveMotorClosedLoopOutput
     private static final Slot0Configs driveGains = new Slot0Configs()
-            .withKP(0.14817)
+            .withKP(0.16684)
             .withKI(0)
             .withKD(0)
-            .withKS(0.16238)
-            .withKV(0.11315);
+            .withKS(0.12268)
+            .withKV(0.11435);
 
     // The closed-loop output type to use for the steer motors;
     // This affects the PID/FF gains for the steer motors
@@ -54,7 +54,7 @@ public class TunerConstants {
     private static final SteerFeedbackType kSteerFeedbackType = SteerFeedbackType.RemoteCANcoder;
 
     // The stator current at which the wheels start to slip;
-    public static final Current kSlipCurrent = Amps.of(51.62);
+    public static final Current kSlipCurrent = Amps.of(43.62);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.

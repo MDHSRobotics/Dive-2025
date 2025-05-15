@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -29,9 +28,12 @@ public class DriveConstants {
     private DriveConstants() {}
 
     /**
-     * Distance between center to front bumper in meters
+     * Distance between center to front bumper
      */
-    public static final Distance CENTER_TO_BUMPER_LENGTH = Inches.of(16);
+    public static final Distance CENTER_TO_FRONT_BUMPER_LENGTH = Inches.of(18);
+
+    public static final Distance BUMPER_TO_BUMPER_X_DISTANCE = Inches.of(33);
+    public static final Distance BUMPER_TO_BUMPER_Y_DISTANCE = Inches.of(36);
 
     /**
      * Distance between front left module (cancoder) and front right module (cancoder)
@@ -101,14 +103,11 @@ public class DriveConstants {
      */
     public static final PIDConstants ROTATION_PID = new PIDConstants(5.0, 0.0, 0.0);
 
-    public static final PPHolonomicDriveController DRIVE_CONTROLLER =
-            new PPHolonomicDriveController(TRANSLATION_PID, ROTATION_PID);
-
     /**
-     * Robot mass with battery.
+     * Robot mass with battery and bumpers.
      * Last measured value: 126 pounds-force, coverted to kg.
      */
-    private static final Mass ROBOT_MASS = Kilograms.of(57.15264);
+    public static final Mass ROBOT_MASS = Kilograms.of(57.15264);
 
     /**
      * Angular acceleration gain from {@link com.ctre.phoenix6.swerve.SwerveRequest.SysIdSwerveRotation a SysId routine}.
@@ -136,7 +135,7 @@ public class DriveConstants {
             * (K_A_ANGULAR.in(VoltsPerRadianPerSecondSquared) / K_A_LINEAR.in(VoltsPerMeterPerSecondSquared)));
 
     /** Wheel coefficient of friction for <a href="https://www.vexrobotics.com/colsonperforma.html">Colson wheels.</a> */
-    private static final double WHEEL_COF = 1.0;
+    public static final double WHEEL_COF = 1.0;
 
     /** The swerve module config to be used for every module. */
     private static final ModuleConfig MODULE_CONFIG = new ModuleConfig(
@@ -170,6 +169,14 @@ public class DriveConstants {
             12);
     public static final PathConstraints CORAL_STATION_CONSTRAINTS =
             new PathConstraints(4, 4, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
-    public static final PathConstraints CAGE_CONSTRAINTS =
-            new PathConstraints(1, 1, Units.degreesToRadians(540), Units.degreesToRadians(540), 12);
+
+    /* Swerve Setpoint Generator Constants */
+    /**
+     * The maximum angular velocity of the steer motor in radians per second.
+     * <p>
+     * We limit the voltage here to 7 V because the highest observed voltage is currently about 8 V.
+     * <p>
+     * Units: volts / volts per radian per second
+     */
+    public static final double MAX_STEER_VELOCITY = 7.0 / TunerConstants.steerGains.kV;
 }

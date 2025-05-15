@@ -4,83 +4,90 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
-import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants.VisionConstants;
 
+/**
+ * IMPORTANT NOTE: Even while in simulation, the pose reported by this telemetry still represents a robot pose that
+ * <a href="https://shenzhen-robotics-alliance.github.io/maple-sim/simulation-details/#odometry-vision-simulation">
+ * accumulates odometry errors.
+ * </a>
+ * <p>
+ * If you want to see the robot's actual position in simulation, use the pose logged by {@link frc.robot.subsystems.drive.MapleSimSwerveDrivetrain Maple-sim}.
+ */
 public class DriveTelemetry {
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
     /**
      * Provides the robot orientation to the front limelight for <a href="https://docs.limelightvision.io/docs/docs-limelight/pipeline-apriltag/apriltag-robot-localization-megatag2">megatag2</a>.
      * The LimelightHelpers equivalent to this is {@link frc.robot.util.LimelightHelpers#SetRobotOrientation(String, double, double, double, double, double, double) SetRobotOrientation()}.
      * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/apis/complete-networktables-api#apriltag-and-3d-data">NetworkTables API documentation</a>
      */
-    private final DoubleArrayPublisher megatag2FrontUpdater = inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
+    private final DoubleArrayPublisher m_megatag2FrontUpdater = m_inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
             .publish(PubSubOption.periodic(0.004));
 
-    private final DoubleArrayPublisher megatag2BackUpdater = inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
+    private final DoubleArrayPublisher m_megatag2BackUpdater = m_inst.getTable(VisionConstants.BACK_LIMELIGHT_NAME)
             .getDoubleArrayTopic("robot_orientation_set")
             .publish(PubSubOption.periodic(0.004));
 
     /** Limelight requires this to be an array of size 6. */
-    private double[] megatag2Orientation = new double[6];
+    private double[] m_megatag2Orientation = new double[6];
 
     /* Robot swerve drive state */
-    private final NetworkTable driveStateTable = inst.getTable("DriveState");
-    private final StructPublisher<Pose2d> drivePosePub = driveStateTable
+    private final NetworkTable m_driveStateTable = m_inst.getTable("DriveState");
+    private final StructPublisher<Pose2d> m_drivePosePub = m_driveStateTable
             .getSubTable("Poses")
             .getStructTopic("Pose", Pose2d.struct)
             .publish();
-    private final StructPublisher<ChassisSpeeds> driveSpeedsPub =
-            driveStateTable.getStructTopic("Speeds", ChassisSpeeds.struct).publish();
-    private final StructArrayPublisher<SwerveModuleState> driveModuleStatesPub = driveStateTable
-            .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
+    private final StructPublisher<ChassisSpeeds> m_speedsPub = m_driveStateTable
+            .getSubTable("Speeds")
+            .getStructTopic("Actual Robot-relative Speeds", ChassisSpeeds.struct)
             .publish();
-    private final StructArrayPublisher<SwerveModuleState> driveModuleTargetsPub = driveStateTable
-            .getStructArrayTopic("ModuleTargets", SwerveModuleState.struct)
-            .publish();
-    private final StructArrayPublisher<SwerveModulePosition> driveModulePositionsPub = driveStateTable
-            .getStructArrayTopic("ModulePositions", SwerveModulePosition.struct)
-            .publish();
-    private final DoublePublisher driveOdometryFrequencyPub =
-            driveStateTable.getDoubleTopic("OdometryFrequency").publish();
-    private final DoublePublisher driveOdometryPeriodPub =
-            driveStateTable.getDoubleTopic("OdometryPeriod").publish();
-    private final DoublePublisher linearSpeedPub =
-            driveStateTable.getDoubleTopic("Linear Speed").publish();
+    // private final StructArrayPublisher<SwerveModuleState> m_moduleStatesPub = m_driveStateTable
+    //         .getStructArrayTopic("ModuleStates", SwerveModuleState.struct)
+    //         .publish();
+    // private final StructArrayPublisher<SwerveModuleState> m_moduleTargetsPub = m_driveStateTable
+    //         .getStructArrayTopic("ModuleTargets", SwerveModuleState.struct)
+    //         .publish();
+    // private final StructArrayPublisher<SwerveModulePosition> m_modulePositionsPub = m_driveStateTable
+    //         .getStructArrayTopic("ModulePositions", SwerveModulePosition.struct)
+    //         .publish();
+    private final DoublePublisher m_odometryFrequencyPub =
+            m_driveStateTable.getDoubleTopic("OdometryFrequency").publish();
+    // private final DoublePublisher m_odometryPeriodPub =
+    //         m_driveStateTable.getDoubleTopic("OdometryPeriod").publish();
+    private final DoublePublisher m_linearSpeedPub =
+            m_driveStateTable.getDoubleTopic("Linear Speed").publish();
 
     /** Accept the swerve drive state and log it to NetworkTables and SignalLogger. */
     public void telemeterize(SwerveDriveState state) {
-        long timestamp = stateTimestampToNTTimestamp(state.Timestamp);
+        long timestampMicroseconds = stateTimestampToNTTimestamp(state.Timestamp);
 
         /* Send the robot orientation to the limelight for megatag2 */
-        megatag2Orientation[0] = state.Pose.getRotation().getDegrees();
-        megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
-        megatag2FrontUpdater.set(megatag2Orientation, timestamp);
-        megatag2BackUpdater.set(megatag2Orientation, timestamp);
+        m_megatag2Orientation[0] = state.Pose.getRotation().getDegrees();
+        m_megatag2Orientation[1] = state.Speeds.omegaRadiansPerSecond * 180.0 / Math.PI;
+        m_megatag2FrontUpdater.set(m_megatag2Orientation, timestampMicroseconds);
+        m_megatag2BackUpdater.set(m_megatag2Orientation, timestampMicroseconds);
         // Flushing is ESSENTIAL for the limelight to receive accurate yaw and give accurate pose estimates.
-        inst.flush();
+        m_inst.flush();
 
         /* Telemeterize the swerve drive state */
-        drivePosePub.set(state.Pose, timestamp);
-        driveSpeedsPub.set(state.Speeds, timestamp);
-        driveModuleStatesPub.set(state.ModuleStates, timestamp);
-        driveModuleTargetsPub.set(state.ModuleTargets, timestamp);
-        driveModulePositionsPub.set(state.ModulePositions, timestamp);
-        driveOdometryFrequencyPub.set(1.0 / state.OdometryPeriod, timestamp);
-        driveOdometryPeriodPub.set(state.OdometryPeriod, timestamp);
+        m_drivePosePub.set(state.Pose, timestampMicroseconds);
+        m_speedsPub.set(state.Speeds, timestampMicroseconds);
+        // m_moduleStatesPub.set(state.ModuleStates, timestampMicroseconds);
+        // m_moduleTargetsPub.set(state.ModuleTargets, timestampMicroseconds);
+        // m_modulePositionsPub.set(state.ModulePositions, timestampMicroseconds);
+        m_odometryFrequencyPub.set(1.0 / state.OdometryPeriod, timestampMicroseconds);
+        // m_odometryPeriodPub.set(state.OdometryPeriod, timestampMicroseconds);
 
         double linearSpeed = Math.hypot(state.Speeds.vxMetersPerSecond, state.Speeds.vyMetersPerSecond);
-        linearSpeedPub.set(linearSpeed, timestamp);
+        m_linearSpeedPub.set(linearSpeed, timestampMicroseconds);
     }
 
     /**

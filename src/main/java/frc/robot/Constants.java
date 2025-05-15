@@ -4,10 +4,12 @@
 
 package frc.robot;
 
-import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.Meters;
 
+import com.pathplanner.lib.util.FlippingUtil;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,7 +22,6 @@ import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.intake.IntakeConstants;
-import frc.robot.util.Aiming;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,11 @@ import java.util.Map;
  */
 public final class Constants {
     private Constants() {}
+
+    /**
+     * The update period of the robot in seconds.
+     */
+    public static final double UPDATE_PERIOD = 0.02;
 
     public static class ControllerConstants {
         private ControllerConstants() {}
@@ -112,194 +118,255 @@ public final class Constants {
     public static class FieldConstants {
         private FieldConstants() {}
 
-        public static final Translation2d BLUE_REEF_CENTER = new Translation2d(Inches.of(176.183), Inches.of(158.500));
-        public static final Translation2d RED_REEF_CENTER = new Translation2d(Inches.of(513.568), Inches.of(158.500));
-
-        private static final Rotation2d k60deg = Rotation2d.fromDegrees(60);
-        private static final Rotation2d k120deg = Rotation2d.fromDegrees(120);
-        private static final Rotation2d k240deg = Rotation2d.fromDegrees(240);
-        private static final Rotation2d k300deg = Rotation2d.fromDegrees(300);
+        public static final AprilTagFieldLayout APRILTAGS =
+                AprilTagFieldLayout.loadField(AprilTagFields.k2025ReefscapeWelded);
 
         /**
-         * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
-         * The rotation represents which way the robot needs to face to be aligned with the tree's wall.
+         * Rotations of the Apriltags for aligning perpendicular to them.
+         * <p>
+         * These rotations correspond to the Z-Rotation of the tags plus 180 degrees.
+         * <p>
+         * Index into the array with the id number starting from 1.
          */
-        public static final List<Pose2d> BLUE_REEF_TREE_POSITIONS = List.of(
-                // A
-                new Pose2d(Inches.of(145.490), Inches.of(164.968), Rotation2d.kZero),
-                // B
-                new Pose2d(Inches.of(145.445), Inches.of(152.030), Rotation2d.kZero),
-                // C
-                new Pose2d(Inches.of(155.234), Inches.of(135.152), k60deg),
-                // D
-                new Pose2d(Inches.of(166.416), Inches.of(128.645), k60deg),
-                // E
-                new Pose2d(Inches.of(185.927), Inches.of(128.684), k120deg),
-                // F
-                new Pose2d(Inches.of(197.154), Inches.of(135.113), k120deg),
-                // G
-                new Pose2d(Inches.of(206.876), Inches.of(152.030), Rotation2d.k180deg),
-                // H
-                new Pose2d(Inches.of(206.921), Inches.of(164.968), Rotation2d.k180deg),
-                // I
-                new Pose2d(Inches.of(197.132), Inches.of(181.846), k240deg),
-                // J
-                new Pose2d(Inches.of(185.950), Inches.of(188.354), k240deg),
-                // K
-                new Pose2d(Inches.of(166.439), Inches.of(188.315), k300deg),
-                // L
-                new Pose2d(Inches.of(155.212), Inches.of(181.885), k300deg));
+        public static final Rotation2d[] APRILTAG_ROTATIONS = {
+            Rotation2d.kZero,
+            APRILTAGS.getTagPose(1).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(2).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(3).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(4).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(5).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(6).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(7).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(8).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(9).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(10).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(11).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(12).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(13).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(14).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(15).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(16).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(17).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(18).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(19).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(20).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(21).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+            APRILTAGS.getTagPose(22).orElseThrow().getRotation().toRotation2d().plus(Rotation2d.k180deg),
+        };
+
+        public static final Translation2d BLUE_REEF_CENTER = new Translation2d(
+                (APRILTAGS.getTagPose(21).orElseThrow().getX()
+                                + APRILTAGS.getTagPose(18).orElseThrow().getX())
+                        / 2.0,
+                APRILTAGS.getTagPose(21).orElseThrow().getY());
+        public static final Translation2d RED_REEF_CENTER = new Translation2d(
+                (APRILTAGS.getTagPose(7).orElseThrow().getX()
+                                + APRILTAGS.getTagPose(10).orElseThrow().getX())
+                        / 2.0,
+                APRILTAGS.getTagPose(7).orElseThrow().getY());
 
         /**
-         * See page 24 of <a href="https://firstfrc.blob.core.windows.net/frc2025/Manual/2025GameManual.pdf">the game manual</a> to understand what each letter means.
-         * The rotation represents which way the robot needs to face to be aligned with the tree's wall.
+         * The distance from a reef apriltag to either of its two trees in meters.
+         * This is only the distance along the face of the reef, and is not two-dimensional.
          */
-        public static final List<Pose2d> RED_REEF_TREE_POSITIONS = List.of(
-                // A
-                new Pose2d(Inches.of(544.261), Inches.of(152.030), Rotation2d.k180deg),
-                // B
-                new Pose2d(Inches.of(544.306), Inches.of(164.968), Rotation2d.k180deg),
-                // C
-                new Pose2d(Inches.of(534.517), Inches.of(181.846), k240deg),
-                // D
-                new Pose2d(Inches.of(523.335), Inches.of(188.354), k240deg),
-                // E
-                new Pose2d(Inches.of(503.823), Inches.of(188.315), k300deg),
-                // F
-                new Pose2d(Inches.of(492.597), Inches.of(181.885), k300deg),
-                // G
-                new Pose2d(Inches.of(482.875), Inches.of(164.968), Rotation2d.kZero),
-                // H
-                new Pose2d(Inches.of(482.830), Inches.of(152.030), Rotation2d.kZero),
-                // I
-                new Pose2d(Inches.of(492.619), Inches.of(135.152), k60deg),
-                // J
-                new Pose2d(Inches.of(503.801), Inches.of(128.645), k60deg),
-                // K
-                new Pose2d(Inches.of(523.312), Inches.of(128.684), k120deg),
-                // L
-                new Pose2d(Inches.of(534.539), Inches.of(135.113), k120deg));
-
-        /** Distance from tree to reef wall */
-        private static final Distance TREE_TO_REEF_WALL_DISTANCE = Inches.of(2);
-
+        private static final double REEF_TAG_TO_TREE_DISTANCE = Inches.of(6.47).in(Meters);
         /** Distance from tree to center of robot in meters */
-        private static final double TREE_TO_ROBOT_DISTANCE = TREE_TO_REEF_WALL_DISTANCE
-                .plus(DriveConstants.CENTER_TO_BUMPER_LENGTH)
-                .in(Meters);
+        private static final double REEF_WALL_TO_ROBOT_DISTANCE =
+                DriveConstants.CENTER_TO_FRONT_BUMPER_LENGTH.in(Meters);
+
+        private static final Rotation2d k60deg = Rotation2d.fromDegrees(60.0);
+        private static final Rotation2d k120deg = Rotation2d.fromDegrees(120.0);
+        private static final Rotation2d k240deg = Rotation2d.fromDegrees(240.0);
+        private static final Rotation2d k300deg = Rotation2d.fromDegrees(300.0);
+
+        /**
+         * An approximation of the tree positions.
+         * These translations actually represent the points of the reef wall that the trees sit behind.
+         */
+        private static final Translation2d[] BLUE_REEF_TREE_POSITIONS = new Translation2d[] {
+            // A
+            APRILTAGS
+                    .getTagPose(18)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[18].plus(Rotation2d.kCCW_90deg))),
+            // B
+            APRILTAGS
+                    .getTagPose(18)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[18].plus(Rotation2d.kCW_90deg))),
+            // C
+            APRILTAGS
+                    .getTagPose(17)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[17].plus(Rotation2d.kCCW_90deg))),
+            // D
+            APRILTAGS
+                    .getTagPose(17)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[17].plus(Rotation2d.kCW_90deg))),
+            // E
+            APRILTAGS
+                    .getTagPose(22)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[22].plus(Rotation2d.kCCW_90deg))),
+            // F
+            APRILTAGS
+                    .getTagPose(22)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[22].plus(Rotation2d.kCW_90deg))),
+            // G
+            APRILTAGS
+                    .getTagPose(21)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[21].plus(Rotation2d.kCCW_90deg))),
+            // H
+            APRILTAGS
+                    .getTagPose(21)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[21].plus(Rotation2d.kCW_90deg))),
+            // I
+            APRILTAGS
+                    .getTagPose(20)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[20].plus(Rotation2d.kCCW_90deg))),
+            // J
+            APRILTAGS
+                    .getTagPose(20)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[20].plus(Rotation2d.kCW_90deg))),
+            // K
+            APRILTAGS
+                    .getTagPose(19)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[19].plus(Rotation2d.kCCW_90deg))),
+            // L
+            APRILTAGS
+                    .getTagPose(19)
+                    .orElseThrow()
+                    .getTranslation()
+                    .toTranslation2d()
+                    .plus(new Translation2d(
+                            REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[19].plus(Rotation2d.kCW_90deg))),
+        };
 
         /**
          * This is a list of positions for the robot to drive to so that it is right in front of the tree, and facing the tree's wall.
          */
         public static final List<Pose2d> BLUE_REEF_TREE_AIMING_POSITIONS = List.of(
                 // A
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(0), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[0].plus(
+                                new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                        Rotation2d.kZero),
                 // B
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(1), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[1].plus(
+                                new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                        Rotation2d.kZero),
                 // C
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(2), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[2].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k240deg)),
+                        k60deg),
                 // D
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(3), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[3].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k240deg)),
+                        k60deg),
                 // E
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(4), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[4].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k300deg)),
+                        k120deg),
                 // F
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(5), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[5].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k300deg)),
+                        k120deg),
                 // G
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(6), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[6].plus(
+                                new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                        Rotation2d.k180deg),
                 // H
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(7), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[7].plus(
+                                new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                        Rotation2d.k180deg),
                 // I
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(8), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[8].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k60deg)),
+                        k240deg),
                 // J
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(9), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[9].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k60deg)),
+                        k240deg),
                 // K
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(10), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)),
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[10].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k120deg)),
+                        k300deg),
                 // L
-                Aiming.translatePose(
-                        BLUE_REEF_TREE_POSITIONS.get(11), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)));
+                new Pose2d(
+                        BLUE_REEF_TREE_POSITIONS[11].plus(new Translation2d(REEF_WALL_TO_ROBOT_DISTANCE, k120deg)),
+                        k300deg));
 
         /**
          * This is a list of positions for the robot to drive to so that it is right in front of the tree, and facing the tree's wall.
          */
         public static final List<Pose2d> RED_REEF_TREE_AIMING_POSITIONS = List.of(
                 // A
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(0), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(0)),
                 // B
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(1), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.kZero)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(1)),
                 // C
-                Aiming.translatePose(RED_REEF_TREE_POSITIONS.get(2), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(2)),
                 // D
-                Aiming.translatePose(RED_REEF_TREE_POSITIONS.get(3), new Translation2d(TREE_TO_ROBOT_DISTANCE, k60deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(3)),
                 // E
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(4), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(4)),
                 // F
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(5), new Translation2d(TREE_TO_ROBOT_DISTANCE, k120deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(5)),
                 // G
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(6), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(6)),
                 // H
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(7), new Translation2d(TREE_TO_ROBOT_DISTANCE, Rotation2d.k180deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(7)),
                 // I
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(8), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(8)),
                 // J
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(9), new Translation2d(TREE_TO_ROBOT_DISTANCE, k240deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(9)),
                 // K
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(10), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)),
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(10)),
                 // L
-                Aiming.translatePose(
-                        RED_REEF_TREE_POSITIONS.get(11), new Translation2d(TREE_TO_ROBOT_DISTANCE, k300deg)));
-
-        /**
-         * Positions of the Apriltags for logging currently visible vision targets in AdvantageScope.
-         * <p>
-         * These were taken from <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">the FRC field layout</a>.
-         * <p>
-         * Index into the array with the id number starting from 1.
-         */
-        public static final Translation3d[] APRILTAG_POSES = {
-            new Translation3d(),
-            new Translation3d(Inches.of(657.37), Inches.of(25.80), Inches.of(58.50)),
-            new Translation3d(Inches.of(657.37), Inches.of(291.20), Inches.of(58.50)),
-            new Translation3d(Inches.of(455.15), Inches.of(317.15), Inches.of(51.25)),
-            new Translation3d(Inches.of(365.20), Inches.of(241.64), Inches.of(573.54)),
-            new Translation3d(Inches.of(365.20), Inches.of(75.39), Inches.of(73.54)),
-            new Translation3d(Inches.of(530.49), Inches.of(130.17), Inches.of(12.13)),
-            new Translation3d(Inches.of(546.87), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(530.49), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(497.77), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(481.39), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(497.77), Inches.of(130.17), Inches.of(12.13)),
-            new Translation3d(Inches.of(33.51), Inches.of(25.80), Inches.of(58.50)),
-            new Translation3d(Inches.of(33.51), Inches.of(291.20), Inches.of(58.50)),
-            new Translation3d(Inches.of(325.68), Inches.of(241.64), Inches.of(73.54)),
-            new Translation3d(Inches.of(325.68), Inches.of(75.39), Inches.of(73.54)),
-            new Translation3d(Inches.of(235.73), Inches.of(-0.15), Inches.of(51.25)),
-            new Translation3d(Inches.of(160.39), Inches.of(130.17), Inches.of(12.13)),
-            new Translation3d(Inches.of(144.00), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(160.39), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(193.10), Inches.of(186.83), Inches.of(12.13)),
-            new Translation3d(Inches.of(209.49), Inches.of(158.50), Inches.of(12.13)),
-            new Translation3d(Inches.of(193.10), Inches.of(130.17), Inches.of(12.13))
-        };
+                FlippingUtil.flipFieldPose(BLUE_REEF_TREE_AIMING_POSITIONS.get(11)));
 
         /** Log this array to AdvantageScope when there are no tags reported by the limelight. */
         public static final Translation3d[] NO_VISIBLE_TAGS = new Translation3d[0];
@@ -314,40 +381,6 @@ public final class Constants {
          */
         public static final List<Rotation2d> REEF_WALL_ROTATIONS =
                 List.of(Rotation2d.kZero, k60deg, k120deg, Rotation2d.k180deg, k240deg, k300deg);
-
-        /**
-         * Rotations of the Apriltags for aligning perpendicular to them.
-         * <p>
-         * These rotations correspond to the Z-Rotation on <a href="https://firstfrc.blob.core.windows.net/frc2025/FieldAssets/2025FieldDrawings-FieldLayoutAndMarking.pdf">FRC Field Drawings</a>
-         * plus 180 degrees.
-         * <p>
-         * Index into the array with the id number starting from 1.
-         */
-        public static final Rotation2d[] APRILTAG_ROTATIONS = {
-            Rotation2d.kZero,
-            new Rotation2d(Degrees.of(126).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(234).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(270).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(120).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(54).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(306).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(90).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(240).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(180).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(120).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(60).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(0).plus(Degrees.of(180))),
-            new Rotation2d(Degrees.of(300).plus(Degrees.of(180))),
-        };
 
         public static final int MINIMUM_RED_REEF_TAG_ID = 6;
         public static final int MAXIMUM_RED_REEF_TAG_ID = 11;
@@ -390,27 +423,51 @@ public final class Constants {
                 new Translation2d(BARGE_CENTER_X_DISTANCE, Inches.of(284.568).plus(SEMICIRCLE_TO_CAGE_DISTANCE)));
 
         private static final double CORAL_STATION_TO_ROBOT_DISTANCE =
-                DriveConstants.CENTER_TO_BUMPER_LENGTH.plus(Inches.of(6)).in(Meters);
+                DriveConstants.CENTER_TO_FRONT_BUMPER_LENGTH.plus(Inches.of(6)).in(Meters);
 
         public static final List<Pose2d> BLUE_CORAL_STATION_POSES = List.of(
-                Aiming.translatePose(
-                        new Pose2d(APRILTAG_POSES[13].getX(), APRILTAG_POSES[13].getY(), APRILTAG_ROTATIONS[13]),
-                        new Translation2d(
-                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[13].plus(Rotation2d.k180deg))),
-                Aiming.translatePose(
-                        new Pose2d(APRILTAG_POSES[12].getX(), APRILTAG_POSES[12].getY(), APRILTAG_ROTATIONS[12]),
-                        new Translation2d(
-                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[12].plus(Rotation2d.k180deg))));
+                new Pose2d(
+                        APRILTAGS
+                                .getTagPose(13)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
+                                .plus(new Translation2d(
+                                        CORAL_STATION_TO_ROBOT_DISTANCE,
+                                        APRILTAG_ROTATIONS[13].plus(Rotation2d.k180deg))),
+                        APRILTAG_ROTATIONS[13]),
+                new Pose2d(
+                        APRILTAGS
+                                .getTagPose(12)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
+                                .plus(new Translation2d(
+                                        CORAL_STATION_TO_ROBOT_DISTANCE,
+                                        APRILTAG_ROTATIONS[12].plus(Rotation2d.k180deg))),
+                        APRILTAG_ROTATIONS[12]));
 
         public static final List<Pose2d> RED_CORAL_STATION_POSES = List.of(
-                Aiming.translatePose(
-                        new Pose2d(APRILTAG_POSES[1].getX(), APRILTAG_POSES[1].getY(), APRILTAG_ROTATIONS[1]),
-                        new Translation2d(
-                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[1].plus(Rotation2d.k180deg))),
-                Aiming.translatePose(
-                        new Pose2d(APRILTAG_POSES[2].getX(), APRILTAG_POSES[2].getY(), APRILTAG_ROTATIONS[2]),
-                        new Translation2d(
-                                CORAL_STATION_TO_ROBOT_DISTANCE, APRILTAG_ROTATIONS[2].plus(Rotation2d.k180deg))));
+                new Pose2d(
+                        APRILTAGS
+                                .getTagPose(1)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
+                                .plus(new Translation2d(
+                                        CORAL_STATION_TO_ROBOT_DISTANCE,
+                                        APRILTAG_ROTATIONS[1].plus(Rotation2d.k180deg))),
+                        APRILTAG_ROTATIONS[1]),
+                new Pose2d(
+                        APRILTAGS
+                                .getTagPose(2)
+                                .orElseThrow()
+                                .getTranslation()
+                                .toTranslation2d()
+                                .plus(new Translation2d(
+                                        CORAL_STATION_TO_ROBOT_DISTANCE,
+                                        APRILTAG_ROTATIONS[2].plus(Rotation2d.k180deg))),
+                        APRILTAG_ROTATIONS[2]));
     }
 
     /** A map of CAN ids to motor names for <a href="https://docs.advantagescope.org/more-features/urcl">URCL</a>. */
