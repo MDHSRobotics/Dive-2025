@@ -6,6 +6,7 @@ import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
 import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -46,7 +47,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
 
     private final FieldCentric m_fieldCentric = new FieldCentric();
 
-    public final PhoenixPIDController m_headingController;
+    private final PhoenixPIDController m_headingController;
     private final double m_maxAngularVelocity;
 
     private boolean m_resetRequested = false;
@@ -55,11 +56,11 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
     // NetworkTables logging
     private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
     private final NetworkTable m_table = m_inst.getTable("Swerve Requests").getSubTable("Drive Facing Angle");
-    public final DoublePublisher m_goalPositionPub =
+    private final DoublePublisher m_goalPositionPub =
             m_table.getSubTable("Goal").getDoubleTopic("Position (radians)").publish();
-    public final DoublePublisher m_appliedVelocityPub =
+    private final DoublePublisher m_appliedVelocityPub =
             m_table.getDoubleTopic("Applied Velocity (rads per sec)").publish();
-    public final BooleanPublisher m_motionIsFinishedPub =
+    private final BooleanPublisher m_motionIsFinishedPub =
             m_table.getBooleanTopic("Motion is Finished").publish();
 
     /**
@@ -71,14 +72,14 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
     public DriveFacingAngle(double kRotationP, double maxAngularVelocity) {
         m_headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         m_headingController.enableContinuousInput(-Math.PI, Math.PI);
-        m_maxAngularVelocity = maxAngularVelocity;
+        m_maxAngularVelocity = Math.abs(maxAngularVelocity);
     }
 
     /**
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Rotation2d fakeTargetDirection = m_targetDirection;
+        Rotation2d blueTargetDirection = m_targetDirection;
 
         if (m_resetRequested) {
             m_headingController.reset();
@@ -87,21 +88,15 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
 
         /* If the user requested a target direction according to the operator perspective, rotate our target direction by the angle */
         if (m_aimingPerspective == ForwardPerspectiveValue.OperatorPerspective) {
-            fakeTargetDirection = m_targetDirection.rotateBy(parameters.operatorForwardDirection);
+            blueTargetDirection = m_targetDirection.rotateBy(parameters.operatorForwardDirection);
         }
 
         double toApplyOmega = m_headingController.calculate(
                 parameters.currentPose.getRotation().getRadians(),
-                fakeTargetDirection.getRadians(),
+                blueTargetDirection.getRadians(),
                 parameters.timestamp);
 
-        if (m_maxAngularVelocity > 0.0) {
-            if (toApplyOmega > m_maxAngularVelocity) {
-                toApplyOmega = m_maxAngularVelocity;
-            } else if (toApplyOmega < -m_maxAngularVelocity) {
-                toApplyOmega = -m_maxAngularVelocity;
-            }
-        }
+        toApplyOmega = MathUtil.clamp(toApplyOmega, -m_maxAngularVelocity, m_maxAngularVelocity);
 
         if (m_headingController.atSetpoint()) {
             toApplyOmega = 0;
@@ -112,7 +107,7 @@ public class DriveFacingAngle implements ResettableSwerveRequest {
         // NetworkTables logging
         long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
 
-        m_goalPositionPub.set(m_targetDirection.getRadians(), timestampMicroseconds);
+        m_goalPositionPub.set(blueTargetDirection.getRadians(), timestampMicroseconds);
         m_appliedVelocityPub.set(toApplyOmega, timestampMicroseconds);
         m_motionIsFinishedPub.set(m_motionIsFinished, timestampMicroseconds);
 

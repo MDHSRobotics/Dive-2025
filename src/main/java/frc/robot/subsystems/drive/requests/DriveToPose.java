@@ -139,7 +139,7 @@ public class DriveToPose implements ResettableSwerveRequest {
 
         m_headingController = new PhoenixPIDController(kRotationP, 0.0, 0.0);
         m_headingController.enableContinuousInput(-Math.PI, Math.PI);
-        m_maxAngularVelocity = maxAngularVelocity;
+        m_maxAngularVelocity = Math.abs(maxAngularVelocity);
 
         m_setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
         m_updatePeriod = updatePeriod;

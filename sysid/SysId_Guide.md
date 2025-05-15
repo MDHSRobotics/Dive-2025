@@ -75,7 +75,7 @@
 6. Open up a line graph and plot Velocity and StatorCurrent.
 7. Enable test mode and drive the robot up to a wall so the front is fully against the wall.
 8. Run quasistatic forward until the wheels stop whistling and start slipping. Then disable test mode.
-9. Press the pause button in AdvantageScope, and zoom in on the line graph to find when the velocity starts to rise or drop and the stator current starts to drop. The maximum stator current is your slip current. 
+9. Press the pause button in AdvantageScope, and zoom in on the line graph to find when the velocity starts to rise or drop and the stator current starts to drop. The maximum stator current is your slip current.
 10. Save the value to "kSlipCurrent" in TunerConstants.
 11. Open AdvantageScope. Go to "Help", then "Show Preferences", then set "Live Source" back to NetworkTables 4.
 12. If you're concerned about memory usage, comment out the SysId routine as well.
