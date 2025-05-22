@@ -134,43 +134,51 @@ public class AimingRoutines {
     }
 
     public Command alignWithCoralStation(boolean leftStation) {
-        return m_drivetrain.applyResettableRequest(() -> {
-            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-            if (leftStation) {
-                if (alliance == Alliance.Blue) {
-                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[13]);
-                } else if (alliance == Alliance.Red) {
-                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[1]);
-                }
-            } else {
-                if (alliance == Alliance.Blue) {
-                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[12]);
-                } else if (alliance == Alliance.Red) {
-                    m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[2]);
-                }
-            }
-
-            return m_driveFacingAngle
-                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                    .withDeadband(m_deadbandSupplier.getAsDouble());
-        });
+        return m_drivetrain.startRun(
+                () -> {
+                    // Must call reset before using this swerve request
+                    m_driveFacingAngle.resetRequest();
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    if (leftStation) {
+                        if (alliance == Alliance.Blue) {
+                            m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[13]);
+                        } else if (alliance == Alliance.Red) {
+                            m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[1]);
+                        }
+                    } else {
+                        if (alliance == Alliance.Blue) {
+                            m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[12]);
+                        } else if (alliance == Alliance.Red) {
+                            m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[2]);
+                        }
+                    }
+                },
+                () -> {
+                    m_drivetrain.setControl(m_driveFacingAngle
+                            .withVelocityX(m_velocityXSupplier.getAsDouble())
+                            .withVelocityY(m_velocityYSupplier.getAsDouble())
+                            .withDeadband(m_deadbandSupplier.getAsDouble()));
+                });
     }
 
     public Command alignWithProcessor() {
-        return m_drivetrain.applyResettableRequest(() -> {
-            Alliance alliance = DriverStation.getAlliance().orElseThrow();
-            if (alliance == Alliance.Blue) {
-                m_driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
-            } else {
-                m_driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
-            }
-
-            return m_driveFacingAngle
-                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                    .withDeadband(m_deadbandSupplier.getAsDouble());
-        });
+        return m_drivetrain.startRun(
+                () -> {
+                    // Must call reset before using this swerve request
+                    m_driveFacingAngle.resetRequest();
+                    Alliance alliance = DriverStation.getAlliance().orElseThrow();
+                    if (alliance == Alliance.Blue) {
+                        m_driveFacingAngle.withTargetDirection(Rotation2d.kCW_90deg);
+                    } else {
+                        m_driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
+                    }
+                },
+                () -> {
+                    m_drivetrain.setControl(m_driveFacingAngle
+                            .withVelocityX(m_velocityXSupplier.getAsDouble())
+                            .withVelocityY(m_velocityYSupplier.getAsDouble())
+                            .withDeadband(m_deadbandSupplier.getAsDouble()));
+                });
     }
 
     /*
@@ -189,23 +197,31 @@ public class AimingRoutines {
         return Commands.sequence(
                         m_drivetrain.runOnce(() -> m_drivetrain.updateVisionTarget(true)),
                         m_drivetrain
-                                .applyResettableRequest(() -> {
-                                    Alliance alliance =
-                                            DriverStation.getAlliance().orElseThrow();
-                                    if (alliance == Alliance.Blue) {
-                                        m_driveFacingPosition.withTargetPosition(FieldConstants.BLUE_REEF_CENTER);
-                                    } else if (alliance == Alliance.Red) {
-                                        m_driveFacingPosition.withTargetPosition(FieldConstants.RED_REEF_CENTER);
-                                    }
-                                    return m_driveFacingPosition
-                                            .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                            .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                            .withDeadband(m_deadbandSupplier.getAsDouble());
-                                })
+                                .startRun(
+                                        () -> {
+                                            // Must call reset before using this swerve request
+                                            m_driveFacingPosition.resetRequest();
+                                            Alliance alliance =
+                                                    DriverStation.getAlliance().orElseThrow();
+                                            if (alliance == Alliance.Blue) {
+                                                m_driveFacingPosition.withTargetPosition(
+                                                        FieldConstants.BLUE_REEF_CENTER);
+                                            } else if (alliance == Alliance.Red) {
+                                                m_driveFacingPosition.withTargetPosition(
+                                                        FieldConstants.RED_REEF_CENTER);
+                                            }
+                                        },
+                                        () -> {
+                                            m_drivetrain.setControl(m_driveFacingPosition
+                                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                        })
                                 .until(m_driveFacingPosition::motionIsFinished),
                         m_drivetrain
                                 .startRun(
                                         () -> {
+                                            // Must call reset before using this swerve request
                                             m_driveFacingAngle.resetRequest();
                                             m_driveFacingAngle.withTargetDirection(Aiming.nearestRotation(
                                                     m_drivetrain.getState().Pose.getRotation(),
@@ -216,16 +232,21 @@ public class AimingRoutines {
                                                 .withVelocityY(m_velocityYSupplier.getAsDouble())
                                                 .withDeadband(m_deadbandSupplier.getAsDouble())))
                                 .until(() -> Aiming.isReefTag((int) m_apriltagIDSub.get())),
-                        m_drivetrain.applyResettableRequest(() -> {
-                            int id = (int) m_apriltagIDSub.get();
-                            if (Aiming.isReefTag(id)) {
-                                m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
-                            }
-                            return m_driveFacingAngle
-                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                    .withDeadband(m_deadbandSupplier.getAsDouble());
-                        }))
+                        m_drivetrain.startRun(
+                                () -> {
+                                    // Must call reset before using this swerve request
+                                    m_driveFacingAngle.resetRequest();
+                                },
+                                () -> {
+                                    int id = (int) m_apriltagIDSub.get();
+                                    if (Aiming.isReefTag(id)) {
+                                        m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);
+                                    }
+                                    m_drivetrain.setControl(m_driveFacingAngle
+                                            .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                            .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                            .withDeadband(m_deadbandSupplier.getAsDouble()));
+                                }))
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 
@@ -252,6 +273,7 @@ public class AimingRoutines {
                 .startRun(
                         () -> {
                             m_drivetrain.updateVisionTarget(true);
+                            // Must call reset before using this swerve request
                             m_driveToPose.resetRequest();
                             calculateTargetPose();
                             m_driveToPose.withTargetPose(m_currentTargetPose);
@@ -306,6 +328,7 @@ public class AimingRoutines {
     private Command positionCorrectionCommand() {
         return m_drivetrain.startRun(
                 () -> {
+                    // Must call reset before using this swerve request
                     m_driveToPose.resetRequest();
                     m_driveToPose.withTargetPose(m_currentTargetPose);
                 },

@@ -95,6 +95,9 @@ public class RobotContainer {
         m_drivetrain.registerTelemetry(m_driveTelemetry::telemeterize);
 
         m_testAutoChooser = AutoBuilder.buildAutoChooser();
+        m_testAutoChooser.addOption("Align with Coral Station", m_aimingRoutines.alignWithCoralStation(true));
+        m_testAutoChooser.addOption("Align with Processor", m_aimingRoutines.alignWithProcessor());
+        m_testAutoChooser.addOption("Orient to Face Reef Wall", m_aimingRoutines.orientToFaceReefWall());
         // testAutoChooser.addOption(
         //         "Drive Wheel Radius Characterization",
         //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));
