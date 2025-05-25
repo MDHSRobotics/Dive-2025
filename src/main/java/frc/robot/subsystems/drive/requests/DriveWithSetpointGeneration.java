@@ -80,7 +80,6 @@ public class DriveWithSetpointGeneration implements ResettableSwerveRequest {
     public DriveWithSetpointGeneration(
             RobotConfig robotConfig, double maxSteerVelocityRadsPerSec, double updatePeriod) {
         m_setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
-        m_startingModuleStates = new SwerveModuleState[4];
         m_updatePeriod = updatePeriod;
     }
 
