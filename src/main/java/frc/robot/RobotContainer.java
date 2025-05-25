@@ -25,6 +25,7 @@ import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
 import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
+import frc.robot.subsystems.drive.requests.DriveWithSetpointGeneration;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPositions;
@@ -47,7 +48,8 @@ public class RobotContainer {
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
-    private final SwerveRequest.FieldCentric m_drive = new SwerveRequest.FieldCentric()
+    private final DriveWithSetpointGeneration m_drive = new DriveWithSetpointGeneration(
+                    DriveConstants.PATHPLANNER_CONFIG, DriveConstants.MAX_STEER_VELOCITY, Constants.UPDATE_PERIOD)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake()
@@ -107,7 +109,7 @@ public class RobotContainer {
     }
 
     private void setDefaultCommands() {
-        m_drivetrain.setDefaultCommand(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
+        m_drivetrain.setDefaultCommand(m_drivetrain.applyResettableRequest(() -> m_drive.withVelocityX(getVelocityX())
                 .withVelocityY(getVelocityY())
                 .withRotationalRate(getRotationalRate())
                 .withDeadband(getDeadband())
