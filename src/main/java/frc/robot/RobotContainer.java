@@ -49,7 +49,7 @@ public class RobotContainer {
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
     private final DriveWithSetpointGeneration m_drive = new DriveWithSetpointGeneration(
-                    DriveConstants.PATHPLANNER_CONFIG, DriveConstants.MAX_STEER_VELOCITY, Constants.UPDATE_PERIOD)
+                    DriveConstants.SWERVE_SETPOINT_GENERATOR, Constants.UPDATE_PERIOD)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
     private final SwerveRequest.SwerveDriveBrake m_brake = new SwerveRequest.SwerveDriveBrake()
@@ -100,6 +100,7 @@ public class RobotContainer {
         m_testAutoChooser.addOption("Align with Coral Station", m_aimingRoutines.alignWithCoralStation(true));
         m_testAutoChooser.addOption("Align with Processor", m_aimingRoutines.alignWithProcessor());
         m_testAutoChooser.addOption("Orient to Face Reef Wall", m_aimingRoutines.orientToFaceReefWall());
+        m_testAutoChooser.addOption("Drive to Nearest Tree", m_aimingRoutines.driveToNearestTree());
         // testAutoChooser.addOption(
         //         "Drive Wheel Radius Characterization",
         //         WheelRadiusCharacterization.characterizationCommand(m_drivetrain));

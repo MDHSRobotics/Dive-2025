@@ -6,6 +6,7 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -78,7 +79,7 @@ public class DriveConstants {
      * Goal tolerance for the <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/introduction/introduction-to-pid.html">x and y PID controllers</a>
      * used in custom swerve requests.
      */
-    public static final Distance LINEAR_TOLERANCE = Inches.of(1);
+    public static final Distance LINEAR_TOLERANCE = Inches.of(0.5);
 
     /**
      * Multiply wheel rotations by this number to convert to meters.
@@ -179,4 +180,7 @@ public class DriveConstants {
      * Units: volts / volts per radian per second
      */
     public static final double MAX_STEER_VELOCITY = 7.0 / TunerConstants.steerGains.kV;
+    /** This can safely be reused by multiple swerve requests because it has no internal state (as of FRC 2025). */
+    public static final SwerveSetpointGenerator SWERVE_SETPOINT_GENERATOR =
+            new SwerveSetpointGenerator(PATHPLANNER_CONFIG, MAX_ANGULAR_RATE);
 }

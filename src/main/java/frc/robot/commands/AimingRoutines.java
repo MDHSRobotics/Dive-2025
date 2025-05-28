@@ -58,12 +58,14 @@ public class AimingRoutines {
     private final NetworkTable m_cameraTable = m_inst.getTable(VisionConstants.FRONT_LIMELIGHT_NAME);
 
     // Swerve requests
-    private final DriveFacingAngle m_driveFacingAngle = new DriveFacingAngle(ROTATION_PID.kP, MAX_ANGULAR_RATE)
+    private final DriveFacingAngle m_driveFacingAngle = new DriveFacingAngle(
+                    ROTATION_PID.kP, MAX_ANGULAR_RATE, SWERVE_SETPOINT_GENERATOR, Constants.UPDATE_PERIOD)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
 
-    private final DriveFacingPosition m_driveFacingPosition = new DriveFacingPosition(ROTATION_PID.kP, MAX_ANGULAR_RATE)
+    private final DriveFacingPosition m_driveFacingPosition = new DriveFacingPosition(
+                    ROTATION_PID.kP, MAX_ANGULAR_RATE, SWERVE_SETPOINT_GENERATOR, Constants.UPDATE_PERIOD)
             .withTolerance(HEADING_TOLERANCE)
             .withDriveRequestType(DriveRequestType.Velocity)
             .withSteerRequestType(SteerRequestType.MotionMagicExpo);
@@ -73,8 +75,7 @@ public class AimingRoutines {
                     ROTATION_PID.kP,
                     MAX_ANGULAR_RATE,
                     LINEAR_MOTION_CONSTRAINTS,
-                    PATHPLANNER_CONFIG,
-                    MAX_STEER_VELOCITY,
+                    SWERVE_SETPOINT_GENERATOR,
                     Constants.UPDATE_PERIOD)
             .withHeadingTolerance(HEADING_TOLERANCE)
             .withLinearTolerance(LINEAR_TOLERANCE)
@@ -153,12 +154,10 @@ public class AimingRoutines {
                         }
                     }
                 },
-                () -> {
-                    m_drivetrain.setControl(m_driveFacingAngle
-                            .withVelocityX(m_velocityXSupplier.getAsDouble())
-                            .withVelocityY(m_velocityYSupplier.getAsDouble())
-                            .withDeadband(m_deadbandSupplier.getAsDouble()));
-                });
+                () -> m_drivetrain.setControl(m_driveFacingAngle
+                        .withVelocityX(m_velocityXSupplier.getAsDouble())
+                        .withVelocityY(m_velocityYSupplier.getAsDouble())
+                        .withDeadband(m_deadbandSupplier.getAsDouble())));
     }
 
     public Command alignWithProcessor() {
@@ -173,12 +172,10 @@ public class AimingRoutines {
                         m_driveFacingAngle.withTargetDirection(Rotation2d.kCCW_90deg);
                     }
                 },
-                () -> {
-                    m_drivetrain.setControl(m_driveFacingAngle
-                            .withVelocityX(m_velocityXSupplier.getAsDouble())
-                            .withVelocityY(m_velocityYSupplier.getAsDouble())
-                            .withDeadband(m_deadbandSupplier.getAsDouble()));
-                });
+                () -> m_drivetrain.setControl(m_driveFacingAngle
+                        .withVelocityX(m_velocityXSupplier.getAsDouble())
+                        .withVelocityY(m_velocityYSupplier.getAsDouble())
+                        .withDeadband(m_deadbandSupplier.getAsDouble())));
     }
 
     /*
@@ -211,12 +208,10 @@ public class AimingRoutines {
                                                         FieldConstants.RED_REEF_CENTER);
                                             }
                                         },
-                                        () -> {
-                                            m_drivetrain.setControl(m_driveFacingPosition
-                                                    .withVelocityX(m_velocityXSupplier.getAsDouble())
-                                                    .withVelocityY(m_velocityYSupplier.getAsDouble())
-                                                    .withDeadband(m_deadbandSupplier.getAsDouble()));
-                                        })
+                                        () -> m_drivetrain.setControl(m_driveFacingPosition
+                                                .withVelocityX(m_velocityXSupplier.getAsDouble())
+                                                .withVelocityY(m_velocityYSupplier.getAsDouble())
+                                                .withDeadband(m_deadbandSupplier.getAsDouble())))
                                 .until(m_driveFacingPosition::motionIsFinished),
                         m_drivetrain
                                 .startRun(
@@ -233,11 +228,8 @@ public class AimingRoutines {
                                                 .withDeadband(m_deadbandSupplier.getAsDouble())))
                                 .until(() -> Aiming.isReefTag((int) m_apriltagIDSub.get())),
                         m_drivetrain.startRun(
-                                () -> {
-                                    // Must call reset before using this swerve request
-                                    m_driveFacingAngle.resetRequest();
-                                },
-                                () -> {
+                                // Must call reset before using this swerve request
+                                m_driveFacingAngle::resetRequest, () -> {
                                     int id = (int) m_apriltagIDSub.get();
                                     if (Aiming.isReefTag(id)) {
                                         m_driveFacingAngle.withTargetDirection(FieldConstants.APRILTAG_ROTATIONS[id]);

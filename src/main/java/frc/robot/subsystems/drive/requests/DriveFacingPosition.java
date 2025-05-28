@@ -3,15 +3,18 @@ package frc.robot.subsystems.drive.requests;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.LinearVelocity;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner, maintaining a
  * specified heading angle to ensure the robot is facing the desired position.
+ * <p>
+ * It also has gives option of using PathPlanner's {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator SwerveSetpointGenerator}
+ * to ensure that the motion respects the robot's contraints.
  * <p>
  * An example scenario is that the robot is at (0,0),
  * and the target position is at (1,1).
@@ -29,13 +32,30 @@ public class DriveFacingPosition implements ResettableSwerveRequest {
     private final DriveFacingAngle m_driveFacingAngle;
 
     /**
-     * Creates a new request with the given gains.
+     * Creates a new request with the given gains, and without Swerve Setpoint Generation.
      *
      * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
      * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
      */
     public DriveFacingPosition(double kRotationP, double maxAngularVelocity) {
         m_driveFacingAngle = new DriveFacingAngle(kRotationP, maxAngularVelocity);
+    }
+
+    /**
+     * Creates a new request with the given gains, and with Swerve Setpoint Generation.
+     *
+     * @param kRotationP The P gain for the heading controller in radians per second output per radian error.
+     * @param maxAngularVelocity The angular velocity to clamp the heading controller output with (in radians per second).
+     * @param swerveSetpointGenerator The Swerve Setpoint Generator to use when driving.
+     * @param updatePeriod The amount of time between robot updates in seconds.
+     */
+    public DriveFacingPosition(
+            double kRotationP,
+            double maxAngularVelocity,
+            SwerveSetpointGenerator swerveSetpointGenerator,
+            double updatePeriod) {
+        m_driveFacingAngle =
+                new DriveFacingAngle(kRotationP, maxAngularVelocity, swerveSetpointGenerator, updatePeriod);
     }
 
     /**
@@ -193,20 +213,6 @@ public class DriveFacingPosition implements ResettableSwerveRequest {
      */
     public DriveFacingPosition withSteerRequestType(SwerveModule.SteerRequestType newSteerRequestType) {
         m_driveFacingAngle.withSteerRequestType(newSteerRequestType);
-        return this;
-    }
-
-    /**
-     * Modifies the DesaturateWheelSpeeds parameter and returns itself.
-     * <p>
-     * Whether to desaturate wheel speeds before applying. For more information, see
-     * the documentation of {@link SwerveDriveKinematics#desaturateWheelSpeeds}.
-     *
-     * @param newDesaturateWheelSpeeds Parameter to modify
-     * @return this object
-     */
-    public DriveFacingPosition withDesaturateWheelSpeeds(boolean newDesaturateWheelSpeeds) {
-        m_driveFacingAngle.withDesaturateWheelSpeeds(newDesaturateWheelSpeeds);
         return this;
     }
 

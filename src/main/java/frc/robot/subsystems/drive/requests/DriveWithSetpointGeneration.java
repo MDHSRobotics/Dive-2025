@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.*;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveControlParameters;
 import com.ctre.phoenix6.swerve.SwerveModule;
-import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
@@ -20,14 +19,13 @@ import frc.robot.subsystems.drive.DriveTelemetry;
 
 /**
  * Drives the swerve drivetrain in a field-centric manner,
- * using PathPlanner's {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator SwerveSetpointGenerator}
+ * with the option of using PathPlanner's {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator SwerveSetpointGenerator}
  * to ensure that the motion respects the robot's contraints.
+ * <p>
+ * Note: If the setpoint generator is not used,
+ * the "Requested Robot-relative Speeds" and "Applied Robot-relative Speeds" NetworkTables publishers will display the same speeds.
  */
 public class DriveWithSetpointGeneration implements ResettableSwerveRequest {
-    /**
-     * The robot-relative chassis speeds to apply to the drivetrain.
-     */
-    private ChassisSpeeds m_toApplyRobotSpeeds = new ChassisSpeeds();
     /**
      * The field-relative chassis speeds to accept field-relative velocities from the user.
      */
@@ -35,27 +33,26 @@ public class DriveWithSetpointGeneration implements ResettableSwerveRequest {
     /**
      * The allowable deadband of the request, in m/s.
      */
-    public double m_deadband = 0;
+    private double m_deadband = 0;
     /**
      * The rotational deadband of the request, in radians per second.
      */
-    public double m_rotationalDeadband = 0;
+    private double m_rotationalDeadband = 0;
     /**
      * The perspective to use when determining which direction is forward.
      */
-    public ForwardPerspectiveValue m_drivingPerspective = ForwardPerspectiveValue.OperatorPerspective;
+    private ForwardPerspectiveValue m_drivingPerspective = ForwardPerspectiveValue.OperatorPerspective;
 
-    // DesaturateWheelSpeeds should be set to false because Swerve Setpoint Generator desaturates wheel speeds for you.
-    private final ApplyRobotSpeeds m_applyRobotSpeeds = new ApplyRobotSpeeds().withDesaturateWheelSpeeds(false);
+    private final ApplyRobotSpeeds m_applyRobotSpeeds = new ApplyRobotSpeeds();
 
     private boolean m_resetRequested = false;
 
     // Swerve Setpoint Generator
     private final SwerveSetpointGenerator m_setpointGenerator;
-    private SwerveModuleState[] m_startingModuleStates = new SwerveModuleState[4];
+    private SwerveModuleState[] m_startingModuleStates;
     private SwerveSetpoint m_previousSwerveSetpoint;
     /**
-     * The update period for the {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator swerve setpoint generator} in seconds.
+     * The update period for the {@link com.pathplanner.lib.util.swerve.SwerveSetpointGenerator Swerve Setpoint Generator} in seconds.
      */
     private final double m_updatePeriod;
 
@@ -71,28 +68,41 @@ public class DriveWithSetpointGeneration implements ResettableSwerveRequest {
             .publish();
 
     /**
-     * Creates a new request with the swerve setpoint generator configuration.
+     * Creates a new request without the Swerve Setpoint Generator.
+     */
+    public DriveWithSetpointGeneration() {
+        m_setpointGenerator = null;
+        m_startingModuleStates = null;
+        m_updatePeriod = 0.0;
+    }
+
+    /**
+     * Creates a new request with the Swerve Setpoint Generator.
      *
-     * @param robotConfig The PathPlanner config for the robot
-     * @param maxSteerVelocityRadsPerSec The maximum rotation velocity of a swerve module, in radians per second
+     * @param swerveSetpointGenerator The Swerve Setpoint Generator to use when driving.
      * @param updatePeriod The amount of time between robot updates in seconds.
      */
-    public DriveWithSetpointGeneration(
-            RobotConfig robotConfig, double maxSteerVelocityRadsPerSec, double updatePeriod) {
-        m_setpointGenerator = new SwerveSetpointGenerator(robotConfig, maxSteerVelocityRadsPerSec);
+    public DriveWithSetpointGeneration(SwerveSetpointGenerator swerveSetpointGenerator, double updatePeriod) {
+        m_setpointGenerator = swerveSetpointGenerator;
+        m_startingModuleStates = new SwerveModuleState[4];
         m_updatePeriod = updatePeriod;
+
+        // This should be set to false because Swerve Setpoint Generator desaturates wheel speeds for you.
+        m_applyRobotSpeeds.withDesaturateWheelSpeeds(false);
     }
 
     /**
      * @see com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.FieldCentric#apply(com.ctre.phoenix6.mechanisms.swerve.LegacySwerveRequest.LegacySwerveControlRequestParameters, com.ctre.phoenix6.mechanisms.swerve.LegacySwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
+        // Clone the field speeds so we can modify them every time without affecting the speeds requested by the user.
         final ChassisSpeeds toApplyFieldSpeeds = new ChassisSpeeds(
                 m_toApplyFieldSpeeds.vxMetersPerSecond,
                 m_toApplyFieldSpeeds.vyMetersPerSecond,
                 m_toApplyFieldSpeeds.omegaRadiansPerSecond);
 
-        if (m_resetRequested) {
+        // Resets are only required if the Swerve Setpoint Generator is in use.
+        if (m_resetRequested && m_setpointGenerator != null) {
             for (int i = 0; i < 4; ++i) {
                 m_startingModuleStates[i] = modulesToApply[i].getCurrentState();
             }
@@ -121,29 +131,32 @@ public class DriveWithSetpointGeneration implements ResettableSwerveRequest {
 
         // The generator requires robot-relative speeds, so we always convert the field-relative input to
         // robot-relative.
-        m_toApplyRobotSpeeds =
+        ChassisSpeeds toApplyRobotSpeeds =
                 ChassisSpeeds.fromFieldRelativeSpeeds(toApplyFieldSpeeds, parameters.currentPose.getRotation());
 
         // NetworkTables logging (must be done before generating the setpoint)
         long timestampMicroseconds = DriveTelemetry.stateTimestampToNTTimestamp(parameters.timestamp);
-        m_requestedSpeedsPub.set(m_toApplyRobotSpeeds, timestampMicroseconds);
+        m_requestedSpeedsPub.set(toApplyRobotSpeeds, timestampMicroseconds);
 
-        // Improve the profiled movement with a setpoint that respects the robot's constraints better.
-        m_previousSwerveSetpoint =
-                m_setpointGenerator.generateSetpoint(m_previousSwerveSetpoint, m_toApplyRobotSpeeds, m_updatePeriod);
+        // If the setpoint generator is configured, improve the profiled movement with a setpoint that
+        // respects the robot's constraints better.
+        if (m_setpointGenerator != null) {
+            m_previousSwerveSetpoint =
+                    m_setpointGenerator.generateSetpoint(m_previousSwerveSetpoint, toApplyRobotSpeeds, m_updatePeriod);
 
-        m_toApplyRobotSpeeds = m_previousSwerveSetpoint.robotRelativeSpeeds();
+            toApplyRobotSpeeds = m_previousSwerveSetpoint.robotRelativeSpeeds();
+
+            m_applyRobotSpeeds
+                    .withWheelForceFeedforwardsX(
+                            m_previousSwerveSetpoint.feedforwards().robotRelativeForcesXNewtons())
+                    .withWheelForceFeedforwardsY(
+                            m_previousSwerveSetpoint.feedforwards().robotRelativeForcesYNewtons());
+        }
 
         // More NetworkTables logging
-        m_appliedSpeedsPub.set(m_toApplyRobotSpeeds);
+        m_appliedSpeedsPub.set(toApplyRobotSpeeds);
 
-        return m_applyRobotSpeeds
-                .withSpeeds(m_toApplyRobotSpeeds)
-                .withWheelForceFeedforwardsX(
-                        m_previousSwerveSetpoint.feedforwards().robotRelativeForcesXNewtons())
-                .withWheelForceFeedforwardsY(
-                        m_previousSwerveSetpoint.feedforwards().robotRelativeForcesYNewtons())
-                .apply(parameters, modulesToApply);
+        return m_applyRobotSpeeds.withSpeeds(toApplyRobotSpeeds).apply(parameters, modulesToApply);
     }
 
     /**
@@ -290,6 +303,20 @@ public class DriveWithSetpointGeneration implements ResettableSwerveRequest {
      */
     public DriveWithSetpointGeneration withRotationalDeadband(AngularVelocity newRotationalDeadband) {
         m_rotationalDeadband = newRotationalDeadband.in(RadiansPerSecond);
+        return this;
+    }
+
+    /**
+     * Modifies the CenterOfRotation parameter and returns itself.
+     * <p>
+     * The center of rotation the robot should rotate around. This is (0,0) by
+     * default, which will rotate around the center of the robot.
+     *
+     * @param newCenterOfRotation Parameter to modify
+     * @return this object
+     */
+    public DriveWithSetpointGeneration withCenterOfRotation(Translation2d newCenterOfRotation) {
+        m_applyRobotSpeeds.withCenterOfRotation(newCenterOfRotation);
         return this;
     }
 
