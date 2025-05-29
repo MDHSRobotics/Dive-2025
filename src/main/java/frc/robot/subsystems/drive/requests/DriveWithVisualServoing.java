@@ -34,12 +34,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @see <a href="https://docs.limelightvision.io/docs/docs-limelight/tutorials/tutorial-aiming-with-visual-servoing">Explanation of visual servoing</a>
  */
 public class DriveWithVisualServoing implements ResettableSwerveRequest {
-    /**
-     * The target direction for the swerve request.
-     * This field is not modifiable outside of this class because it is determined by tx.
-     */
-    private Rotation2d m_targetDirection = new Rotation2d();
-
     private final DriveFacingAngle m_driveFacingAngle;
 
     private boolean m_resetRequested = false;
@@ -99,10 +93,7 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
      * @see com.ctre.phoenix6.swerve.SwerveRequest.FieldCentricFacingAngle#apply(SwerveControlParameters, SwerveModule...)
      */
     public StatusCode apply(SwerveControlParameters parameters, SwerveModule... modulesToApply) {
-        Rotation2d currentAngle = parameters.currentPose.getRotation();
-
         if (m_resetRequested) {
-            m_targetDirection = currentAngle;
             m_txValue.set(null);
             m_resetRequested = false;
         }
@@ -112,10 +103,11 @@ public class DriveWithVisualServoing implements ResettableSwerveRequest {
         if (tx != null) {
             // You need to subtract instead of adding because the current angle is counterclockwise, but tx is
             // clockwise.
-            m_targetDirection = currentAngle.minus(Rotation2d.fromDegrees(tx));
+            Rotation2d targetDirection = parameters.currentPose.getRotation().minus(Rotation2d.fromDegrees(tx));
+            m_driveFacingAngle.withTargetDirection(targetDirection);
         }
 
-        return m_driveFacingAngle.withTargetDirection(m_targetDirection).apply(parameters, modulesToApply);
+        return m_driveFacingAngle.apply(parameters, modulesToApply);
     }
 
     /**

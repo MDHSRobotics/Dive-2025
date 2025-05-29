@@ -1,19 +1,19 @@
 # SysId Guide for Different Mechanisms
 
 ## Swerve drive motor gains:
-1. Go to CommandSwerveDrivetrain and set m_sysIdRoutineToApply to the sysid translation test.
+1. Go to CommandSwerveDrivetrain and set m_sysIdRoutineToApply to the SysId translation test.
 2. Go to RobotContainer. Make sure you have controller bindings for quasistatic forward, quasistatic backward, dynamic forward and dynamic backward.
 3. Make sure to call SignalLogger.start() in robotInit or testInit, and SignalLogger.stop() in testExit.
 4. Deploy your robot code.
 5. Make sure your robot has as much room as possible to move forward and backward.
-6. Enable test mode, run all four tests for, and disable test mode.
+6. Enable test mode, run all four tests for as long as you can without driving into anything, and disable test mode.
 7. Open Phoenix Tuner X, go to the “Tools” menu, and go to the “Log Extractor” menu.
 8. Press connect, and press the up arrow to go up each directory until you reach the root. Then go to .media/sda1/logs”.
 9. Find the log file with the exact date and time of your test. It’s the file that doesn’t start with “rio”.
 10. Select the downloads folder as your directory and download the file.
 11. Click on the file on the right menu, then change the output type to wpilog, then convert.
 12. Open up SysId and press “open data log file” to open your converted file.
-13. Drag the SyId string from the list of entries to the Test State.
+13. Drag the SysId string from the list of entries to the Test State.
 14. Decide on a drive motor (doesn't matter which one), and find the ID from TunerConstants. Open the dropdown for that motor in SysId and drag MotorVoltage to Voltage, Position to Position, and Velocity to Velocity. Set "Analysis Type" to "Simple".
 15. Select Rotations as your units and press load.
 16. Compare your results to the ones on this page (https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html). If your sim velocity r-squared in less than 0.9 or your acceleration R-squared is less than 0.2, you must adjust the plots using the directions from the page. (As a general tip, increasing window size increases acceleration r-squared and increasing the velocity threshold increases sim velocity r-squared.) If you can’t get those values past 0.9 and 0.2 without losing most of your filtered data, you need to run it again. (Keep in mind that SysId translation is one of the hardest tests to get good gains from, especially if you’re using Colson wheels.)
@@ -24,7 +24,7 @@
 
 
 ## Swerve steer motor gains:
-1. Go to CommandSwerveDrivetrain and set m_sysIdRoutineToApply to the sysid steer test.
+1. Go to CommandSwerveDrivetrain and set m_sysIdRoutineToApply to the SysId steer test.
 2. Go to RobotContainer. Make sure you have controller bindings for quasistatic forward, quasistatic backward, dynamic forward and dynamic backward.
 3. Make sure to call SignalLogger.start() in robotInit or testInit, and SignalLogger.stop() in testExit.
 4. Deploy your robot code.
@@ -36,7 +36,7 @@
 10. Select the downloads folder as your directory and download the file.
 11. Click on the file on the right menu, then change the output type to wpilog, then convert.
 12. Open up SysId and press “open data log file” to open your converted file.
-13. Drag the SyId string from the list of entries to the Test State.
+13. Drag the SysId string from the list of entries to the Test State.
 14. Decide on a steer motor (doesn't matter which one), and find the ID from TunerConstants. Open the dropdown for that motor in SysId and drag MotorVoltage to Voltage, Position to Position, and Velocity to Velocity. Set "Analysis Type" to "Simple".
 15. Select Rotations as your units and press load.
 16. Compare your results to the ones on this page (https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html). If your sim velocity r-squared in less than 0.9 or your acceleration R-squared is less than 0.2, you must adjust the plots using the directions from the page. (As a general tip, increasing window size increases acceleration r-squared and increasing the velocity threshold increases sim velocity r-squared.) If you can’t get those values past 0.9 and 0.2 without losing most of your filtered data, you need to run it again.
@@ -47,7 +47,7 @@
 
 
 ## Swerve rotation gains (this is only useful if you want to calculate your robot’s exact MOI for PathPlanner. I’m not sure how necessary this is.):
-1. Go to CommandSwerveDrivetrain and set m_sysIdRoutineToApply to the sysid rotation test.
+1. Go to CommandSwerveDrivetrain and set m_sysIdRoutineToApply to the SysId rotation test.
 2. Go to RobotContainer. Make sure you have controller bindings for quasistatic forward, quasistatic backward, dynamic forward and dynamic backward.
 3. Make sure to call SignalLogger.start() in robotInit or testInit, and SignalLogger.stop() in testExit.
 4. Deploy your robot code.
@@ -59,7 +59,7 @@
 10. Select the downloads folder as your directory and download the file.
 11. Click on the file on the right menu, then change the output type to wpilog, then convert.
 12. Open up SysId and press “open data log file” to open your converted file.
-13. Drag the SyId string from the list of entries to the Test State.
+13. Drag the SysId string from the list of entries to the Test State.
 14. Decide on a drive motor (doesn't matter which one), and find the ID from TunerConstants. Open the dropdown for that motor in SysId and drag MotorVoltage to Voltage. Drag the pigeon 2’s Yaw to Position and AngularVelocityZWorld to Velocity. Set "Analysis Type" to "Simple".
 15. Select radians as your units and PI/180 (copy/paste from desmos) as your velocity and position scaling. Press load.
 16. Compare your results to the ones on this page (https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html). If your sim velocity r-squared in less than 0.9 or your acceleration R-squared is less than 0.2, you must adjust the plots using the directions from the page. (As a general tip, increasing window size increases acceleration r-squared and increasing the velocity threshold increases sim velocity r-squared.) If you can’t get those values past 0.9 and 0.2 without losing most of your filtered data, you need to run it again.
@@ -82,7 +82,7 @@
 
 
 ## Other CTRE gains (like for an elevator):
-1. Write a sysid routine and sysid commands for the elevator. Use this as an example: https://github.com/MDHSRobotics/Dive-2025/blob/experiments/src/main/java/frc/robot/subsystems/elevator/Elevator.java
+1. Write a SysId routine and SysId commands for the mechanism. Use this as an example: https://github.com/MDHSRobotics/Dive-2025/blob/experiments/src/main/java/frc/robot/subsystems/elevator/Elevator.java
 2. Go to RobotContainer. Make sure you have controller bindings for quasistatic forward, quasistatic backward, dynamic forward and dynamic backward.
 3. Make sure to call SignalLogger.start() in robotInit or testInit, and SignalLogger.stop() in testExit.
 4. Deploy your robot code.
@@ -95,7 +95,7 @@
 11. Select the downloads folder as your directory and download the file.
 12. Click on the file on the right menu, then change the output type to wpilog, then convert.
 13. Open up SysId and press “open data log file” to open your converted file.
-14. Drag the SyId string from the list of entries to the Test State.
+14. Drag the SysId string from the list of entries to the Test State.
 15. Find your motor. Open the dropdown for that motor in SysId and drag MotorVoltage to Voltage, Position to Position, and Velocity to Velocity. Set "Analysis Type" to Arm if you're testing an arm (or Simple if the arm is resting on its side), Elevator if you're testing an elevator, and Simple for everything else.
 16. Select Rotations as your units and press load.
 17. Compare your results to the ones on this page (https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html). If your sim velocity r-squared in less than 0.9 or your acceleration R-squared is less than 0.2, you must adjust the plots using the directions from the page. (As a general tip, increasing window size increases acceleration r-squared and increasing the velocity threshold increases sim velocity r-squared.) If you can’t get those values past 0.9 and 0.2 without losing most of your filtered data, you need to run it again.
@@ -107,7 +107,7 @@
 
 ## REV gains:
 1. Use the URCL page as a guide if you need more information: https://docs.advantagescope.org/more-features/urcl/
-2. Write a sysid routine and sysid commands for the elevator. Use this as an example: https://github.com/MDHSRobotics/Dive-2025/blob/experiments/src/main/java/frc/robot/subsystems/elevator/Elevator.java
+2. Write a SysId routine and SysId commands for the mechanism. Use this as an example: https://github.com/MDHSRobotics/Dive-2025/blob/experiments/src/main/java/frc/robot/subsystems/elevator/Elevator.java
 3. Decide what units you want your gains in. I suggest radians and radians per second because ArmFeedforward requires these units. Regardless, set position and velocity conversion factors in your motor configs to convert from rotations and rotations per minute to your desired units.
 4. Enable either primaryEncoderPosition/VelocityAlwaysOn or absoluteEncoderPosition/VelocityAlwaysOn, depending on whether you use the built in encoder or a separate absolute encoder.
 5. Go to RobotContainer. Make sure you have controller bindings for quasistatic forward, quasistatic backward, dynamic forward and dynamic backward.
@@ -121,7 +121,7 @@
 13. Open AdvantageScope, press “File” and “Open Log(s)” and find your log on the USB drive. It should be the most recent .wpilog.
 14. Press “File” and “Export Data”. Set the format to “WPILOG” and the field set to “Include Generated”. Press the save icon.
 15. Open up SysId and press “open data log file” to open your file.
-16. Drag the SyId string from the list of entries to the Test State.
+16. Drag the SysId string from the list of entries to the Test State.
 17. Find your motor. Open the dropdown for that motor in SysId and drag AppliedOutputVoltage to Voltage, primary or absolute position to Position, and primary or absolute velocity to Velocity. Set "Analysis Type" to Arm if you're testing an arm (or Simple if the arm is resting on its side), Elevator if you're testing an elevator, and Simple for everything else.
 18. Select whatever units you chose to use and press load.
 19. Compare your results to the ones on this page (https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html). If your sim velocity r-squared in less than 0.9 or your acceleration R-squared is less than 0.2, you must adjust the plots using the directions from the page. (As a general tip, increasing window size increases acceleration r-squared and increasing the velocity threshold increases sim velocity r-squared.) If you can’t get those values past 0.9 and 0.2 without losing most of your filtered data, you need to run it again.
