@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
 import frc.robot.subsystems.climb.Climb;
@@ -135,17 +134,19 @@ public class RobotContainer {
      * ">this controller map</a>
      * to update and view the current controls.
      */
+    /**
+     * Updated Driver Controllers
+     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftBumper=Face+Left+Coral+Station&rightBumper=Face+Right+Coral+Station&rightTrigger=Slow+Mode+%2825%25%29&dpadUp=Raise+Climb&dpadDown=Lower+Climb&backButton=Reset+Robot+Orientation&yButton=Auto+alignment+to+nearest+coral+station&xButton=Re-enable+manual+driving&bButton=Face+reef+wall&aButton=Lock+Wheels&leftStick=Drive&rightStick=Rotate&leftTrigger=Remove+algae+from+reef
+     */
     private void configureDriverControls() {
-        // Half Speed
-        m_driverController.L2().onTrue(Commands.runOnce(() -> m_robotSpeed = 0.5));
-        m_driverController.L2().onFalse(Commands.runOnce(() -> m_robotSpeed = 1.0));
 
         // Quarter Speed
         m_driverController.R2().onTrue(Commands.runOnce(() -> m_robotSpeed = 0.25));
+
         m_driverController.R2().onFalse(Commands.runOnce(() -> m_robotSpeed = 1.0));
-        // Select left station
+        // Facing left coral station
         m_driverController.L1().whileTrue(m_aimingRoutines.alignWithCoralStation(true));
-        // Select right station
+        // Facing right coral station
         m_driverController.R1().whileTrue(m_aimingRoutines.alignWithCoralStation(false));
 
         // Reset robot orientation
@@ -154,8 +155,11 @@ public class RobotContainer {
                 .onTrue(m_drivetrain.runOnce(() -> m_drivetrain.setOperatorPerspectiveForward(
                         m_drivetrain.getState().Pose.getRotation())));
 
+        // Facing Reef Wall
         m_driverController.circle().whileTrue(m_aimingRoutines.orientToFaceReefWall());
+        // Auto alignment to nearest coral station
         m_driverController.triangle().whileTrue(m_aimingRoutines.driveToNearestCoralStation());
+        // Lock wheels
         m_driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> m_brake));
         // Press once to begin driving normally again
         m_driverController.square().onTrue(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
@@ -164,30 +168,34 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
 
-        // m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
-        // m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
+        // Climb controls
+        m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
+        m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
+
+        // Remove algae from reef
+        m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
          * Note that each routine should be run exactly once in a single log.
          * Comment out when finished.
          */
-        m_driverController
-                .share()
-                .and(m_driverController.povUp())
-                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
-        m_driverController
-                .share()
-                .and(m_driverController.povDown())
-                .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-        m_driverController
-                .options()
-                .and(m_driverController.povUp())
-                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-        m_driverController
-                .options()
-                .and(m_driverController.povDown())
-                .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // m_driverController
+        //         .share()
+        //         .and(m_driverController.povUp())
+        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // m_driverController
+        //         .share()
+        //         .and(m_driverController.povDown())
+        //         .whileTrue(m_drivetrain.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // m_driverController
+        //         .options()
+        //         .and(m_driverController.povUp())
+        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // m_driverController
+        //         .options()
+        //         .and(m_driverController.povDown())
+        //         .whileTrue(m_drivetrain.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     }
 
     /**
@@ -197,39 +205,38 @@ public class RobotContainer {
      * ">this controller map</a>
      * to update and view the current controls.
      */
+    /**
+     * Updated Operator Controller
+     * https://www.padcrafter.com/?templates=Operator+Controller&yButton=Elevator+and+arm+to+L1&xButton=&bButton=Elevator+and+arm+to+L2&aButton=Elevator+and+arm+to+L3&rightStick=Select+left%2Fright+tree+and+enable+auto+align&dpadUp=Intake+to+algae+on+ice+cream&dpadRight=Intake+to+processor&dpadLeft=Intake+to+ground+algae&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&leftTrigger=Elevator+and+arm+to+coral+station&leftBumper=Intake+coral&dpadDown=&rightTrigger=Eject+Coral&leftStick=&leftStickClick=&startButton=Stow+intake&backButton=Stow+catcher
+     */
     private void configureOperatorControls() {
-        m_operatorController.b().whileTrue(m_elevator.ejectCoralCommand());
-        m_operatorController.a().whileTrue(m_elevator.intakeCoralCommand());
+        // Set Elevator and Arm positions
+        // L1
         m_operatorController
-                .leftBumper()
+                .b()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
-                        ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
+                        ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
         m_operatorController
-                .rightBumper()
+                .a()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
         m_operatorController
-                .leftTrigger()
+                .y()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
+
+        // Intake and Eject corals
+        m_operatorController.leftBumper().whileTrue(m_elevator.intakeCoralCommand());
+        m_operatorController.rightTrigger().whileTrue(m_elevator.ejectCoralCommand());
+
+        // Elevator and arm to coral station
         m_operatorController
-                .rightTrigger()
+                .leftTrigger()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
-                        ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
+                        ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
 
         m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
-        m_operatorController
-                .povLeft()
-                .and(m_operatorController.a())
-                .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
-        m_operatorController
-                .povLeft()
-                .and(m_operatorController.y())
-                .whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
-
-        m_operatorController.x().whileTrue(m_intake.runWheelsCommand());
-        m_operatorController.y().whileTrue(m_intake.wheelsBackwardsCommand());
 
         m_operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
         m_operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
