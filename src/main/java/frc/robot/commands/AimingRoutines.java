@@ -332,9 +332,13 @@ public class AimingRoutines {
      * See "diagrams/Tree_Selection.jpeg" and "diagrams/Useful_angles_in_radians.png" in the project files for more info on target selection.
      */
     private void calculateTargetPose() {
+        double tagID = NetworkTableInstance.getDefault()
+                .getTable("limelight")
+                .getEntry("tid")
+                .getDouble(0);
         // Get the left joystick angle in the range of 0 to 2*PI
-        final double leftStickAngleRadians = MathUtil.inputModulus(
-                Math.atan2(-m_leftYSupplier.getAsDouble(), m_leftXSupplier.getAsDouble()), 0.0, 2.0 * Math.PI);
+        // final double leftStickAngleRadians = MathUtil.inputModulus(
+        // Math.atan2(-m_leftYSupplier.getAsDouble(), m_leftXSupplier.getAsDouble()), 0.0, 2.0 * Math.PI);
 
         // Get the right joystick angle in the range of 0 to 2*PI
         final double rightStickAngleRadians = MathUtil.inputModulus(
@@ -344,47 +348,74 @@ public class AimingRoutines {
         final boolean leftTreeSelected =
                 (rightStickAngleRadians >= Math.PI / 2.0) && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
 
-        if (leftStickAngleRadians >= Math.PI / 3.0 && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // 1: Top reef side
-            if (leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
-            }
-        } else if (leftStickAngleRadians >= 2.0 * Math.PI / 3.0
-                && leftStickAngleRadians < Math.PI) { // 2: Top left reef side
-            if (leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
-            }
-        } else if (leftStickAngleRadians >= Math.PI
-                && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // 3: Bottom left reef side
-            if (leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
-            }
-        } else if (leftStickAngleRadians >= 4.0 * Math.PI / 3.0
-                && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // 4: Bottom reef side
-            if (leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
-            }
-        } else if (leftStickAngleRadians >= 5.0 * Math.PI / 3.0
-                && leftStickAngleRadians < 2.0 * Math.PI) { // 5: Bottom right reef side
-            if (leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
-            }
-        } else { // 6: Top right reef side
-            if (leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
-            }
+        if (tagID == 18 && leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
+        } else if (tagID == 18 && !leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
+        } else if (tagID == 17 && leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
+        } else if (tagID == 17 && !leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
+        } else if (tagID == 22 && leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
+        } else if (tagID == 22 && !leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
+        } else if (tagID == 21 && leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
+        } else if (tagID == 21 && !leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
+        } else if (tagID == 20 && leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
+        } else if (tagID == 20 && !leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
+        } else if (tagID == 19 && leftTreeSelected) {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
+        } else {
+            m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
         }
+
+        // if (leftStickAngleRadians >= Math.PI / 3.0 && leftStickAngleRadians < 2.0 * Math.PI / 3.0) { // 1: Top reef
+        // side
+        //     if (leftTreeSelected) {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
+        //     } else {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
+        //     }
+        // } else if (leftStickAngleRadians >= 2.0 * Math.PI / 3.0
+        //         && leftStickAngleRadians < Math.PI) { // 2: Top left reef side
+        //     if (leftTreeSelected) {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
+        //     } else {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
+        //     }
+        // } else if (leftStickAngleRadians >= Math.PI
+        //         && leftStickAngleRadians < 4.0 * Math.PI / 3.0) { // 3: Bottom left reef side
+        //     if (leftTreeSelected) {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
+        //     } else {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
+        //     }
+        // } else if (leftStickAngleRadians >= 4.0 * Math.PI / 3.0
+        //         && leftStickAngleRadians < 5.0 * Math.PI / 3.0) { // 4: Bottom reef side
+        //     if (leftTreeSelected) {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
+        //     } else {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
+        //     }
+        // } else if (leftStickAngleRadians >= 5.0 * Math.PI / 3.0
+        //         && leftStickAngleRadians < 2.0 * Math.PI) { // 5: Bottom right reef side
+        //     if (leftTreeSelected) {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
+        //     } else {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
+        //     }
+        // } else { // 6: Top right reef side
+        //     if (leftTreeSelected) {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
+        //     } else {
+        //         m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
+        //     }
+        // }
         // Flip from blue target to red target if on red alliance
         if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
             m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
