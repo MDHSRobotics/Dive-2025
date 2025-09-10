@@ -161,7 +161,7 @@ public class RobotContainer {
         m_driverController.triangle().whileTrue(m_aimingRoutines.driveToNearestCoralStation());
         // Lock wheels
         m_driverController.cross().whileTrue(m_drivetrain.applyRequest(() -> m_brake));
-        // Press once to begin driving normally again
+        // Press once to begin driving normally again (after auto-alignment)
         m_driverController.square().onTrue(m_drivetrain.applyRequest(() -> m_drive.withVelocityX(getVelocityX())
                 .withVelocityY(getVelocityY())
                 .withRotationalRate(getRotationalRate())

@@ -10,7 +10,6 @@ import com.pathplanner.lib.path.GoalEndState;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.Waypoint;
-import com.pathplanner.lib.util.FlippingUtil;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -346,58 +345,67 @@ public class AimingRoutines {
 
         // Whether or not the joystick chose the left tree
         final boolean leftTreeSelected =
-                (rightStickAngleRadians >= Math.PI / 2.0) && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
+                (rightStickAngleRadians > Math.PI / 2.0) && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
         if (DriverStation.getAlliance().orElseThrow() == Alliance.Blue) {
-            if (tagID == 18 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
-            } else if (tagID == 18 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
-            } else if (tagID == 17 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
-            } else if (tagID == 17 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
-            } else if (tagID == 22 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
-            } else if (tagID == 22 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
-            } else if (tagID == 21 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
-            } else if (tagID == 21 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
-            } else if (tagID == 20 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
-            } else if (tagID == 20 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
-            } else if (tagID == 19 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
+            if (leftTreeSelected) {
+                if (tagID == 18) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
+                } else if (tagID == 17) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
+                } else if (tagID == 22) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
+                } else if (tagID == 21) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
+                } else if (tagID == 20) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
+                } else if (tagID == 19) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
+                }
+            } else if (!leftTreeSelected) {
+                if (tagID == 18) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
+                } else if (tagID == 17) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
+                } else if (tagID == 22) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
+                } else if (tagID == 21) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
+                } else if (tagID == 20) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
+                } else if (tagID == 19) {
+                    m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
+                }
             }
+
         } else {
-            if (tagID == 7 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(0); // A
-            } else if (tagID == 7 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(1); // B
-            } else if (tagID == 8 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(2); // C
-            } else if (tagID == 8 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(3); // D
-            } else if (tagID == 9 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(4); // E
-            } else if (tagID == 9 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(5); // F
-            } else if (tagID == 10 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(6); // G
-            } else if (tagID == 10 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(7); // H
-            } else if (tagID == 11 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(8); // I
-            } else if (tagID == 11 && !leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(9); // J
-            } else if (tagID == 6 && leftTreeSelected) {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(10); // K
-            } else {
-                m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(11); // L
+            if (leftTreeSelected) {
+                if (tagID == 7) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(0); // A
+                } else if (tagID == 8) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(2); // C
+                } else if (tagID == 9) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(4); // E
+                } else if (tagID == 10) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(6); // G
+                } else if (tagID == 11) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(8); // I
+                } else if (tagID == 6) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(10); // K
+                }
+            } else if (!leftTreeSelected) {
+                if (tagID == 7) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(1); // B
+                } else if (tagID == 8) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(3); // D
+                } else if (tagID == 9) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(5); // F
+                } else if (tagID == 10) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(7); // H
+                } else if (tagID == 11) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(9); // J
+                } else if (tagID == 6) {
+                    m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(11); // L
+                }
             }
         }
 
@@ -444,9 +452,9 @@ public class AimingRoutines {
         //     }
         // }
         // Flip from blue target to red target if on red alliance
-        if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
-            m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
-        }
+        // if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
+        //     m_currentTargetPose = FlippingUtil.flipFieldPose(m_currentTargetPose);
+        // }
         // Log to NetworkTables
         m_targetPosePub.set(m_currentTargetPose);
     }
