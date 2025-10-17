@@ -14,11 +14,14 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.*;
 import frc.robot.commands.AimingRoutines;
+import frc.robot.subsystems.LED;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.drive.CommandSwerveDrivetrain;
 import frc.robot.subsystems.drive.DriveConstants;
@@ -44,6 +47,7 @@ public class RobotContainer {
     private final Climb m_climb = new Climb();
     private final Elevator m_elevator = new Elevator();
     private final Intake m_intake = new Intake();
+    private final LED m_led = new LED();
 
     /* Setting up bindings for necessary control of the swerve drive platform.
      */
@@ -118,6 +122,7 @@ public class RobotContainer {
         m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
                 ElevatorPositions.CURRENT_POSITION, ElevatorArmPositions.CURRENT_POSITION));
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
+        m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
     }
 
     /**
@@ -169,8 +174,15 @@ public class RobotContainer {
                 .withRotationalDeadband(getRotationalDeadband())));
 
         // Climb controls
-        m_driverController.povUp().whileTrue(m_climb.setPowerCommand(() -> 1.0, () -> 1.0));
-        m_driverController.povDown().whileTrue(m_climb.setPowerCommand(() -> -1.0, () -> -1.0));
+        m_driverController
+                .povUp()
+                .whileTrue(new ParallelCommandGroup(
+                        m_climb.setPowerCommand(() -> 1.0, () -> 1.0), new RunCommand(() -> m_led.setRedGRB(), m_led)));
+        m_driverController
+                .povDown()
+                .whileTrue(new ParallelCommandGroup(
+                        m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
+                        new RunCommand(() -> m_led.setRedGRB(), m_led)));
 
         // Remove algae from reef
         m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
