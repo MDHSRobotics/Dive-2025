@@ -14,11 +14,13 @@ import com.ctre.phoenix6.configs.SoftwareLimitSwitchConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
+import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -39,6 +41,7 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -64,6 +67,9 @@ public class Elevator extends SubsystemBase {
         ALGAE_REMOVAL,
         CURRENT_POSITION
     }
+    // New Intake
+    private final SparkFlex m_intake2 = new SparkFlex(9, MotorType.kBrushless);
+    private final RelativeEncoder m_intakeEncoder = m_intake2.getEncoder();
 
     // Elevator
     private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
@@ -119,12 +125,22 @@ public class Elevator extends SubsystemBase {
     private final DoublePublisher m_armSetpointVelocityPub =
             m_table.getDoubleTopic("Arm Setpoint Velocity").publish();
 
+    private final DoublePublisher m_intakePositionPub = m_table.getDoubleTopic("Intake Position").publish();
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
      * so that we can see the motor configs without having to connect to the robot.
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Elevator() {
+        SparkFlexConfig intake2Config = new SparkFlexConfig();
+        intake2Config.smartCurrentLimit(80).idleMode(IdleMode.kBrake).inverted(true);
+        //45 degrees is 0.5905
+        //Intake position is 0.22
+        intake2Config.softLimit.forwardSoftLimit(0.22).forwardSoftLimitEnabled(true).reverseSoftLimit(-0.0001).reverseSoftLimitEnabled(true);
+
+
+        m_intake2.configure(intake2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        
         TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
         elevatorConfig
                 .withMotorOutput(new MotorOutputConfigs()
@@ -198,6 +214,7 @@ public class Elevator extends SubsystemBase {
         double armAccel = (armVelocity - m_prevVelocity) / 0.02;
         m_armAccelPub.set(armAccel);
         m_prevVelocity = armVelocity;
+        m_intakePositionPub.set(m_intakeEncoder.getPosition());
     }
 
     private void setElevatorPosition(ElevatorPositions elevatorPosition) {
@@ -348,4 +365,13 @@ public class Elevator extends SubsystemBase {
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_elevatorRoutine.dynamic(direction);
     }
+
+    public Command testIntake2Command(DoubleSupplier intake2PowerSupplier){
+        return this.run(()-> m_intake2.set(intake2PowerSupplier.getAsDouble() * 0.25)).finallyDo(()->m_intake2.disable());
+    }
+
+    public void resetIntakeEncoder(){
+        m_intakeEncoder.setPosition(0);
+    }
+
 }

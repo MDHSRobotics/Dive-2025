@@ -251,8 +251,9 @@ public class AimingRoutines {
                             m_drivetrain.updateVisionTarget(true);
                             calculateTargetPose();
                             return generatePath(m_drivetrain.getState(), m_currentTargetPose, ON_THE_FLY_CONSTRAINTS);
-                        }),
-                        positionCorrectionCommand())
+                        })
+                        // positionCorrectionCommand()
+                        )
                 .finallyDo(() -> m_drivetrain.updateVisionTarget(false));
     }
 

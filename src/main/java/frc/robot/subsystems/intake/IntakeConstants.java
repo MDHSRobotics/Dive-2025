@@ -8,6 +8,7 @@ public class IntakeConstants {
     public static final int ARM_ID = 6;
     public static final int WHEEL_RIGHT_ID = 7;
     public static final int WHEEL_LEFT_ID = 8;
+    public static final int ARM2_ID = 9;
 
     /**
      * The roboRIO DIO channel that the

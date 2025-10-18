@@ -14,8 +14,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -247,13 +248,19 @@ public class RobotContainer {
                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
 
         m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        //m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        //m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
 
         m_operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
         m_operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
 
+        m_operatorController.povUp().whileTrue(m_elevator.testIntake2Command(()->1.0));
+        m_operatorController.povDown().whileTrue(m_elevator.testIntake2Command(()->-1.0));
+        m_operatorController.x().toggleOnTrue(new InstantCommand(()->m_elevator.resetIntakeEncoder(), m_elevator));
+        
+
         // operatorController
+        
         //         .back()
         //         .and(operatorController.povUp())
         //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
