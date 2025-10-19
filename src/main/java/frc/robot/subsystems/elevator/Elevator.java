@@ -65,9 +65,16 @@ public class Elevator extends SubsystemBase {
         ALGAE_REMOVAL,
         CURRENT_POSITION
     }
+
+    public enum Arm2Positions {
+        ZERO_POSITION,
+        HORIZONTAL,
+        DROP_OFF,
+        CURRENT_POSITION
+    }
     // New arm
-    private final SparkFlex m_arm2 = new SparkFlex(9, MotorType.kBrushless);
-    private final RelativeEncoder m_arm2Encoder = m_arm2.getEncoder();
+    private final SparkFlex m_arm2Motor = new SparkFlex(ARM2_ID, MotorType.kBrushless);
+    private final RelativeEncoder m_arm2Encoder = m_arm2Motor.getEncoder();
 
     // Elevator
     private final TalonFX m_elevatorMotor = new TalonFX(ELEVATOR_ID, TunerConstants.kCANBus);
@@ -98,6 +105,7 @@ public class Elevator extends SubsystemBase {
     private TrapezoidProfile.State m_armCurrentSetpoint = new TrapezoidProfile.State();
     private final Timer m_armProfileTimer = new Timer();
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
+    private final SparkClosedLoopController m_arm2Controller = m_arm2Motor.getClosedLoopController();
 
     // Flywheels
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
@@ -109,6 +117,8 @@ public class Elevator extends SubsystemBase {
     private final NetworkTable m_table = m_inst.getTable("Elevator");
     private final DoublePublisher m_armGoalPub =
             m_table.getDoubleTopic("Arm Goal Position").publish();
+    private final DoublePublisher m_arm2GoalPub =
+            m_table.getDoubleTopic("Arm 2 Goal Position").publish();
     private final DoublePublisher m_elevatorGoalPub =
             m_table.getDoubleTopic("Elevator Goal Position").publish();
     private final DoubleEntry m_pGainEntry =
@@ -122,6 +132,11 @@ public class Elevator extends SubsystemBase {
             m_table.getDoubleTopic("Arm Setpoint Position").publish();
     private final DoublePublisher m_armSetpointVelocityPub =
             m_table.getDoubleTopic("Arm Setpoint Velocity").publish();
+
+    private final DoublePublisher m_arm2SetpointPositionPub =
+            m_table.getDoubleTopic("Arm 2 Setpopint Position").publish();
+    private final DoublePublisher m_arm2SetpointVelocityPub =
+            m_table.getDoubleTopic("Arm 2 Setpoint Velocity").publish();
 
     private final DoublePublisher m_intakePositionPub =
             m_table.getDoubleTopic("Intake Position").publish();
@@ -138,12 +153,12 @@ public class Elevator extends SubsystemBase {
         // Intake position is 0.22
         arm2Config
                 .softLimit
-                .forwardSoftLimit(0.22)
+                .forwardSoftLimit(ARM2_MAX_LIMIT)
                 .forwardSoftLimitEnabled(true)
-                .reverseSoftLimit(-0.0001)
+                .reverseSoftLimit(ARM2_MIN_LIMIT)
                 .reverseSoftLimitEnabled(true);
 
-        m_arm2.configure(arm2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        m_arm2Motor.configure(arm2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         TalonFXConfiguration elevatorConfig = new TalonFXConfiguration();
         elevatorConfig
@@ -267,6 +282,25 @@ public class Elevator extends SubsystemBase {
         m_armProfileTimer.restart();
     }
 
+    private void setArm2Position(Arm2Positions arm2Position) {
+        double position;
+        if (arm2Position == Arm2Positions.ZERO_POSITION) {
+            position = ARM2_MIN_LIMIT;
+        } else if (arm2Position == Arm2Positions.DROP_OFF) {
+            position = ARM2_MAX_LIMIT;
+        } else if (arm2Position == Arm2Positions.CURRENT_POSITION) {
+            position = m_arm2Encoder.getPosition();
+        } else {
+            DriverStation.reportWarning("Attempted to set the arm to a null position!", true);
+            return;
+        }
+        m_arm2GoalPub.set(position);
+        m_armGoal.position = position;
+        m_armStartingSetpoint.position = m_arm2Encoder.getPosition();
+        m_armStartingSetpoint.velocity = m_arm2Encoder.getVelocity();
+        m_armProfileTimer.restart();
+    }
+
     private void updateArmProfile() {
         double currentTime = m_armProfileTimer.get();
         TrapezoidProfile.State nextArmSetpoint = m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
@@ -279,6 +313,21 @@ public class Elevator extends SubsystemBase {
         m_armCurrentSetpoint = nextArmSetpoint;
         m_armSetpointPositionPub.set(m_armCurrentSetpoint.position);
         m_armSetpointVelocityPub.set(m_armCurrentSetpoint.velocity);
+    }
+
+    private void updateArm2Profile() {
+        double currentTime = m_armProfileTimer.get();
+        TrapezoidProfile.State nextArmSetpoint = m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
+        // Might need to change to the ClosedLoopSlot 1
+        m_arm2Controller.setReference(nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+        m_armCurrentSetpoint = nextArmSetpoint;
+        m_arm2SetpointPositionPub.set(m_armCurrentSetpoint.position);
+        m_arm2SetpointVelocityPub.set(m_armCurrentSetpoint.velocity);
+        // setReference(
+        //         nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
+        // m_armCurrentSetpoint = nextArmSetpoint;
+        // m_armSetpointPositionPub.set(m_armCurrentSetpoint.position);
+        // m_armSetpointVelocityPub.set(m_armCurrentSetpoint.velocity);
     }
 
     public Command disableMotorsCommand() {
@@ -350,6 +399,18 @@ public class Elevator extends SubsystemBase {
                 this::updateArmProfile);
     }
 
+    public Command testIntake2Command(DoubleSupplier intake2PowerSupplier) {
+        return this.run(() -> m_arm2Motor.set(intake2PowerSupplier.getAsDouble() * 0.25));
+    }
+
+    public void resetIntakeEncoder() {
+        m_arm2Encoder.setPosition(0);
+    }
+
+    public Command setArm2PositionCommaned(Arm2Positions arm2Position) {
+        return this.startRun(() -> setArm2Position(arm2Position), this::updateArm2Profile);
+    }
+
     /**
      * Runs the SysId Quasistatic test in the given direction for the routine.
      *
@@ -368,14 +429,5 @@ public class Elevator extends SubsystemBase {
      */
     public Command sysIdDynamic(SysIdRoutine.Direction direction) {
         return m_elevatorRoutine.dynamic(direction);
-    }
-
-    public Command testIntake2Command(DoubleSupplier intake2PowerSupplier) {
-        return this.run(() -> m_arm2.set(intake2PowerSupplier.getAsDouble() * 0.25))
-                .finallyDo(() -> m_arm2.disable());
-    }
-
-    public void resetIntakeEncoder() {
-        m_arm2Encoder.setPosition(0);
     }
 }

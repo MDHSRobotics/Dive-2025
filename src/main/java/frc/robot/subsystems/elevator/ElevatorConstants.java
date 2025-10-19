@@ -8,6 +8,7 @@ public class ElevatorConstants {
     public static final int ELEVATOR_ID = 15;
     public static final int ARM_ID = 4;
     public static final int WHEELS_ID = 5;
+    public static final int ARM2_ID = 9;
 
     /**
      * The current limit for the arm and wheels in amps.
@@ -24,6 +25,10 @@ public class ElevatorConstants {
     public static final double ARM_MIN_LIMIT = 3.911;
     /** Units: radians */
     public static final double ARM_MAX_LIMIT = 6.2;
+    /**Units: rotations */
+    public static final double ARM2_MAX_LIMIT = 0.5905;
+    /**Units: rotations */
+    public static final double ARM2_MIN_LIMIT = -0.0001;
 
     /**
      * The conversion of motor rotations to elevator chain rotations.
@@ -101,4 +106,6 @@ public class ElevatorConstants {
     public static final double ARM_L2_AND_L3_POSITION = 4.95;
     /** Units: radians */
     public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357;
+    /**Units: rotations */
+    public static final double ARM2_HORIZONTAL_POSITION = 0.22;
 }

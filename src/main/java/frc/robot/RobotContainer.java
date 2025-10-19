@@ -30,6 +30,7 @@ import frc.robot.subsystems.drive.DriveTelemetry;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.drive.requests.DriveWithSetpointGeneration;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.Elevator.Arm2Positions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorArmPositions;
 import frc.robot.subsystems.elevator.Elevator.ElevatorPositions;
 import frc.robot.subsystems.intake.Intake;
@@ -233,9 +234,10 @@ public class RobotContainer {
                 .a()
                 .onTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
-        m_operatorController
-                .y()
-                .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
+        // m_operatorController
+        //         .y()
+        //         .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED,
+        // ElevatorArmPositions.L1));
 
         // Intake and Eject corals
         m_operatorController.leftBumper().whileTrue(m_elevator.intakeCoralCommand());
@@ -248,19 +250,19 @@ public class RobotContainer {
                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
 
         m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
-        //m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        //m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        // m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        // m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
 
         m_operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
         m_operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
 
-        m_operatorController.povUp().whileTrue(m_elevator.testIntake2Command(()->1.0));
-        m_operatorController.povDown().whileTrue(m_elevator.testIntake2Command(()->-1.0));
-        m_operatorController.x().toggleOnTrue(new InstantCommand(()->m_elevator.resetIntakeEncoder(), m_elevator));
-        
+        m_operatorController.povUp().whileTrue(m_elevator.testIntake2Command(() -> 1.0));
+        m_operatorController.povDown().whileTrue(m_elevator.testIntake2Command(() -> -1.0));
+        m_operatorController.x().toggleOnTrue(new InstantCommand(() -> m_elevator.resetIntakeEncoder(), m_elevator));
+        m_operatorController.y().onTrue(m_elevator.setArm2PositionCommaned(Arm2Positions.DROP_OFF));
 
         // operatorController
-        
+
         //         .back()
         //         .and(operatorController.povUp())
         //         .whileTrue(m_elevator.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
