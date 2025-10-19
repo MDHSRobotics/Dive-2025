@@ -3,7 +3,9 @@ package frc.robot.subsystems;
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
 import com.ctre.phoenix.led.CANdleConfiguration;
+import com.ctre.phoenix.led.FireAnimation;
 import com.ctre.phoenix.led.RainbowAnimation;
+import com.ctre.phoenix.led.TwinkleAnimation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LED extends SubsystemBase {
@@ -29,8 +31,23 @@ public class LED extends SubsystemBase {
         candle.setLEDs(0, 0, 255, 0, 0, 300);
     }
 
+    public void setColor(int r, int g, int b){
+        candle.setLEDs(r, g, b);
+    }
+
     public void setRainbowAnimation() {
         RainbowAnimation rainbow = new RainbowAnimation(1, .3, 300);
         candle.animate(rainbow);
+    }
+
+    public void setTwinkleAnimation() {
+        // Twinkle Mater Dei Red
+        TwinkleAnimation twinkle = new TwinkleAnimation(194, 4, 48);
+        candle.animate(twinkle);
+    }
+
+    public void setFireAnimation() {
+        FireAnimation fire = new FireAnimation();
+        candle.animate(fire);
     }
 }
