@@ -155,15 +155,15 @@ public class Elevator extends SubsystemBase {
     public Elevator() {
         SparkFlexConfig arm2Config = new SparkFlexConfig();
         arm2Config.smartCurrentLimit(80).idleMode(IdleMode.kBrake).inverted(true);
-        arm2Config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
+        arm2Config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(0.6);
         // 45 degrees is 0.5905
         // Intake position is 0.22
         arm2Config
                 .softLimit
                 .forwardSoftLimit(ARM2_HORIZONTAL_POSITION)
-                .forwardSoftLimitEnabled(true)
+                .forwardSoftLimitEnabled(false)
                 .reverseSoftLimit(ARM2_MIN_LIMIT)
-                .reverseSoftLimitEnabled(true);
+                .reverseSoftLimitEnabled(false);
 
         m_arm2Motor.configure(arm2Config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -329,7 +329,7 @@ public class Elevator extends SubsystemBase {
         TrapezoidProfile.State nextArm2Setpoint =
                 m_arm2Profile.calculate(currentTime2, m_arm2StartingSetpoint, m_arm2Goal);
         // Might need to change to the ClosedLoopSlot 1
-        m_arm2Controller.setReference(nextArm2Setpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+        m_arm2Controller.setReference(nextArm2Setpoint.position, ControlType.kPosition);
         m_arm2CurrentSetpoint = nextArm2Setpoint;
         m_arm2SetpointPositionPub.set(m_arm2CurrentSetpoint.position);
         m_arm2SetpointVelocityPub.set(m_arm2CurrentSetpoint.velocity);
