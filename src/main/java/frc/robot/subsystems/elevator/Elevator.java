@@ -100,10 +100,17 @@ public class Elevator extends SubsystemBase {
     private final ArmFeedforward m_armFeedforward = new ArmFeedforward(ARM_K_S, ARM_K_G, ARM_K_V, ARM_K_A);
     private final TrapezoidProfile m_armProfile =
             new TrapezoidProfile(new TrapezoidProfile.Constraints(ARM_MAX_VELOCITY, ARM_MAX_ACCELERATION));
+    private final TrapezoidProfile m_arm2Profile =
+            new TrapezoidProfile(new TrapezoidProfile.Constraints(ARM_MAX_VELOCITY, ARM_MAX_ACCELERATION));
     private final TrapezoidProfile.State m_armGoal = new TrapezoidProfile.State();
+    private final TrapezoidProfile.State m_arm2Goal = new TrapezoidProfile.State();
     private TrapezoidProfile.State m_armStartingSetpoint = new TrapezoidProfile.State();
     private TrapezoidProfile.State m_armCurrentSetpoint = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_arm2StartingSetpoint = new TrapezoidProfile.State();
+    private TrapezoidProfile.State m_arm2CurrentSetpoint = new TrapezoidProfile.State();
     private final Timer m_armProfileTimer = new Timer();
+    private final Timer m_arm2ProfileTimer = new Timer();
+
     private final SparkClosedLoopController m_armController = m_armMotor.getClosedLoopController();
     private final SparkClosedLoopController m_arm2Controller = m_arm2Motor.getClosedLoopController();
 
@@ -153,7 +160,7 @@ public class Elevator extends SubsystemBase {
         // Intake position is 0.22
         arm2Config
                 .softLimit
-                .forwardSoftLimit(ARM2_MAX_LIMIT)
+                .forwardSoftLimit(ARM2_HORIZONTAL_POSITION)
                 .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(ARM2_MIN_LIMIT)
                 .reverseSoftLimitEnabled(true);
@@ -290,15 +297,17 @@ public class Elevator extends SubsystemBase {
             position = ARM2_MAX_LIMIT;
         } else if (arm2Position == Arm2Positions.CURRENT_POSITION) {
             position = m_arm2Encoder.getPosition();
+        } else if (arm2Position == Arm2Positions.HORIZONTAL) {
+            position = ARM2_HORIZONTAL_POSITION;
         } else {
             DriverStation.reportWarning("Attempted to set the arm to a null position!", true);
             return;
         }
         m_arm2GoalPub.set(position);
-        m_armGoal.position = position;
-        m_armStartingSetpoint.position = m_arm2Encoder.getPosition();
-        m_armStartingSetpoint.velocity = m_arm2Encoder.getVelocity();
-        m_armProfileTimer.restart();
+        m_arm2Goal.position = position;
+        m_arm2StartingSetpoint.position = m_arm2Encoder.getPosition();
+        m_arm2StartingSetpoint.velocity = m_arm2Encoder.getVelocity();
+        m_arm2ProfileTimer.restart();
     }
 
     private void updateArmProfile() {
@@ -316,13 +325,14 @@ public class Elevator extends SubsystemBase {
     }
 
     private void updateArm2Profile() {
-        double currentTime = m_armProfileTimer.get();
-        TrapezoidProfile.State nextArmSetpoint = m_armProfile.calculate(currentTime, m_armStartingSetpoint, m_armGoal);
+        double currentTime2 = m_arm2ProfileTimer.get();
+        TrapezoidProfile.State nextArm2Setpoint =
+                m_arm2Profile.calculate(currentTime2, m_arm2StartingSetpoint, m_arm2Goal);
         // Might need to change to the ClosedLoopSlot 1
-        m_arm2Controller.setReference(nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0);
-        m_armCurrentSetpoint = nextArmSetpoint;
-        m_arm2SetpointPositionPub.set(m_armCurrentSetpoint.position);
-        m_arm2SetpointVelocityPub.set(m_armCurrentSetpoint.velocity);
+        m_arm2Controller.setReference(nextArm2Setpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+        m_arm2CurrentSetpoint = nextArm2Setpoint;
+        m_arm2SetpointPositionPub.set(m_arm2CurrentSetpoint.position);
+        m_arm2SetpointVelocityPub.set(m_arm2CurrentSetpoint.velocity);
         // setReference(
         //         nextArmSetpoint.position, ControlType.kPosition, ClosedLoopSlot.kSlot0, feedforwardVolts);
         // m_armCurrentSetpoint = nextArmSetpoint;
@@ -407,7 +417,7 @@ public class Elevator extends SubsystemBase {
         m_arm2Encoder.setPosition(0);
     }
 
-    public Command setArm2PositionCommaned(Arm2Positions arm2Position) {
+    public Command setArm2PositionCommand(Arm2Positions arm2Position) {
         return this.startRun(() -> setArm2Position(arm2Position), this::updateArm2Profile);
     }
 

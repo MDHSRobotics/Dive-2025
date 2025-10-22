@@ -3,7 +3,6 @@ package frc.robot.subsystems.intake;
 import static frc.robot.subsystems.intake.IntakeConstants.*;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.sim.SparkFlexSim;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -32,7 +31,7 @@ public class Intake extends SubsystemBase {
         PROCESSOR
     }
 
-    //private final SparkMax m_gate = new SparkMax(12, MotorType.kBrushless);
+    // private final SparkMax m_gate = new SparkMax(12, MotorType.kBrushless);
 
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final SparkMax m_flywheelLeftMotor = new SparkMax(WHEEL_LEFT_ID, MotorType.kBrushless);
@@ -48,7 +47,7 @@ public class Intake extends SubsystemBase {
     private final DoubleEntry m_flywheelSpeedEntry =
             m_table.getDoubleTopic("Flywheel Speed").getEntry(1);
     private final DoublePublisher m_targetPositionPub =
-            m_table.getDoubleTopic("Target Position (radians)").publish(); 
+            m_table.getDoubleTopic("Target Position (radians)").publish();
     // private final DoubleEntry pGainEntry =
     //         table.getDoubleTopic("Arm P Gain").getEntry(K_P, PubSubOption.excludeSelf(true));
 
@@ -58,7 +57,6 @@ public class Intake extends SubsystemBase {
      * For this reason, values set in the REV Hardware Client will be cleared when this constructor runs.
      */
     public Intake() {
-
 
         // SparkMaxConfig gateConfig = new SparkMaxConfig();
         // gateConfig.smartCurrentLimit(20).idleMode(IdleMode.kBrake).inverted(true);

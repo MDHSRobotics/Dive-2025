@@ -15,8 +15,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -256,10 +256,10 @@ public class RobotContainer {
         m_operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
         m_operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));
 
-        m_operatorController.povUp().whileTrue(m_elevator.testIntake2Command(() -> 1.0));
-        m_operatorController.povDown().whileTrue(m_elevator.testIntake2Command(() -> -1.0));
+        m_operatorController.povUp().whileTrue(m_elevator.testIntake2Command(() -> 0.5));
+        m_operatorController.povDown().whileTrue(m_elevator.testIntake2Command(() -> -0.5));
         m_operatorController.x().toggleOnTrue(new InstantCommand(() -> m_elevator.resetIntakeEncoder(), m_elevator));
-        m_operatorController.y().onTrue(m_elevator.setArm2PositionCommaned(Arm2Positions.DROP_OFF));
+        m_operatorController.y().onTrue(m_elevator.setArm2PositionCommand(Arm2Positions.HORIZONTAL));
 
         // operatorController
 

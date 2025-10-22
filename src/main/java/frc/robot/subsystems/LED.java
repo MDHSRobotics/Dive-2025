@@ -9,7 +9,8 @@ import com.ctre.phoenix.led.TwinkleAnimation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LED extends SubsystemBase {
-    private final CANdle candle = new CANdle(0);
+    private final int CANdle_ID = 15;
+    private final CANdle candle = new CANdle(CANdle_ID);
 
     public LED() {
         CANdleConfiguration config = new CANdleConfiguration();
@@ -31,7 +32,7 @@ public class LED extends SubsystemBase {
         candle.setLEDs(0, 0, 255, 0, 0, 300);
     }
 
-    public void setColor(int r, int g, int b){
+    public void setColor(int r, int g, int b) {
         candle.setLEDs(r, g, b);
     }
 
