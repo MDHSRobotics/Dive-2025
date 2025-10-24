@@ -67,7 +67,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public enum Arm2Positions {
-        ZERO_POSITION,
+        DEFAULT_POSITION,
         HORIZONTAL,
         DROP_OFF,
         CURRENT_POSITION
@@ -155,7 +155,11 @@ public class Elevator extends SubsystemBase {
     public Elevator() {
         SparkFlexConfig arm2Config = new SparkFlexConfig();
         arm2Config.smartCurrentLimit(80).idleMode(IdleMode.kBrake).inverted(true);
-        arm2Config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).p(0.6);
+        arm2Config
+                .closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .p(1.3)
+                .d(0.8);
         // 45 degrees is 0.5905
         // Intake position is 0.22
         arm2Config
@@ -291,14 +295,14 @@ public class Elevator extends SubsystemBase {
 
     private void setArm2Position(Arm2Positions arm2Position) {
         double position;
-        if (arm2Position == Arm2Positions.ZERO_POSITION) {
+        if (arm2Position == Arm2Positions.DEFAULT_POSITION) {
             position = ARM2_MIN_LIMIT;
         } else if (arm2Position == Arm2Positions.DROP_OFF) {
-            position = ARM2_MAX_LIMIT;
-        } else if (arm2Position == Arm2Positions.CURRENT_POSITION) {
-            position = m_arm2Encoder.getPosition();
+            position = ARM2_DROP_OFF_POSITION;
         } else if (arm2Position == Arm2Positions.HORIZONTAL) {
             position = ARM2_HORIZONTAL_POSITION;
+        } else if (arm2Position == Arm2Positions.CURRENT_POSITION) {
+            position = m_arm2Encoder.getPosition();
         } else {
             DriverStation.reportWarning("Attempted to set the arm to a null position!", true);
             return;
@@ -409,6 +413,15 @@ public class Elevator extends SubsystemBase {
                 this::updateArmProfile);
     }
 
+    public Command setElevatorAndArm2PositionCommand(ElevatorPositions elevatorPosition, Arm2Positions arm2Position) {
+        return this.startRun(
+                () -> {
+                    setElevatorPosition(elevatorPosition);
+                    setArm2Position(arm2Position);
+                },
+                this::updateArm2Profile);
+    }
+
     public Command testIntake2Command(DoubleSupplier intake2PowerSupplier) {
         return this.run(() -> m_arm2Motor.set(intake2PowerSupplier.getAsDouble() * 0.25));
     }
@@ -416,6 +429,8 @@ public class Elevator extends SubsystemBase {
     public void resetIntakeEncoder() {
         m_arm2Encoder.setPosition(0);
     }
+
+    public void resetElevatorEncoder() {}
 
     public Command setArm2PositionCommand(Arm2Positions arm2Position) {
         return this.startRun(() -> setArm2Position(arm2Position), this::updateArm2Profile);

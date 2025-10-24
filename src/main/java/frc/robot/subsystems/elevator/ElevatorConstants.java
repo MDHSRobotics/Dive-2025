@@ -108,4 +108,6 @@ public class ElevatorConstants {
     public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357;
     /**Units: rotations */
     public static final double ARM2_HORIZONTAL_POSITION = 0.22;
+    /**Units: rotations */
+    public static final double ARM2_DROP_OFF_POSITION = 0.412;
 }
