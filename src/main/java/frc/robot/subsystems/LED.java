@@ -44,12 +44,12 @@ public class LED extends SubsystemBase {
 
     public void setTwinkleAnimation() {
         // Twinkle Mater Dei Red
-        TwinkleAnimation twinkle = new TwinkleAnimation(194, 4, 48);
+        TwinkleAnimation twinkle = new TwinkleAnimation(250, 4, 8);
         candle.animate(twinkle);
     }
 
     public void setFireAnimation() {
-        FireAnimation fire = new FireAnimation();
+        FireAnimation fire = new FireAnimation(1.0, 0.2, LED_STRIP_COUNT, 1.0, 0.00001);
         candle.animate(fire);
     }
 }

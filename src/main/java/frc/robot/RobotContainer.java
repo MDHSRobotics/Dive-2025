@@ -123,7 +123,7 @@ public class RobotContainer {
         m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
                 ElevatorPositions.CURRENT_POSITION, ElevatorArmPositions.CURRENT_POSITION));
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
-        // m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
+        m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
     }
 
     /**
@@ -184,8 +184,8 @@ public class RobotContainer {
                 .whileTrue(new ParallelCommandGroup(
                         m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
                         new RunCommand(() -> m_led.setRedGRB(), m_led)));
-        m_driverController.povRight().onTrue(new InstantCommand(() -> m_led.setTwinkleAnimation()));
-        m_driverController.povLeft().onTrue(new InstantCommand(() -> m_led.setRainbowAnimation()));
+        m_driverController.povRight().toggleOnTrue(new RunCommand(() -> m_led.setTwinkleAnimation(), m_led));
+        m_driverController.povLeft().toggleOnTrue(new RunCommand(() -> m_led.setFireAnimation(), m_led));
 
         // Remove algae from reef
         m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
