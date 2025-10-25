@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -122,7 +123,7 @@ public class RobotContainer {
         m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
                 ElevatorPositions.CURRENT_POSITION, ElevatorArmPositions.CURRENT_POSITION));
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
-        m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
+        // m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
     }
 
     /**
@@ -183,6 +184,8 @@ public class RobotContainer {
                 .whileTrue(new ParallelCommandGroup(
                         m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
                         new RunCommand(() -> m_led.setRedGRB(), m_led)));
+        m_driverController.povRight().onTrue(new InstantCommand(() -> m_led.setTwinkleAnimation()));
+        m_driverController.povLeft().onTrue(new InstantCommand(() -> m_led.setRainbowAnimation()));
 
         // Remove algae from reef
         m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
@@ -219,7 +222,7 @@ public class RobotContainer {
      */
     /**
      * Updated Operator Controller
-     * https://www.padcrafter.com/?templates=Operator+Controller&yButton=Elevator+and+arm+to+L1&xButton=&bButton=Elevator+and+arm+to+L2&aButton=Elevator+and+arm+to+L3&rightStick=Select+left%2Fright+tree+and+enable+auto+align&dpadUp=Intake+to+algae+on+ice+cream&dpadRight=Intake+to+processor&dpadLeft=Intake+to+ground+algae&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&leftTrigger=Elevator+and+arm+to+coral+station&leftBumper=Intake+coral&dpadDown=&rightTrigger=Eject+Coral&leftStick=&leftStickClick=&startButton=Stow+intake&backButton=Stow+catcher
+     * https://www.padcrafter.com/?templates=Operator+Controller&yButton=Elevator+and+arm+to+L1&xButton=&bButton=Elevator+and+arm+to+L2&aButton=Elevator+and+arm+to+L3&rightStick=Select+left%2Fright+tree+and+enable+auto+align&dpadUp=Intake+to+algae+on+ice+cream+and+run+wheels&dpadRight=Intake+to+processor+and+run+wheels&dpadLeft=&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&leftTrigger=Elevator+and+arm+to+coral+station&leftBumper=Intake+coral&dpadDown=intake+to+ground+%28algae%29+and+run+wheels&rightTrigger=Eject+Coral&leftStick=Intake+algae&leftStickClick=&startButton=Stow+intake&backButton=Stow+catcher&rightStickClick=eject+algae
      */
     private void configureOperatorControls() {
         // Set Elevator and Arm positions
@@ -249,6 +252,8 @@ public class RobotContainer {
         m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
         m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        m_operatorController.leftStick().whileTrue(m_intake.runWheelsCommand());
+        m_operatorController.rightStick().whileTrue(m_intake.wheelsBackwardsCommand());
 
         m_operatorController.back().onTrue(m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
         m_operatorController.start().onTrue(m_elevator.setArmPositionCommand(ElevatorArmPositions.STOWED));

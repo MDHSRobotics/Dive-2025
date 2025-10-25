@@ -377,7 +377,7 @@ public class AimingRoutines {
                 }
             }
 
-        } else {
+        } else if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
             if (leftTreeSelected) {
                 if (tagID == 7) {
                     m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(0); // A

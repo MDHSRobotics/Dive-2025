@@ -9,7 +9,9 @@ import com.ctre.phoenix.led.TwinkleAnimation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LED extends SubsystemBase {
-    private final CANdle candle = new CANdle(0);
+    private final int CANdle_ID = 15;
+    private final int LED_STRIP_COUNT = 300;
+    private final CANdle candle = new CANdle(CANdle_ID);
 
     public LED() {
         CANdleConfiguration config = new CANdleConfiguration();
@@ -20,23 +22,23 @@ public class LED extends SubsystemBase {
     }
 
     public void setWhiteGRB() {
-        candle.setLEDs(255, 255, 255);
+        candle.setLEDs(255, 255, 255, 0, 0, LED_STRIP_COUNT);
     }
 
     public void setRedGRB() {
-        candle.setLEDs(255, 0, 0);
+        candle.setLEDs(255, 0, 0, 0, 0, LED_STRIP_COUNT);
     }
 
     public void setBlueGRB() {
-        candle.setLEDs(0, 0, 255, 0, 0, 300);
+        candle.setLEDs(0, 0, 255, 0, 0, LED_STRIP_COUNT);
     }
 
-    public void setColor(int r, int g, int b){
+    public void setColor(int r, int g, int b) {
         candle.setLEDs(r, g, b);
     }
 
     public void setRainbowAnimation() {
-        RainbowAnimation rainbow = new RainbowAnimation(1, .3, 300);
+        RainbowAnimation rainbow = new RainbowAnimation(1, .3, LED_STRIP_COUNT);
         candle.animate(rainbow);
     }
 
