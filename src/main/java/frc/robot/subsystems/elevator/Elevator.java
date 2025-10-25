@@ -119,6 +119,9 @@ public class Elevator extends SubsystemBase {
     private final DoublePublisher m_armSetpointVelocityPub =
             m_table.getDoubleTopic("Arm Setpoint Velocity").publish();
 
+    private final DoublePublisher m_armCurrentPositionPub = m_table.getDoubleTopic("Arm Current Position").publish();
+
+
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
      * so that we can see the motor configs without having to connect to the robot.
@@ -159,7 +162,7 @@ public class Elevator extends SubsystemBase {
         m_elevatorMotor.optimizeBusUtilization();
 
         SparkFlexConfig armConfig = new SparkFlexConfig();
-        armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        armConfig.smartCurrentLimit(CURRENT_LIMIT).idleMode(IdleMode.kCoast);
         armConfig
                 .softLimit
                 .forwardSoftLimit(ARM_MAX_LIMIT)
@@ -198,6 +201,8 @@ public class Elevator extends SubsystemBase {
         double armAccel = (armVelocity - m_prevVelocity) / 0.02;
         m_armAccelPub.set(armAccel);
         m_prevVelocity = armVelocity;
+        m_armCurrentPositionPub.set(m_armEncoder.getPosition());
+        
     }
 
     private void setElevatorPosition(ElevatorPositions elevatorPosition) {
@@ -328,6 +333,7 @@ public class Elevator extends SubsystemBase {
                 },
                 this::updateArmProfile);
     }
+
 
     /**
      * Runs the SysId Quasistatic test in the given direction for the routine.

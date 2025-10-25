@@ -21,9 +21,10 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_MAX_LIMIT = 4.7;
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 3.911;
+
+    public static final double ARM_MIN_LIMIT = 3.07;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 6.2;
+    public static final double ARM_MAX_LIMIT = 6.2 - 0.84;
 
     /**
      * The conversion of motor rotations to elevator chain rotations.
@@ -71,7 +72,7 @@ public class ElevatorConstants {
     public static final double ARM_ZERO_OFFSET = 0;
 
     /** The position of the absolute encoder in radians that makes the arm stick straight out at the horizontal. */
-    public static final double ARM_HORIZONTAL_OFFSET = 5.395;
+    public static final double ARM_HORIZONTAL_OFFSET = 5.395 - 0.84;
 
     /** Units: volts */
     public static final double ARM_K_G = 1;
@@ -98,7 +99,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L1_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double ARM_L2_AND_L3_POSITION = 4.95;
+    public static final double ARM_L2_AND_L3_POSITION = 4.95 - 0.84;
     /** Units: radians */
-    public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357;
+    public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357 - 0.84;
 }
