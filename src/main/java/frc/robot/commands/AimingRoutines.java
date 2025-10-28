@@ -32,6 +32,7 @@ import frc.robot.subsystems.drive.requests.DriveFacingPosition;
 import frc.robot.subsystems.drive.requests.DriveToPose;
 import frc.robot.util.Aiming;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -347,7 +348,16 @@ public class AimingRoutines {
         // Whether or not the joystick chose the left tree
         final boolean leftTreeSelected =
                 (rightStickAngleRadians > Math.PI / 2.0) && (rightStickAngleRadians < 3.0 * Math.PI / 2.0);
-        if (DriverStation.getAlliance().orElseThrow() == Alliance.Blue) {
+        Optional<Alliance> allianceOptional = DriverStation.getAlliance();
+        if (allianceOptional.isEmpty()) {
+            return;
+        }
+        Alliance alliance = allianceOptional.get();
+
+        if (tagID < 0) {
+            return;
+        }
+        if (alliance == Alliance.Blue) {
             if (leftTreeSelected) {
                 if (tagID == 18) {
                     m_currentTargetPose = FieldConstants.BLUE_REEF_TREE_AIMING_POSITIONS.get(0); // A
@@ -378,7 +388,7 @@ public class AimingRoutines {
                 }
             }
 
-        } else if (DriverStation.getAlliance().orElseThrow() == Alliance.Red) {
+        } else if (alliance == Alliance.Red) {
             if (leftTreeSelected) {
                 if (tagID == 7) {
                     m_currentTargetPose = FieldConstants.RED_REEF_TREE_AIMING_POSITIONS.get(0); // A
