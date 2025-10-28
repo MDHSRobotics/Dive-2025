@@ -6,13 +6,16 @@ package frc.robot.subsystems.climb;
 
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -27,6 +30,9 @@ public class Climb extends SubsystemBase {
 
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
+    private final SparkMax m_gateMotor = new SparkMax(CAGE_ID, MotorType.kBrushless);
+
+    private final RelativeEncoder m_gateEncoder = m_gateMotor.getEncoder();
 
     // private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
     // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
@@ -110,6 +116,15 @@ public class Climb extends SubsystemBase {
                 .absoluteEncoderVelocityAlwaysOn(true);
         m_frontHookMotor.configure(frontConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+        SparkMaxConfig gateConfig = new SparkMaxConfig();
+        gateConfig.smartCurrentLimit(CAGE_CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        gateConfig
+                .softLimit
+                .forwardSoftLimit(BACK_MAX_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimit(BACK_MAX_LIMIT)
+                .reverseSoftLimitEnabled(true);
+        m_gateMotor.configure(gateConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         // pGainEntry.set(K_P);
         // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
         //     SparkFlexConfig tempConfig = new SparkFlexConfig();
@@ -173,6 +188,16 @@ public class Climb extends SubsystemBase {
             m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.5);
             m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
         });
+    }
+
+    public Command setGatePowerCommand(DoubleSupplier gateMotorPowerSupplier) {
+        return this.runOnce(() -> {
+            m_gateMotor.set(gateMotorPowerSupplier.getAsDouble() * 0.5);
+        });
+    }
+
+    public void resetGateEncoder() {
+        m_gateEncoder.setPosition(0);
     }
 
     // public Command setHookPositionCommand(HookPositions hookPositions) {

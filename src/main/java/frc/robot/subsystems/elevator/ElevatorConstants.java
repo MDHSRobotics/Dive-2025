@@ -21,7 +21,6 @@ public class ElevatorConstants {
     /** Units: rotations */
     public static final double ELEVATOR_MAX_LIMIT = 4.7;
     /** Units: radians */
-
     public static final double ARM_MIN_LIMIT = 3.07;
     /** Units: radians */
     public static final double ARM_MAX_LIMIT = 6.2 - 0.84;
@@ -99,7 +98,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L1_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double ARM_L2_AND_L3_POSITION = 4.95 - 0.84;
+    public static final double ARM_L2_AND_L3_POSITION = 4.95 - 1;
     /** Units: radians */
     public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357 - 0.84;
 }

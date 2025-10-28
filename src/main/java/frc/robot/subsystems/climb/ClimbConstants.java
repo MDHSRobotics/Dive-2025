@@ -9,6 +9,8 @@ public class ClimbConstants {
     public static final int BACK_ID = 2;
     /** The CAN id of the right motor. */
     public static final int FRONT_ID = 3;
+    /**The CAN id of the cage */
+    public static final int CAGE_ID = 16;
 
     public static final int CAGE_BEAM_BREAK_DIO_CHANNEL = 7;
 
@@ -18,6 +20,13 @@ public class ClimbConstants {
      * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO Vortex.</a>
      */
     public static final int CURRENT_LIMIT = 80;
+
+    /**
+     * The current limit for the wheels in amps.
+     * This is currently set to the value suggested by
+     * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO 550.</a>
+     */
+    public static final int CAGE_CURRENT_LIMIT = 40;
 
     /** The furthest safe angle that is away from the cage in radians. */
     public static final double BACK_MAX_LIMIT = 3.463;

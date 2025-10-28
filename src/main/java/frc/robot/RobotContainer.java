@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -120,8 +119,10 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
-                ElevatorPositions.CURRENT_POSITION, ElevatorArmPositions.CURRENT_POSITION));
+        m_elevator.setDefaultCommand(m_elevator.disableMotorsCommand());
+        // m_elevator.setDefaultCommand(
+        //         m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.STOWED));
+
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
         m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
     }
@@ -229,15 +230,16 @@ public class RobotContainer {
         // L1
         m_operatorController
                 .b()
-                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                .toggleOnTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3));
         m_operatorController
                 .a()
-                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                .toggleOnTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
         m_operatorController
                 .y()
-                .onTrue(m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
+                .toggleOnFalse(
+                        m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
 
         // Intake and Eject corals
         m_operatorController.leftBumper().whileTrue(m_elevator.intakeCoralCommand());
@@ -246,7 +248,7 @@ public class RobotContainer {
         // Elevator and arm to coral station
         m_operatorController
                 .leftTrigger()
-                .onTrue(m_elevator.setElevatorAndArmPositionCommand(
+                .toggleOnTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
 
         m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
