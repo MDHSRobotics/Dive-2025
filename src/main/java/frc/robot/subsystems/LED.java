@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LED extends SubsystemBase {
     private final int CANdle_ID = 15;
-    private final int LED_STRIP_COUNT = 300;
+    private final int LED_STRIP_COUNT = 294;
     private final CANdle candle = new CANdle(CANdle_ID);
 
     public LED() {
@@ -44,7 +44,7 @@ public class LED extends SubsystemBase {
 
     public void setTwinkleAnimation() {
         // Twinkle Mater Dei Red
-        TwinkleAnimation twinkle = new TwinkleAnimation(250, 4, 8);
+        TwinkleAnimation twinkle = new TwinkleAnimation(255, 2, 2);
         candle.animate(twinkle);
     }
 

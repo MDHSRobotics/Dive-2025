@@ -73,6 +73,9 @@ public class RobotContainer {
     private final Trigger m_autoAlignmentRequested =
             new Trigger(() -> Math.hypot(m_operatorController.getRightX(), -m_operatorController.getRightY()) > 0.8);
 
+    // Coral Detection
+    private final Trigger m_coralDetector = new Trigger(() -> m_elevator.detectGamePiece());
+
     private final DriveTelemetry m_driveTelemetry = new DriveTelemetry();
 
     /* Selectors (open up in a dashboard like Elastic) */
@@ -119,9 +122,8 @@ public class RobotContainer {
                 .withDeadband(getDeadband())
                 .withRotationalDeadband(getRotationalDeadband())));
         m_climb.setDefaultCommand(m_climb.disableMotorsCommand());
-        m_elevator.setDefaultCommand(m_elevator.disableMotorsCommand());
-        // m_elevator.setDefaultCommand(
-        //         m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.STOWED));
+        m_elevator.setDefaultCommand(m_elevator.setElevatorAndArmPositionCommand(
+                ElevatorPositions.STOWED, ElevatorArmPositions.CURRENT_POSITION));
 
         m_intake.setDefaultCommand(m_intake.disableMotorsCommand());
         m_led.setDefaultCommand(new RunCommand(() -> m_led.setRainbowAnimation(), m_led));
@@ -132,6 +134,10 @@ public class RobotContainer {
      */
     private void configureTriggers() {
         m_autoAlignmentRequested.onTrue(m_aimingRoutines.driveToTree());
+        m_coralDetector
+                .debounce(0.2)
+                // .and(m_operatorController.leftBumper())
+                .onTrue(new RunCommand(() -> m_led.setTwinkleAnimation(), m_led).withTimeout(3));
     }
 
     /**
@@ -185,8 +191,8 @@ public class RobotContainer {
                 .whileTrue(new ParallelCommandGroup(
                         m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
                         new RunCommand(() -> m_led.setRedGRB(), m_led)));
-        m_driverController.povRight().toggleOnTrue(new RunCommand(() -> m_led.setTwinkleAnimation(), m_led));
-        m_driverController.povLeft().toggleOnTrue(new RunCommand(() -> m_led.setFireAnimation(), m_led));
+        m_driverController.povRight().whileTrue(m_climb.setGatePowerCommand(() -> 1));
+        m_driverController.povLeft().whileTrue(m_climb.setGatePowerCommand(() -> -1));
 
         // Remove algae from reef
         m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));

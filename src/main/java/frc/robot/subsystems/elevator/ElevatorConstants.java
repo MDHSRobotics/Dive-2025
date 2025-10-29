@@ -16,14 +16,15 @@ public class ElevatorConstants {
      */
     public static final int CURRENT_LIMIT = 80;
 
+    public static final double ARM_POSITION_OFFSET = 2.75;
     /** Units: rotations */
     public static final double ELEVATOR_MIN_LIMIT = 0;
     /** Units: rotations */
     public static final double ELEVATOR_MAX_LIMIT = 4.7;
     /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 3.07;
+    public static final double ARM_MIN_LIMIT = 3.07 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 6.2 - 0.84;
+    public static final double ARM_MAX_LIMIT = 5.36 + ARM_POSITION_OFFSET;
 
     /**
      * The conversion of motor rotations to elevator chain rotations.
@@ -98,7 +99,10 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L1_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double ARM_L2_AND_L3_POSITION = 4.95 - 1;
+    public static final double ARM_L2_AND_L3_POSITION = 3.95 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_ALGAE_REMOVAL_POSITION = 5.357 - 0.84;
+    public static final double ARM_ALGAE_REMOVAL_POSITION = 4.517 + ARM_POSITION_OFFSET;
+
+    public static final double INTAKE_SPEED_THRESHOLD = 1000;
+    public static final double INTAKE_CURRENT_THRESHOLD = 30;
 }

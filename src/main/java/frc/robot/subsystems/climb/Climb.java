@@ -16,6 +16,9 @@ import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.networktables.DoublePublisher;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,6 +36,12 @@ public class Climb extends SubsystemBase {
     private final SparkMax m_gateMotor = new SparkMax(CAGE_ID, MotorType.kBrushless);
 
     private final RelativeEncoder m_gateEncoder = m_gateMotor.getEncoder();
+
+    // Networktables
+    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
+    private final NetworkTable m_table = m_inst.getTable("Climb");
+    private final DoublePublisher m_gatePositionPub =
+            m_table.getDoubleTopic("Gate Current Position").publish();
 
     // private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
     // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
@@ -120,10 +129,11 @@ public class Climb extends SubsystemBase {
         gateConfig.smartCurrentLimit(CAGE_CURRENT_LIMIT).idleMode(IdleMode.kBrake);
         gateConfig
                 .softLimit
-                .forwardSoftLimit(BACK_MAX_LIMIT)
-                .forwardSoftLimitEnabled(true)
-                .reverseSoftLimit(BACK_MAX_LIMIT)
-                .reverseSoftLimitEnabled(true);
+                .forwardSoftLimit(CAGE_MAX_LIMIT)
+                .forwardSoftLimitEnabled(false)
+                .reverseSoftLimit(CAGE_MIN_LITMIT)
+                .reverseSoftLimitEnabled(false);
+        gateConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
         m_gateMotor.configure(gateConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         // pGainEntry.set(K_P);
         // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
@@ -134,6 +144,12 @@ public class Climb extends SubsystemBase {
         //     m_frontHookMotor.configureAsync(
         //             tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         // });
+    }
+
+    @Override
+    public void periodic() {
+        double gatePosition = m_gateEncoder.getPosition();
+        m_gatePositionPub.set(gatePosition);
     }
 
     // private void resetProfile(HookPositions hookPositions) {

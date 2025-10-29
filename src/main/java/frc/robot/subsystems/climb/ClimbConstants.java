@@ -38,6 +38,11 @@ public class ClimbConstants {
     /** The angle that pushes the cage down as far as possible in radians. */
     public static final double FRONT_MIN_LIMIT = 1.496;
 
+    /** Units: Rotations */
+    public static final double CAGE_MAX_LIMIT = 0;
+
+    public static final double CAGE_MIN_LITMIT = 0;
+
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the motor's range of motion to prevent the position wrapping around from 1 to 0.

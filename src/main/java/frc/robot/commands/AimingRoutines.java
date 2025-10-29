@@ -468,6 +468,7 @@ public class AimingRoutines {
         // }
         // Log to NetworkTables
         m_targetPosePub.set(m_currentTargetPose);
+        return;
     }
 
     /**

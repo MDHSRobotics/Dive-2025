@@ -19,6 +19,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
@@ -97,6 +98,7 @@ public class Elevator extends SubsystemBase {
 
     // Flywheels
     private final SparkFlex m_flywheelsMotor = new SparkFlex(WHEELS_ID, MotorType.kBrushless);
+    private final RelativeEncoder m_flywheelsMotorEncoder = m_flywheelsMotor.getEncoder();
 
     // private final RelativeEncoder m_flywheelsEncoder = m_flywheelsMotor.getEncoder();
 
@@ -121,6 +123,10 @@ public class Elevator extends SubsystemBase {
 
     private final DoublePublisher m_armCurrentPositionPub =
             m_table.getDoubleTopic("Arm Current Position").publish();
+    private final DoublePublisher m_flywheelVelocityPub =
+            m_table.getDoubleTopic("Fly Wheel Current Velocity").publish();
+    private final DoublePublisher m_flywheelOutputCurrentPub =
+            m_table.getDoubleTopic("Fly Wheel Output Current ").publish();
 
     /**
      * Motors should be configured in the robot code rather than the REV Hardware Client
@@ -198,10 +204,14 @@ public class Elevator extends SubsystemBase {
     @Override
     public void periodic() {
         double armVelocity = m_armEncoder.getVelocity();
+        double flyWheelsVelocity = m_flywheelsMotorEncoder.getVelocity();
+        double flyWheelsOutputCurrent = m_flywheelsMotor.getOutputCurrent();
         double armAccel = (armVelocity - m_prevVelocity) / 0.02;
         m_armAccelPub.set(armAccel);
         m_prevVelocity = armVelocity;
         m_armCurrentPositionPub.set(m_armEncoder.getPosition());
+        m_flywheelOutputCurrentPub.set(flyWheelsOutputCurrent);
+        m_flywheelVelocityPub.set(flyWheelsVelocity);
     }
 
     private void setElevatorPosition(ElevatorPositions elevatorPosition) {
@@ -335,6 +345,11 @@ public class Elevator extends SubsystemBase {
                     }
                 },
                 this::updateArmProfile);
+    }
+
+    public boolean detectGamePiece() {
+        return Math.abs(m_flywheelsMotorEncoder.getVelocity()) < INTAKE_SPEED_THRESHOLD
+                && m_flywheelsMotor.getOutputCurrent() > INTAKE_CURRENT_THRESHOLD;
     }
 
     /**
