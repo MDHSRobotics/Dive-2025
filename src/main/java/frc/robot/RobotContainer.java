@@ -134,6 +134,7 @@ public class RobotContainer {
      */
     private void configureTriggers() {
         m_autoAlignmentRequested.onTrue(m_aimingRoutines.driveToTree());
+        
         m_coralDetector
                 .debounce(0.2)
                 // .and(m_operatorController.leftBumper())
@@ -244,7 +245,7 @@ public class RobotContainer {
                         ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3));
         m_operatorController
                 .y()
-                .toggleOnFalse(
+                .toggleOnTrue(
                         m_elevator.setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.L1));
 
         // Intake and Eject corals

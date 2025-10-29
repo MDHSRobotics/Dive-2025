@@ -16,15 +16,10 @@ public class ElevatorConstants {
      */
     public static final int CURRENT_LIMIT = 80;
 
-    public static final double ARM_POSITION_OFFSET = 2.75;
     /** Units: rotations */
     public static final double ELEVATOR_MIN_LIMIT = 0;
     /** Units: rotations */
     public static final double ELEVATOR_MAX_LIMIT = 4.7;
-    /** Units: radians */
-    public static final double ARM_MIN_LIMIT = 3.07 + ARM_POSITION_OFFSET;
-    /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 5.36 + ARM_POSITION_OFFSET;
 
     /**
      * The conversion of motor rotations to elevator chain rotations.
@@ -71,8 +66,11 @@ public class ElevatorConstants {
      */
     public static final double ARM_ZERO_OFFSET = 0;
 
+    /** Units: radians */
+    public static final double ARM_POSITION_OFFSET = 5.82;
+
     /** The position of the absolute encoder in radians that makes the arm stick straight out at the horizontal. */
-    public static final double ARM_HORIZONTAL_OFFSET = 5.395 - 0.84;
+    public static final double ARM_HORIZONTAL_OFFSET = 1.484 + ARM_POSITION_OFFSET;
 
     /** Units: volts */
     public static final double ARM_K_G = 1;
@@ -91,7 +89,12 @@ public class ElevatorConstants {
     /** Units: duty cycle out per radian */
     public static final double ARM_K_P = 0.5;
 
-    // Common arm positions
+    // Arm positions relative to 0 as min
+    /** Units: radians */
+    public static final double ARM_MIN_LIMIT = 0 + ARM_POSITION_OFFSET;
+    /** Units: radians */
+    public static final double ARM_MAX_LIMIT = 2.289 + ARM_POSITION_OFFSET;
+
     /** Units: radians */
     public static final double ARM_STOWED_POSITION = ARM_MIN_LIMIT;
     /** Units: radians */
@@ -99,10 +102,12 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L1_POSITION = ARM_MAX_LIMIT;
     /** Units: radians */
-    public static final double ARM_L2_AND_L3_POSITION = 3.95 + ARM_POSITION_OFFSET;
+    public static final double ARM_L2_AND_L3_POSITION = 1.039 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_ALGAE_REMOVAL_POSITION = 4.517 + ARM_POSITION_OFFSET;
+    public static final double ARM_ALGAE_REMOVAL_POSITION = 1.446 + ARM_POSITION_OFFSET;
 
+    //Constants for detecting whether a coral has entered the arm
     public static final double INTAKE_SPEED_THRESHOLD = 1000;
+    /** Units: Amps**/
     public static final double INTAKE_CURRENT_THRESHOLD = 30;
 }

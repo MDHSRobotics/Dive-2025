@@ -349,7 +349,8 @@ public class Elevator extends SubsystemBase {
 
     public boolean detectGamePiece() {
         return Math.abs(m_flywheelsMotorEncoder.getVelocity()) < INTAKE_SPEED_THRESHOLD
-                && m_flywheelsMotor.getOutputCurrent() > INTAKE_CURRENT_THRESHOLD;
+                && m_flywheelsMotor.getOutputCurrent() > INTAKE_CURRENT_THRESHOLD
+                && m_flywheelsMotorEncoder.getVelocity() < 0;
     }
 
     /**

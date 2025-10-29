@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
+import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
 import com.ctre.phoenix.led.CANdleConfiguration;
 import com.ctre.phoenix.led.FireAnimation;
 import com.ctre.phoenix.led.RainbowAnimation;
@@ -45,6 +46,8 @@ public class LED extends SubsystemBase {
     public void setTwinkleAnimation() {
         // Twinkle Mater Dei Red
         TwinkleAnimation twinkle = new TwinkleAnimation(255, 2, 2);
+        twinkle.setSpeed(1);
+        twinkle.setDivider(TwinklePercent.Percent76);
         candle.animate(twinkle);
     }
 
