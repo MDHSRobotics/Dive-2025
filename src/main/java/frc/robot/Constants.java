@@ -282,6 +282,25 @@ public final class Constants {
                             REEF_TAG_TO_TREE_DISTANCE, APRILTAG_ROTATIONS[19].plus(Rotation2d.kCW_90deg))),
         };
 
+        // Create lookup tables for tag-to-index mappings
+        public static final Map<Integer, Integer> BLUE_TAG_TO_INDEX = Map.of(
+            18, 0,
+            17, 2,
+            22, 4,
+            21, 6,
+            20, 8,
+            19, 10
+        );
+
+        public static final Map<Integer, Integer> RED_TAG_TO_INDEX = Map.of(
+            7, 0,
+            8, 2,
+            9, 4,
+            10, 6,
+            11, 8,
+            6, 10
+        );
+
         /**
          * This is a list of positions for the robot to drive to so that it is right in front of the tree, and facing the tree's wall.
          */
