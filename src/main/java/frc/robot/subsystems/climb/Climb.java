@@ -7,15 +7,15 @@ package frc.robot.subsystems.climb;
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
+import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
@@ -33,8 +33,10 @@ public class Climb extends SubsystemBase {
 
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
-    private final SparkMax m_gateMotor = new SparkMax(CAGE_ID, MotorType.kBrushless);
+    private final SparkFlex m_gateMotor = new SparkFlex(CAGE_ID, MotorType.kBrushless);
+    private final SparkClosedLoopController m_gateController = m_gateMotor.getClosedLoopController();
 
+    // Gate Encoder
     private final RelativeEncoder m_gateEncoder = m_gateMotor.getEncoder();
 
     // Networktables
@@ -125,14 +127,17 @@ public class Climb extends SubsystemBase {
                 .absoluteEncoderVelocityAlwaysOn(true);
         m_frontHookMotor.configure(frontConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        SparkMaxConfig gateConfig = new SparkMaxConfig();
-        gateConfig.smartCurrentLimit(CAGE_CURRENT_LIMIT).idleMode(IdleMode.kBrake);
+        SparkFlexConfig gateConfig = new SparkFlexConfig();
+        gateConfig
+                .smartCurrentLimit(CAGE_CURRENT_LIMIT)
+                .idleMode(IdleMode.kBrake)
+                .inverted(true);
         gateConfig
                 .softLimit
-                .forwardSoftLimit(CAGE_MAX_LIMIT)
-                .forwardSoftLimitEnabled(false)
-                .reverseSoftLimit(CAGE_MIN_LITMIT)
-                .reverseSoftLimitEnabled(false);
+                .forwardSoftLimit(GATE_MAX_LIMIT)
+                .forwardSoftLimitEnabled(true)
+                .reverseSoftLimit(GATE_MIN_LIMIT)
+                .reverseSoftLimitEnabled(true);
         gateConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
         m_gateMotor.configure(gateConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         // pGainEntry.set(K_P);
@@ -209,6 +214,12 @@ public class Climb extends SubsystemBase {
     public Command setGatePowerCommand(DoubleSupplier gateMotorPowerSupplier) {
         return this.runOnce(() -> {
             m_gateMotor.set(gateMotorPowerSupplier.getAsDouble() * 0.5);
+        });
+    }
+
+    public Command setGatePositionCommand() {
+        return this.runOnce(() -> {
+            m_gateController.setReference(GATE_MAX_LIMIT, ControlType.kPosition);
         });
     }
 

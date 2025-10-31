@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
@@ -186,17 +187,18 @@ public class RobotContainer {
         m_driverController
                 .povUp()
                 .whileTrue(new ParallelCommandGroup(
-                        m_climb.setPowerCommand(() -> 1.0, () -> 1.0), new RunCommand(() -> m_led.setRedGRB(), m_led)));
+                        m_climb.setPowerCommand(() -> 1.0, () -> 1.0),
+                        new RunCommand(() -> m_led.setRedGRB(), m_led).withTimeout(5)));
         m_driverController
                 .povDown()
                 .whileTrue(new ParallelCommandGroup(
                         m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
-                        new RunCommand(() -> m_led.setRedGRB(), m_led)));
+                        new RunCommand(() -> m_led.setRedGRB(), m_led).withTimeout(5)));
         m_driverController.povRight().toggleOnTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
         m_driverController.povLeft().toggleOnTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
 
         // Remove algae from reef
-        m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
+        m_driverController.L2().onTrue(m_climb.setGatePositionCommand());
 
         /*
          * Run SysId routines when holding back/start and X/Y.
@@ -251,6 +253,7 @@ public class RobotContainer {
         // Intake and Eject corals
         m_operatorController.leftBumper().whileTrue(m_elevator.intakeCoralCommand());
         m_operatorController.rightTrigger().whileTrue(m_elevator.ejectCoralCommand());
+        m_operatorController.rightTrigger().onTrue(new InstantCommand(() -> m_led.setRainbowAnimation(), m_led));
 
         // Elevator and arm to coral station
         m_operatorController
@@ -297,8 +300,9 @@ public class RobotContainer {
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return m_testAutoChooser.getSelected();
-        // return autoCreator.getAutonomousCommand();
+        // Uncomment m_autoCreator to run auto
+        // return m_testAutoChooser.getSelected();
+        return m_autoCreator.getAutonomousCommand();
     }
 
     /**

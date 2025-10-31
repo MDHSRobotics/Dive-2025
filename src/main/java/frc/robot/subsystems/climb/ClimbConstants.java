@@ -26,7 +26,7 @@ public class ClimbConstants {
      * This is currently set to the value suggested by
      * <a href="https://docs.revrobotics.com/brushless/spark-flex/gs/make-it-spin#suggested-current-limits">REV for the NEO 550.</a>
      */
-    public static final int CAGE_CURRENT_LIMIT = 20;
+    public static final int CAGE_CURRENT_LIMIT = 80;
 
     /** The furthest safe angle that is away from the cage in radians. */
     public static final double BACK_MAX_LIMIT = 3.463;
@@ -39,9 +39,9 @@ public class ClimbConstants {
     public static final double FRONT_MIN_LIMIT = 1.496;
 
     /** Units: Rotations */
-    public static final double CAGE_MAX_LIMIT = 0;
-
-    public static final double CAGE_MIN_LITMIT = 0;
+    public static final double GATE_MAX_LIMIT = 0.8;
+    /**Units: Rotations */
+    public static final double GATE_MIN_LIMIT = 0;
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
