@@ -150,7 +150,7 @@ public class RobotContainer {
      */
     /**
      * Updated Driver Controllers
-     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftBumper=Face+Left+Coral+Station&rightBumper=Face+Right+Coral+Station&rightTrigger=Slow+Mode+%2825%25%29&dpadUp=Raise+Climb&dpadDown=Lower+Climb&backButton=Reset+Robot+Orientation&yButton=Auto+alignment+to+nearest+coral+station&xButton=Re-enable+manual+driving&bButton=Face+reef+wall&aButton=Lock+Wheels&leftStick=Drive&rightStick=Rotate&leftTrigger=Remove+algae+from+reef
+     * https://www.padcrafter.com/?templates=Driver+Controller&plat=1&leftBumper=Face+Left+Coral+Station&rightBumper=Face+Right+Coral+Station&rightTrigger=Slow+Mode+%2825%25%29&dpadUp=Raise+Climb&dpadDown=Lower+Climb&backButton=Reset+Robot+Orientation&yButton=Auto+alignment+to+nearest+coral+station&xButton=Re-enable+manual+driving&bButton=Face+reef+wall&aButton=Lock+Wheels&leftStick=Drive&rightStick=Rotate&leftTrigger=&dpadRight=Remove+Algae+from+reef+%28L3%29&dpadLeft=Remove+Algae+from+reef+%28L1%29
      */
     private void configureDriverControls() {
 
@@ -192,8 +192,8 @@ public class RobotContainer {
                 .whileTrue(new ParallelCommandGroup(
                         m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
                         new RunCommand(() -> m_led.setRedGRB(), m_led)));
-        m_driverController.povRight().whileTrue(m_climb.setGatePowerCommand(() -> 1));
-        m_driverController.povLeft().whileTrue(m_climb.setGatePowerCommand(() -> -1));
+        m_driverController.povRight().toggleOnTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
+        m_driverController.povLeft().toggleOnTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
 
         // Remove algae from reef
         m_driverController.L2().whileTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
@@ -230,7 +230,7 @@ public class RobotContainer {
      */
     /**
      * Updated Operator Controller
-     * https://www.padcrafter.com/?templates=Operator+Controller&yButton=Elevator+and+arm+to+L1&xButton=&bButton=Elevator+and+arm+to+L2&aButton=Elevator+and+arm+to+L3&rightStick=Select+left%2Fright+tree+and+enable+auto+align&dpadUp=Intake+to+algae+on+ice+cream+and+run+wheels&dpadRight=Intake+to+processor+and+run+wheels&dpadLeft=&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&leftTrigger=Elevator+and+arm+to+coral+station&leftBumper=Intake+coral&dpadDown=intake+to+ground+%28algae%29+and+run+wheels&rightTrigger=Eject+Coral&leftStick=Intake+algae&leftStickClick=&startButton=Stow+intake&backButton=Stow+catcher&rightStickClick=eject+algae
+     * https://www.padcrafter.com/?templates=Operator+Controller&yButton=Elevator+and+arm+to+L1&xButton=&bButton=Elevator+and+arm+to+L2&aButton=Elevator+and+arm+to+L3&rightStick=Select+left%2Fright+tree+and+enable+auto+align&dpadUp=Intake+to+processor&dpadRight=Intake+to+algae+on+ice+cream&dpadLeft=&col=%23D3D3D3%2C%233E4B50%2C%23FFFFFF&leftTrigger=Elevator+and+arm+to+coral+station&leftBumper=Intake+coral&dpadDown=Intake+to+ground&rightTrigger=Eject+Coral&leftStick=Intake+algae&leftStickClick=&startButton=Stow+intake&backButton=Stow+catcher&rightStickClick=eject+algae
      */
     private void configureOperatorControls() {
         // Set Elevator and Arm positions
@@ -258,9 +258,11 @@ public class RobotContainer {
                 .toggleOnTrue(m_elevator.setElevatorAndArmPositionCommand(
                         ElevatorPositions.STOWED, ElevatorArmPositions.CORAL_STATION));
 
-        m_operatorController.povRight().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
+        m_operatorController
+                .povRight()
+                .toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
         m_operatorController.povDown().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
-        m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.ON_CORAL_PICKUP));
+        m_operatorController.povUp().toggleOnTrue(m_intake.setArmPositionCommand(IntakeArmPositions.PROCESSOR));
         m_operatorController.leftStick().whileTrue(m_intake.runWheelsCommand());
         m_operatorController.rightStick().whileTrue(m_intake.wheelsBackwardsCommand());
 

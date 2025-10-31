@@ -83,6 +83,7 @@ public class Elevator extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final AbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
 
+    // April tag ID
     private int tagID;
 
     // private final SysIdRoutine m_armRoutine = new SysIdRoutine(
