@@ -83,6 +83,9 @@ public class Elevator extends SubsystemBase {
     private final SparkFlex m_armMotor = new SparkFlex(ARM_ID, MotorType.kBrushless);
     private final AbsoluteEncoder m_armEncoder = m_armMotor.getAbsoluteEncoder();
 
+    // April tag ID
+    private int tagID;
+
     // private final SysIdRoutine m_armRoutine = new SysIdRoutine(
     //         new SysIdRoutine.Config(Volts.of(0.25).per(Second), Volts.of(1), null),
     //         new SysIdRoutine.Mechanism(m_armMotor::setVoltage, null, this));
@@ -212,6 +215,10 @@ public class Elevator extends SubsystemBase {
         m_armCurrentPositionPub.set(m_armEncoder.getPosition());
         m_flywheelOutputCurrentPub.set(flyWheelsOutputCurrent);
         m_flywheelVelocityPub.set(flyWheelsVelocity);
+        tagID = (int) NetworkTableInstance.getDefault()
+                .getTable("limelight")
+                .getEntry("tid")
+                .getDouble(-1);
     }
 
     private void setElevatorPosition(ElevatorPositions elevatorPosition) {
@@ -351,6 +358,10 @@ public class Elevator extends SubsystemBase {
         return Math.abs(m_flywheelsMotorEncoder.getVelocity()) < INTAKE_SPEED_THRESHOLD
                 && m_flywheelsMotor.getOutputCurrent() > INTAKE_CURRENT_THRESHOLD
                 && m_flywheelsMotorEncoder.getVelocity() < 0;
+    }
+
+    public int getTagID() {
+        return tagID;
     }
 
     /**
