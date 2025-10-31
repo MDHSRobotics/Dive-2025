@@ -133,8 +133,8 @@ public class RobotContainer {
      * Use this method to define trigger->command mappings that don't involve controller inputs.
      */
     private void configureTriggers() {
-        m_autoAlignmentRequested.onTrue(m_aimingRoutines.driveToTree());
-        
+        m_autoAlignmentRequested.and(() -> m_elevator.getTagID() != -1).onTrue(m_aimingRoutines.driveToTree());
+
         m_coralDetector
                 .debounce(0.2)
                 // .and(m_operatorController.leftBumper())
