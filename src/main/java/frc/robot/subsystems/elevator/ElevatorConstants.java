@@ -93,7 +93,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 0 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 2.289 + ARM_POSITION_OFFSET;
+    public static final double ARM_MAX_LIMIT = 2.0 + ARM_POSITION_OFFSET;
 
     /** Units: radians */
     public static final double ARM_STOWED_POSITION = ARM_MIN_LIMIT;

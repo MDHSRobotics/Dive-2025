@@ -43,6 +43,9 @@ public class ClimbConstants {
     /**Units: Rotations */
     public static final double GATE_MIN_LIMIT = 0;
 
+    public static final double GATE_P_GAIN = 0.4;
+    public static final double GATE_D_GAIN = 0.3;
+
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
      * This is currently set outside the motor's range of motion to prevent the position wrapping around from 1 to 0.

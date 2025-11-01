@@ -138,7 +138,11 @@ public class Climb extends SubsystemBase {
                 .forwardSoftLimitEnabled(true)
                 .reverseSoftLimit(GATE_MIN_LIMIT)
                 .reverseSoftLimitEnabled(true);
-        gateConfig.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder);
+        gateConfig
+                .closedLoop
+                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+                .p(GATE_P_GAIN)
+                .d(GATE_D_GAIN);
         m_gateMotor.configure(gateConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         // pGainEntry.set(K_P);
         // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
