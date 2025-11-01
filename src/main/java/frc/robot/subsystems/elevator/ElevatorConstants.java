@@ -93,7 +93,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_MIN_LIMIT = 0 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_MAX_LIMIT = 2.0 + ARM_POSITION_OFFSET;
+    public static final double ARM_MAX_LIMIT = 1.9 + ARM_POSITION_OFFSET;
 
     /** Units: radians */
     public static final double ARM_STOWED_POSITION = ARM_MIN_LIMIT;
@@ -104,7 +104,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L2_AND_L3_POSITION = 0.8 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_ALGAE_REMOVAL_POSITION = 1.446 + ARM_POSITION_OFFSET;
+    public static final double ARM_ALGAE_REMOVAL_POSITION = 1.0 + ARM_POSITION_OFFSET;
 
     // Constants for detecting whether a coral has entered the arm
     public static final double INTAKE_SPEED_THRESHOLD = 1000;
