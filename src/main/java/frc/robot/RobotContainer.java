@@ -10,6 +10,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -76,6 +77,9 @@ public class RobotContainer {
 
     // Coral Detection
     private final Trigger m_coralDetector = new Trigger(() -> m_elevator.detectGamePiece());
+
+    // Match Timer
+    private final Trigger m_matchTime = new Trigger(() -> Timer.getMatchTime() < 20);
 
     private final DriveTelemetry m_driveTelemetry = new DriveTelemetry();
 
@@ -194,11 +198,21 @@ public class RobotContainer {
                 .whileTrue(new ParallelCommandGroup(
                         m_climb.setPowerCommand(() -> -1.0, () -> -1.0),
                         new RunCommand(() -> m_led.setRedGRB(), m_led).withTimeout(5)));
+        // Remove algae from reef
         m_driverController.povRight().toggleOnTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.L3_ALGAE));
         m_driverController.povLeft().toggleOnTrue(m_elevator.removeAlgaeFromReefCommand(ElevatorPositions.STOWED));
 
-        // Remove algae from reef
-        m_driverController.L2().onTrue(m_climb.setGatePositionCommand());
+        // Raise the Gate for climbing
+        m_driverController
+                .L2()
+                .onTrue(m_elevator
+                        .disableWheelMotorsCommand2()
+                        .andThen(new ParallelCommandGroup(
+                                m_climb.setGatePositionCommand(),
+                                m_intake.setArmPositionCommand(IntakeArmPositions.STOWED),
+                                m_elevator.setElevatorAndArmPositionCommand(
+                                        ElevatorPositions.STOWED, ElevatorArmPositions.STOWED))));
+        m_driverController.share().onTrue(m_climb.setGatePowerCommand(() -> -0.5));
 
         /*
          * Run SysId routines when holding back/start and X/Y.

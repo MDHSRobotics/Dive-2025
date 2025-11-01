@@ -294,6 +294,10 @@ public class Elevator extends SubsystemBase {
         return this.runOnce(() -> m_flywheelsMotor.stopMotor()).andThen(Commands.idle(this));
     }
 
+    public Command disableWheelMotorsCommand2() {
+        return this.runOnce(() -> m_flywheelsMotor.stopMotor());
+    }
+
     public Command setArmPowerCommand(DoubleSupplier armPowerSupplier) {
         return this.run(() -> {
                     m_armMotor.set(armPowerSupplier.getAsDouble() * 0.5);

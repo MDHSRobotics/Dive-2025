@@ -44,7 +44,7 @@ public class ClimbConstants {
     public static final double GATE_MIN_LIMIT = 0;
 
     public static final double GATE_P_GAIN = 0.4;
-    public static final double GATE_D_GAIN = 0.3;
+    public static final double GATE_D_GAIN = 0.9;
 
     /**
      * The position of the absolute encoder (before any position conversion factor) that reports 0.
