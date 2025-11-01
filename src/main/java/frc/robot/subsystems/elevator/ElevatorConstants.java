@@ -67,7 +67,7 @@ public class ElevatorConstants {
     public static final double ARM_ZERO_OFFSET = 0;
 
     /** Units: radians */
-    public static final double ARM_POSITION_OFFSET = 2.065;
+    public static final double ARM_POSITION_OFFSET = 3.169;
 
     /** The position of the absolute encoder in radians that makes the arm stick straight out at the horizontal. */
     public static final double ARM_HORIZONTAL_OFFSET = 1.484 + ARM_POSITION_OFFSET;
@@ -104,7 +104,7 @@ public class ElevatorConstants {
     /** Units: radians */
     public static final double ARM_L2_AND_L3_POSITION = 0.8 + ARM_POSITION_OFFSET;
     /** Units: radians */
-    public static final double ARM_ALGAE_REMOVAL_POSITION = 1.0 + ARM_POSITION_OFFSET;
+    public static final double ARM_ALGAE_REMOVAL_POSITION = 0.8 + ARM_POSITION_OFFSET;
 
     // Constants for detecting whether a coral has entered the arm
     public static final double INTAKE_SPEED_THRESHOLD = 1000;

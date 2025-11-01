@@ -315,8 +315,11 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // Uncomment m_autoCreator to run auto
-        // return m_testAutoChooser.getSelected();
-        return m_autoCreator.getAutonomousCommand();
+        Command auto_command = m_autoCreator.getAutonomousCommand();
+        if (auto_command != null) {
+            return auto_command;
+        }
+        return m_testAutoChooser.getSelected();
     }
 
     /**

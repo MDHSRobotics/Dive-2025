@@ -305,10 +305,6 @@ public class AutoCreator {
     }
 
     public Command getAutonomousCommand() {
-        if (m_autoSequence != null) {
-            return m_autoSequence;
-        } else {
-            return Commands.none();
-        }
+        return m_autoSequence;
     }
 }
