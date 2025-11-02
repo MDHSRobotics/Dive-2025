@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -316,7 +317,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         // Uncomment m_autoCreator to run auto
         Command auto_command = m_autoCreator.getAutonomousCommand();
-        if (auto_command != null) {
+        if (auto_command != null && auto_command instanceof SequentialCommandGroup) {
             return auto_command;
         }
         return m_testAutoChooser.getSelected();

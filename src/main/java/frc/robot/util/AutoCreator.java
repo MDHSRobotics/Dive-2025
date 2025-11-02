@@ -144,6 +144,8 @@ public class AutoCreator {
                         Commands.runOnce(m_autoTimer::stopAndPublish));
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
+                System.out.println("Failed to schedule auto path" + e.getMessage() + e.getStackTrace());
+
                 m_autoSequence = Commands.none();
                 return;
             }
@@ -203,6 +205,8 @@ public class AutoCreator {
                         Commands.runOnce(m_autoTimer::stopAndPublish));
             } catch (Exception e) {
                 DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
+                System.out.println("Failed to schedule auto path" + e.getMessage() + e.getStackTrace());
+
                 m_autoSequence = Commands.none();
                 return;
             }
@@ -289,6 +293,7 @@ public class AutoCreator {
                     Commands.runOnce(m_autoTimer::stopAndPublish));
         } catch (Exception e) {
             DriverStation.reportError("Failed to load path: " + e.getMessage(), e.getStackTrace());
+            System.out.println("Failed to schedule auto path" + e.getMessage() + e.getStackTrace());
             m_autoSequence = Commands.none();
             return;
         }
