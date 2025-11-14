@@ -6,19 +6,13 @@ package frc.robot.subsystems.climb;
 
 import static frc.robot.subsystems.climb.ClimbConstants.*;
 
-import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
-import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import edu.wpi.first.networktables.DoublePublisher;
-import edu.wpi.first.networktables.NetworkTable;
-import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -33,18 +27,6 @@ public class Climb extends SubsystemBase {
 
     private final SparkFlex m_backHookMotor = new SparkFlex(BACK_ID, MotorType.kBrushless);
     private final SparkFlex m_frontHookMotor = new SparkFlex(FRONT_ID, MotorType.kBrushless);
-    private final SparkFlex m_gateMotor = new SparkFlex(CAGE_ID, MotorType.kBrushless);
-    private final SparkClosedLoopController m_gateController = m_gateMotor.getClosedLoopController();
-
-    // Gate Encoder
-    private final RelativeEncoder m_gateEncoder = m_gateMotor.getEncoder();
-
-    // Networktables
-    private final NetworkTableInstance m_inst = NetworkTableInstance.getDefault();
-    private final NetworkTable m_table = m_inst.getTable("Climb");
-    private final DoublePublisher m_gatePositionPub =
-            m_table.getDoubleTopic("Gate Current Position").publish();
-
     // private final SparkAbsoluteEncoder m_backEncoder = m_backHookMotor.getAbsoluteEncoder();
     // private final SparkAbsoluteEncoder m_frontEncoder = m_frontHookMotor.getAbsoluteEncoder();
 
@@ -127,23 +109,6 @@ public class Climb extends SubsystemBase {
                 .absoluteEncoderVelocityAlwaysOn(true);
         m_frontHookMotor.configure(frontConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        SparkFlexConfig gateConfig = new SparkFlexConfig();
-        gateConfig
-                .smartCurrentLimit(CAGE_CURRENT_LIMIT)
-                .idleMode(IdleMode.kBrake)
-                .inverted(true);
-        gateConfig
-                .softLimit
-                .forwardSoftLimit(GATE_MAX_LIMIT)
-                .forwardSoftLimitEnabled(true)
-                .reverseSoftLimit(GATE_MIN_LIMIT)
-                .reverseSoftLimitEnabled(true);
-        gateConfig
-                .closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .p(GATE_P_GAIN)
-                .d(GATE_D_GAIN);
-        m_gateMotor.configure(gateConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         // pGainEntry.set(K_P);
         // inst.addListener(pGainEntry, EnumSet.of(NetworkTableEvent.Kind.kValueAll), event -> {
         //     SparkFlexConfig tempConfig = new SparkFlexConfig();
@@ -153,12 +118,6 @@ public class Climb extends SubsystemBase {
         //     m_frontHookMotor.configureAsync(
         //             tempConfig, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         // });
-    }
-
-    @Override
-    public void periodic() {
-        double gatePosition = m_gateEncoder.getPosition();
-        m_gatePositionPub.set(gatePosition);
     }
 
     // private void resetProfile(HookPositions hookPositions) {
@@ -213,22 +172,6 @@ public class Climb extends SubsystemBase {
             m_backHookMotor.set(backMotorPowerSupplier.getAsDouble() * 0.5);
             m_frontHookMotor.set(frontMotorPowerSupplier.getAsDouble() * 0.5);
         });
-    }
-
-    public Command setGatePowerCommand(DoubleSupplier gateMotorPowerSupplier) {
-        return this.runOnce(() -> {
-            m_gateMotor.set(gateMotorPowerSupplier.getAsDouble() * 0.5);
-        });
-    }
-
-    public Command setGatePositionCommand() {
-        return this.runOnce(() -> {
-            m_gateController.setReference(GATE_MAX_LIMIT, ControlType.kPosition);
-        });
-    }
-
-    public void resetGateEncoder() {
-        m_gateEncoder.setPosition(0);
     }
 
     // public Command setHookPositionCommand(HookPositions hookPositions) {

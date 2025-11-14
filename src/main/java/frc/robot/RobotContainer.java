@@ -209,11 +209,9 @@ public class RobotContainer {
                 .onTrue(m_elevator
                         .disableWheelMotorsCommand2()
                         .andThen(new ParallelCommandGroup(
-                                m_climb.setGatePositionCommand(),
                                 m_intake.setArmPositionCommand(IntakeArmPositions.STOWED),
                                 m_elevator.setElevatorAndArmPositionCommand(
                                         ElevatorPositions.STOWED, ElevatorArmPositions.STOWED))));
-        m_driverController.share().onTrue(m_climb.setGatePowerCommand(() -> -0.5));
 
         /*
          * Run SysId routines when holding back/start and X/Y.
