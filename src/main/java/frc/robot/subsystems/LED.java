@@ -2,16 +2,18 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
-import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
 import com.ctre.phoenix.led.CANdleConfiguration;
 import com.ctre.phoenix.led.FireAnimation;
+import com.ctre.phoenix.led.LarsonAnimation;
+import com.ctre.phoenix.led.LarsonAnimation.BounceMode;
 import com.ctre.phoenix.led.RainbowAnimation;
 import com.ctre.phoenix.led.TwinkleAnimation;
+import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class LED extends SubsystemBase {
     private final int CANdle_ID = 15;
-    private final int LED_STRIP_COUNT = 294;
+    private final int LED_STRIP_COUNT = 140;
     private final CANdle candle = new CANdle(CANdle_ID);
 
     public LED() {
@@ -54,5 +56,10 @@ public class LED extends SubsystemBase {
     public void setFireAnimation() {
         FireAnimation fire = new FireAnimation(1.0, 0.2, LED_STRIP_COUNT, 1.0, 0.00001);
         candle.animate(fire);
+    }
+
+    public void setLarsonAnimation() {
+        LarsonAnimation larson = new LarsonAnimation(5, 2, 255, 0, 1.0, LED_STRIP_COUNT, BounceMode.Front, 7);
+        candle.animate(larson);
     }
 }

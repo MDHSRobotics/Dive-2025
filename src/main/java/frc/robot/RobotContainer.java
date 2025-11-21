@@ -8,6 +8,7 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Timer;
@@ -18,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandPS4Controller;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -306,7 +306,35 @@ public class RobotContainer {
     /**
      * Registers the <a href="https://pathplanner.dev/pplib-named-commands.html">Named Commands</a> used in PathPlanner.
      */
-    private void registerNamedCommands() {}
+    private void registerNamedCommands() {
+
+        // Elevator named commands
+        NamedCommands.registerCommand(
+                "Elevator L2",
+                m_elevator
+                        .setElevatorAndArmPositionCommand(ElevatorPositions.L2, ElevatorArmPositions.L_2_AND_3)
+                        .withTimeout(0.3));
+        NamedCommands.registerCommand(
+                "Elevator L3",
+                m_elevator
+                        .setElevatorAndArmPositionCommand(ElevatorPositions.L3, ElevatorArmPositions.L_2_AND_3)
+                        .withTimeout(0.3));
+        NamedCommands.registerCommand(
+                "Elevator Down",
+                m_elevator
+                        .setElevatorAndArmPositionCommand(ElevatorPositions.STOWED, ElevatorArmPositions.STOWED)
+                        .withTimeout(0.3));
+        NamedCommands.registerCommand("Stop Elevator Wheels", m_elevator.disableWheelMotorsCommand2());
+
+        // Intake named commands-
+        NamedCommands.registerCommand("Intake Up", m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
+        NamedCommands.registerCommand("Intake Down", m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+
+        // LED named commands
+        NamedCommands.registerCommand("LED Blink", new InstantCommand(() -> m_led.setTwinkleAnimation(), m_led));
+        NamedCommands.registerCommand("LED Rainbow", new InstantCommand(() -> m_led.setRainbowAnimation(), m_led));
+        NamedCommands.registerCommand("LED Larson", new InstantCommand(() -> m_led.setLarsonAnimation(), m_led));
+    }
 
     /**
      * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -314,10 +342,10 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // Uncomment m_autoCreator to run auto
-        Command auto_command = m_autoCreator.getAutonomousCommand();
-        if (auto_command != null && auto_command instanceof SequentialCommandGroup) {
-            return auto_command;
-        }
+        // Command auto_command = m_autoCreator.getAutonomousCommand();
+        // if (auto_command != null && auto_command instanceof SequentialCommandGroup) {
+        //    return auto_command;
+        // }
         return m_testAutoChooser.getSelected();
     }
 
