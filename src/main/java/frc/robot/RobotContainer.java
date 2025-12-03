@@ -327,8 +327,12 @@ public class RobotContainer {
         NamedCommands.registerCommand("Stop Elevator Wheels", m_elevator.disableWheelMotorsCommand2());
 
         // Intake named commands-
-        NamedCommands.registerCommand("Intake Up", m_intake.setArmPositionCommand(IntakeArmPositions.STOWED));
-        NamedCommands.registerCommand("Intake Down", m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP));
+        NamedCommands.registerCommand(
+                "Intake Up",
+                m_intake.setArmPositionCommand(IntakeArmPositions.STOWED).withTimeout(0.3));
+        NamedCommands.registerCommand(
+                "Intake Down",
+                m_intake.setArmPositionCommand(IntakeArmPositions.GROUND_PICKUP).withTimeout(0.3));
 
         // LED named commands
         NamedCommands.registerCommand("LED Blink", new InstantCommand(() -> m_led.setTwinkleAnimation(), m_led));
